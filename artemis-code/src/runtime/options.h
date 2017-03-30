@@ -48,7 +48,7 @@ enum CoverageReport {
 };
 
 enum MajorMode {
-    AUTOMATED, MANUAL, CONCOLIC, CONCOLIC_TEST
+    AUTOMATED, MANUAL, CONCOLIC, CONCOLIC_TEST, ANALYSIS_SERVER
 };
 
 enum PathTraceReport {
@@ -85,6 +85,7 @@ struct ConcolicSearchSelector
 typedef struct OptionsType {
 
     OptionsType() :
+        saveCookiesForSession(false),
         iterationLimit(4),
         numberSameLength(1),
         disableStateCheck(true),
@@ -112,6 +113,9 @@ typedef struct OptionsType {
         concolicDisabledFeatures(0),
         debugConcolic(false),
         enableEventVisibilityFiltering(false),
+        analysisServerPort(8008),
+        analysisServerDebugView(false),
+        analysisServerLog(false),
         artemisLoadUrls(false),
         delegationTestingMode(false),
         testingConcolicSendIterationCountToServer(false)
@@ -119,6 +123,7 @@ typedef struct OptionsType {
 
     QMap<QString, InjectionValue> presetFormfields;
     QMap<QString, QString> presetCookies;
+    bool saveCookiesForSession;
 
     QSet<QUrl> coverageIgnoreUrls;
 
@@ -169,6 +174,12 @@ typedef struct OptionsType {
 
     bool debugConcolic;
     bool enableEventVisibilityFiltering;
+
+    unsigned short analysisServerPort;
+    bool analysisServerDebugView;
+    bool analysisServerLog;
+
+    QString allArguments;
 
     bool artemisLoadUrls;
 

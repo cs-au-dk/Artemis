@@ -128,7 +128,7 @@ private slots:
     void postAllInjection();
     void postSingleInjection(FormFieldDescriptorConstPtr field);
 
-    void slExecutionTreeUpdated(TraceNodePtr tree);
+    void slExecutionTreeUpdated(TraceNodePtr tree, QString name);
 
 signals:
     void sigNewTraceMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);

@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function() {
+            
+            var status = document.getElementById("status");
+            
+            var keys = [];
+            var didFocus = false;
+            var focusString;
+            
+            var input_text = document.getElementById("input-text");
+            input_text.addEventListener("change", function (e) {
+                var keysString = "";
+                if (keys.length > 0) {
+                    keysString = " (keys: '" + keys.join("','") + "')";
+                    keys = []
+                }
+                focusString = didFocus ? " (in focus)" : "";
+                
+                status.textContent = "#input-text set to '" + input_text.value + "'" + keysString + focusString;
+            }, false);
+            
+            input_text.addEventListener("keypress", function (e) {
+                keys.push(String.fromCharCode(e.charCode));
+            }, false);
+            
+            input_text.addEventListener("focus", function (e) {
+                didFocus = true;
+            }, false);
+            
+            input_text.addEventListener("blur", function (e) {
+                if (didFocus) {
+                    status.textContent = status.textContent.substring(0, status.textContent.length - focusString.length)
+                }
+                didFocus = false;
+            }, false);
+            
+            var input_radio_1 = document.getElementById("input-radio-1");
+            input_radio_1.addEventListener("change", function (e) {
+                status.textContent = "#input-radio-1 set to " + input_radio_1.checked;
+            }, false);
+            
+            var input_radio_2 = document.getElementById("input-radio-2");
+            input_radio_2.addEventListener("change", function (e) {
+                status.textContent = "#input-radio-2 set to " + input_radio_2.checked;
+            }, false);
+            
+            var input_checkbox = document.getElementById("input-checkbox");
+            input_checkbox.addEventListener("change", function (e) {
+                status.textContent = "#input-checkbox set to " + input_checkbox.checked;
+            }, false);
+            
+            var input_select = document.getElementById("input-select");
+            input_select.addEventListener("change", function (e) {
+                status.textContent = "#input-select set to '" + input_select.value + "' (index " + input_select.selectedIndex + ")";
+            }, false);
+            
+        }
+        
+    </script>
+</head>
+<body>
+
+    <h1>Form fields with change handlers</h1>
+    <hr>
+    <p>Status: <span id="status">Nothing changed.</span></p>
+    <hr>
+
+    <form action="" method="GET" onsubmit="return false;" >
+        <input type="text" id="input-text" ><br>
+        <input type="radio" name="radio-group" id="input-radio-1" >
+        <input type="radio" name="radio-group" id="input-radio-2" ><br>
+        <input type="checkbox" id="input-checkbox" ><br>
+        <select id="input-select" >
+            <option value="first" >First Option</option>
+            <option value="second" >Second Option</option>
+            <option value="third" >Third Option</option>
+        </select>
+    </form>
+
+</body>
+</html>

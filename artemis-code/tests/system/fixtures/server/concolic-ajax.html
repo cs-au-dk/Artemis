@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    
+    <script type="text/javascript">
+        /*
+            The idea of this test is to simulate race conditions between timers or AJAX requests on the page.
+            
+            In this test the validation is spread across four handlers triggered by AJAX request. If the server
+            records traces while the slow validation is still in progress it will corrupt its recorded traces.
+        */
+        
+        function validate() {
+            var status = document.getElementById("status");
+            removeExistingLogs(status);
+            
+            // Validate the fields with delays.
+            
+            var f1 = document.getElementById("field1");
+            var f2 = document.getElementById("field2");
+            var f3 = document.getElementById("field3");
+            
+            var v1 = "One";
+            var v2 = "Two";
+            var v3 = "Three";
+            
+            var t1 = 1000;
+            var t2 = 2000;
+            var t3 = 3000;
+            var tf = 4000;
+            
+            var b1 = false;
+            var b2 = false;
+            var b3 = false;
+            
+            var xhr_connection_fail_reported = false
+            function slow_xhr_custom(timeout, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://localhost:8098/slow-response/" + timeout, true);
+                xhr.onload = callback;
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == XMLHttpRequest.DONE && this.status == 0 && !xhr_connection_fail_reported) {
+                        xhr_connection_fail_reported = true;
+                        alert("XHR connection failed");
+                        status.textContent += "XHR connection failed; "
+                    }
+                };
+                xhr.send();
+            }
+            
+            slow_xhr_custom(t1, function () {
+                if (f1.value == v1) {
+                    logMessage(status, "Field 1: OK");
+                    b1 = true;
+                } else {
+                    logMessage(status, "Field 1: FAIL");
+                }
+            })
+            
+            slow_xhr_custom(t2, function () {
+                if (f2.value == v2) {
+                    logMessage(status, "Field 2: OK");
+                    b2 = true;
+                } else {
+                    logMessage(status, "Field 2: FAIL");
+                }
+            })
+            
+            slow_xhr_custom(t3, function () {
+                if (f3.value == v3) {
+                    logMessage(status, "Field 3: OK");
+                    b3 = true;
+                } else {
+                    logMessage(status, "Field 3: FAIL");
+                }
+            })
+            
+            slow_xhr_custom(tf, function () {
+                if (b1 && b2 && b3) {
+                    document.forms[0].submit();
+                } else {
+                    logMessage(status, "Submission failed");
+                }
+            })
+            
+            return false;
+        }
+        
+        function logMessage(status, message) {
+            var el = document.createElement("li");
+            el.textContent = message;
+            status.appendChild(el);
+        }
+        function removeExistingLogs(status) {
+            while (status.firstChild) {
+                status.removeChild(status.firstChild);
+            }
+        }
+    </script>
+    
+</head>
+<body>
+    <p>Write <i>One</i>, <i>Two</i>, <i>Three</i> in the fields to do something.</p>
+    
+    <form method="GET" action="about:blank" >
+        <input type="text" id="field1" /><br>
+        <input type="text" id="field2" /><br>
+        <input type="text" id="field3" /><br>
+        
+        <button type="submit" onclick="return validate();">Validate</button>
+    </form>
+    
+    <ul id="status" >
+    </ul>
+    
+</body>
+</html>

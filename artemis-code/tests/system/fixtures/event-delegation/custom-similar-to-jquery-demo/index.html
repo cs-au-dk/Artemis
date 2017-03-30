@@ -36,7 +36,7 @@ color: red;
 function on(container, type, selector, handler) {
     container.addEventListener(type, function(event) {
         // Fetch an array containing all descendants of container which match the selector.
-        var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
+        var matches = Array.prototype.slice.call(container.querySelectorAll(selector));
         // If the target matches the selector then fire the event.
         if(matches.indexOf(event.target) >= 0) {
             handler(event);
@@ -45,8 +45,7 @@ function on(container, type, selector, handler) {
 }
 
 var count = 0;
-body = document.getElementsByTagName("body")[0];
-on(body, "click", "p", function(e) {
+on(document.body, "click", "p", function(e) {
     newPara = document.createElement("p");
     newPara.appendChild(document.createTextNode("Another paragraph! " + (++count)));
     // Add the new paragraph after the clicked target.

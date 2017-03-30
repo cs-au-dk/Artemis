@@ -52,7 +52,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                ConcolicBenchmarkFeatures disabledFeatures,
                                bool enableExtrnalNavigationRequests)
     : QObject(parent)
-    , mNextOpCanceled(false), mKeepOpen(false)
+    , mIgnoreCancelledPageLoad(false)
+    , mNextOpCanceled(false)
+    , mKeepOpen(false)
     , mSymbolicMode(MODE_CONCRETE)
     , mEnableExternalNaviagtionRequests(enableExtrnalNavigationRequests)
 {
@@ -116,8 +118,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mWebkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)));
 
-    QObject::connect(mWebkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
-                     mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
+    QObject::connect(mWebkitListener, SIGNAL(addedEventListener(QWebElement*, QString, QString)),
+                     mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString, QString)));
     QObject::connect(mWebkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
 
@@ -203,32 +205,34 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
 void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode)
 {
     currentConf = conf;
+    mSymbolicMode = symbolicMode;
 
+    notifyNewSequence();
+
+    qDebug() << "--------------- FETCH PAGE --------------" << endl;
+    mPage->mainFrame()->load(conf->getUrl());
+}
+
+void WebKitExecutor::notifyNewSequence(bool noNewSymbolicSession)
+{
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
 
     // Clear the previous DOM snapshots. In practice this means only one snapshot is stored at a time, as it is only recorded for the last event in symbolic mode MODE_CONCOLIC_LAST_EVENT.
     mDomSnapshotStorage->reset();
 
-    qDebug() << "--------------- FETCH PAGE --------------" << endl;
-
     mCoverageListener->notifyStartingLoad();
     mResultBuilder->notifyStartingLoad();
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
-    mSymbolicMode = symbolicMode;
-    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINOUS || symbolicMode == MODE_CONCOLIC_NO_TRACE) {
-        mWebkitListener->beginSymbolicSession();
+    if (mSymbolicMode == MODE_CONCOLIC || mSymbolicMode == MODE_CONCOLIC_CONTINUOUS || mSymbolicMode == MODE_CONCOLIC_NO_TRACE) {
+        if (!noNewSymbolicSession) {
+            mWebkitListener->beginSymbolicSession();
+        }
     }
-
-    mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
-    if (mEnableExternalNaviagtionRequests) {
-        mPage->mAcceptNavigation = true; // Allow navigation dunring the page load.
-    }
-
-    mPage->mainFrame()->load(conf->getUrl());
 }
+
 
 void WebKitExecutor::slLoadProgress(int i){
     if(!mNextOpCanceled)
@@ -253,14 +257,16 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-    if (mEnableExternalNaviagtionRequests) {
-        mPage->mAcceptNavigation = false; // Now the page load is done, pass all navigation requests to the external signal instead.
-    }
+    assert(!currentConf.isNull());
 
     if(mNextOpCanceled){
         mNextOpCanceled = false;
-        qDebug() << "Page load canceled";
-        return;
+        qDebug() << "Page load cancelled";
+
+        if (!mIgnoreCancelledPageLoad) {
+            emit sigAbortedExecution("Page load cancelled");
+            return;
+        }
     }
 
     if(!ok){
@@ -268,7 +274,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         if(html == "<html><head></head><body></body></html>"){
             emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
             return;
-        }        
+        }
     }
     mResultBuilder->notifyPageLoaded();
 
@@ -348,6 +354,16 @@ ArtemisWebPagePtr WebKitExecutor::getPage()
 TraceBuilder* WebKitExecutor::getTraceBuilder()
 {
     return mTraceBuilder;
+}
+
+QList<EventHandlerDescriptorConstPtr> WebKitExecutor::getCurrentEventHandlers()
+{
+    return mResultBuilder->getCurrentEventHandlers();
+}
+
+QNetworkCookieJar *WebKitExecutor::getCookieJar()
+{
+    return mAjaxListener->cookieJar();
 }
 
 DomSnapshotStoragePtr WebKitExecutor::getDomSnapshotStorage()

@@ -56,6 +56,7 @@ QWebExecutionListener::QWebExecutionListener(QObject *parent)
     , inst::ExecutionListener()
     , jscinst::JSCExecutionListener()
     , m_ajax_callback_next_id(0)
+    , m_do_not_capture_ajax_callbacks(false)
     , m_reportHeapMode(0)
     , m_heapReportNumber(0)
     , m_heapReportFactor(1)
@@ -70,13 +71,14 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget* target, const char*
         if (node->isDocumentNode() || node->isElementNode()) {
             // Notice! QWebElement will default to a NULL value if node is not an element node but a document node.
             // We recover this case later by assuming null values refer to the target node.
-            emit addedEventListener(new QWebElement(node), QString(tr(typeString.c_str())));
+            QString targetObject = node->isDocumentNode() ? QString::fromStdString("document") : QString();
+            emit addedEventListener(new QWebElement(node), QString(tr(typeString.c_str())), targetObject);
         } else {
             qWarning() << QString::fromStdString("Event handler added to non-document and non-elmenet node. Ignored.");
         }
 
     } else if (target->toDOMWindow() != NULL) {
-        emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+        emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())), QString::fromStdString("window"));
 
     } else if (typeString.compare("readystatechange") == 0) {
         qDebug() << QString::fromStdString("WEBKIT::AJAX CALLBACK DETECTED (and ignored in event added)");
@@ -134,6 +136,11 @@ void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const 
 // AJAX SUPPORT
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
+    if (m_do_not_capture_ajax_callbacks) {
+        xmlHttpRequest->fire();
+        return;
+    }
+
     int callbackId = m_ajax_callback_next_id++;
 
     m_ajax_callbacks.insert(callbackId, xmlHttpRequest);
@@ -146,7 +153,7 @@ void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
         qWarning() << "WARNING: xmlHttpRequest not found!";
         return;
     }
-	xmlHttpRequest->fire();
+    xmlHttpRequest->fire();
 
 }
 
@@ -157,6 +164,11 @@ void QWebExecutionListener::clearAjaxCallbacks() {
 
     m_ajax_callbacks.clear();
     m_ajax_callback_next_id = 0;
+}
+
+void QWebExecutionListener::doNotCaptureAjaxCallbacks()
+{
+    m_do_not_capture_ajax_callbacks = true;
 }
 
 void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data) {
@@ -193,8 +205,17 @@ void QWebExecutionListener::timerFire(int timerId) {
         i.value()->findTimeout(timerId)->fired();
     }
 
-    i++;
-    Q_ASSERT(i != m_timers.constEnd());
+    //i++;
+    //Q_ASSERT(i != m_timers.constEnd());
+}
+
+void QWebExecutionListener::timerCancel(int timerId)
+{
+    Q_ASSERT(timerId > 0);
+
+    if (m_timers.contains(timerId)) {
+        WebCore::DOMTimer::removeById(m_timers[timerId], timerId);
+    }
 }
 
 void QWebExecutionListener::clearTimers() {

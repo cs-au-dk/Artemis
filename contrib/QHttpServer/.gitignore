@@ -1,0 +1,37 @@
+# Folders
+build
+lib
+
+# Generated
+Makefile
+*.o
+moc_*
+src/Makefile.Debug
+src/Makefile.Release
+
+# Docs
+docs/html
+
+# Build folders
+*/debug
+*/release
+*/*/debug
+*/*/release
+
+# Examples
+examples/bodydata/bodydata
+examples/greeting/greeting
+examples/helloworld/helloworld
+
+# Visual studio
+*.suo
+*.ncb
+*.user
+*.pdb
+*.idb
+*.vcproj
+*.vcxproj
+*.vcxproj.filters
+*.lib
+*.sln
+*.rc

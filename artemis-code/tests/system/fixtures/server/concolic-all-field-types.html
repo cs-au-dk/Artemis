@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    
+    <script type="text/javascript">
+        function validate() {
+            var a = document.getElementById("my-text-box").value;
+            var b = document.getElementById("my-select-box").value;
+            var c = document.getElementById("my-select-box-accessed-by-index").selectedIndex;
+            var d = document.getElementById("my-check-box").checked;
+            var e = document.getElementById("my-radio-button").checked;
+            
+            if (a != "Hello") {
+                alert("Text box error");
+                return false;
+            }
+            
+            if (b != "Hello") {
+                alert("Select box error");
+                return false;
+            }
+            
+            if (c != 0) {
+                alert("Select box index error");
+                return false;
+            }
+            
+            if (!d) {
+                alert("Check box error");
+                return false;
+            }
+            
+            if (!e) {
+                alert("Radio button error");
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
+    
+</head>
+<body>
+    
+    <p>Write <i>testme</i> in the field to do something.</p>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="my-text-box" value="Hello" />
+        
+        <select id="my-select-box" >
+            <option>Hello</option>
+            <option>Welcome</option>
+            <option>Greetings</option>
+        </select>
+        
+        <select id="my-select-box-accessed-by-index" >
+            <option>Welcome</option>
+            <option>Hello</option>
+            <option>Greetings</option>
+        </select>
+        
+        <input type="checkbox" id="my-check-box" checked="checked" />
+        
+        <input type="radio" name="my-radio-group" id="my-radio-button" />
+        <input type="radio" name="my-radio-group" id="my-radio-button-2" checked="checked" />
+        
+        <button type="submit" onclick="return validate();">Submit</button>
+        
+    </form>
+
+</body>
+</html>

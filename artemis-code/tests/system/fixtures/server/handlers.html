@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function () {
+            
+            var x = document.getElementById("js-attr");
+            x.onclick = function () {
+                alert("Click handler in onclick attribute, set via JavaScript.");
+                return false;
+            };
+            
+            var y = document.getElementById("listener");
+            y.addEventListener("click", function (e) {
+                alert("Click handler registered via addEventListener.");
+                e.preventDefault();
+            }, false);
+            
+            y.addEventListener("focus", function (e) {
+                alert("Focus handler registered via addEventListener.");
+                e.preventDefault();
+            }, false);
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Examples of different event handlers.</h1>
+
+    <ul>
+
+        <li><a href="about:blank" id="dom-attr" onclick="alert('Click handler in onclick attribute.'); return false;" >Onclick attribute in HTML</a></li>
+
+        <li><a href="about:blank" id="js-attr" >Onclick attribute set via JS</a></li>
+
+        <li><a href="about:blank" id="listener" >Event registered with addEventListener</a></li>
+
+    </ul>
+
+    <!-- TODO: jQuery etc. -->
+
+</body>
+</html>

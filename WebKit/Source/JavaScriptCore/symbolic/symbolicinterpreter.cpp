@@ -49,6 +49,9 @@ bool SymbolicInterpreter::m_featureSymbolicCheckedPropertyEnabled = true;
 bool SymbolicInterpreter::m_featureConcreteValuePropertyEnabled = true;
 bool SymbolicInterpreter::m_featureSymbolicTriggeringEnabled = true;
 
+// Symbolic target is not for benchmarking, it is a different mode of operation, disabled unless specifically requested.
+bool SymbolicInterpreter::m_featureSymbolicEventTargetEnabled = false;
+
 // Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values
 unsigned int NEXT_SYMBOLIC_ID = 0;
 

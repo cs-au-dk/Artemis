@@ -1,0 +1,49 @@
+<!--
+TEST PC = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::ConstraintsSolved = 3
+TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 2
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var x = "testme";
+		var x_i = 1;
+
+		// This example should be UNSAT because of the available options in the select box.
+		// Therefore it tests if we aere able to infer the possible values implied by a select box in the empty case.
+		function validate() {
+			var y = document.getElementById("testinput");
+			var result = true;
+
+			if (y.value != x) {
+				result = false;
+			}
+			if (y.selectedIndex != x_i) {
+				result = false;
+			}
+			return result;
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>This form cannot be submitted.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<select name="testinput" id="testinput" >
+		</select>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

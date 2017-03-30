@@ -68,7 +68,7 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
 QString TraceDisplay::makeGraph(TraceNodePtr tree, QString title)
 {
     QString result;
-    /* The visitor part builds up the lists of information which must be included in the "header" and allthe edges
+    /* The visitor part builds up the lists of information which must be included in the "header" and all the edges
      * in the graph. Then we build this into a actual graphviz file. */
 
     // Visitor populates mHeader* and mEdges.

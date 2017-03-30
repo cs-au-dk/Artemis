@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        var x = "oxford";
+        var y = "aarhus";
+
+        function validate() {
+            var z = document.getElementById("city").value;
+
+            if (z == x) {
+                return true;
+            } else if(z == y) {
+                return true;
+            } else {
+                alert("Error!");
+                return false;
+            }
+        }
+
+        function updateCity() {
+            var country = document.getElementById("country");
+            
+            if(country.value == "?") {
+                newCityValues({});
+            } else if(country.value == "uk") {
+                newCityValues({bristol:"Bristol", london:"London", oxford:"Oxford"});
+            } else if(country.value == "dk") {
+                newCityValues({copenhagen:"Copenhagen", aarhus:"Aarhus", aalborg:"Aalborg"});
+            } else if(country.value == "us") {
+                newCityValues({newyork:"New York", washington:"Washington", sanfrancisco:"San Francisco"});
+            } else {
+                alert("NOT REACHED");
+            }
+        }
+
+        function newCityValues(values) {
+            var city = document.getElementById("city");
+            // Reset
+            city.options.length = 0;
+            // Add new values
+            for(index in values) {
+                city.options[city.options.length] = new Option(values[index], index)
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+
+    <form method="GET" action="about:blank" >
+
+        <p>Please select the city <i>Aarhus</i> or <i>Oxford</i> to do something.</p>
+
+        <select name="country" id="country" onchange="updateCity()" >
+            <option value="?" >Please select the country&hellip;</option>
+            <option value="uk" >UK</option>
+            <option value="dk" >Denmark</option>
+            <option value="us" >USA</option>
+        </select>
+
+        <select name="city" id="city" >
+            <!-- Options will be filled dynamically -->
+        </select>
+
+        <button type="submit" onclick="return validate();">Submit</button>
+
+    </form>
+
+</body>
+</html>

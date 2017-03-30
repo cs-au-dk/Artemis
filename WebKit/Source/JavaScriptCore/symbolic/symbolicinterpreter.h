@@ -134,6 +134,13 @@ public:
         SymbolicInterpreter::m_featureSymbolicTriggeringEnabled = value;
     }
 
+    static bool isFeatureSymbolicEventTargetEnabled() {
+        return m_featureSymbolicEventTargetEnabled;
+    }
+    static void setFeatureSymbolicEventTargetEnabled(bool value) {
+        SymbolicInterpreter::m_featureSymbolicEventTargetEnabled = value;
+    }
+
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
@@ -153,6 +160,7 @@ private:
     static bool m_featureSymbolicCheckedPropertyEnabled;
     static bool m_featureConcreteValuePropertyEnabled;
     static bool m_featureSymbolicTriggeringEnabled;
+    static bool m_featureSymbolicEventTargetEnabled;
 };
 
 }

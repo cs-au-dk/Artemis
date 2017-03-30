@@ -28,8 +28,7 @@ namespace artemis
 {
 
 ArtemisWebPage::ArtemisWebPage() :
-    QWebPage(NULL),
-    mAcceptNavigation(true) // Unless we are in manual mode and choose otherwise, we accept all navigation.
+    QWebPage(NULL)
 {
 }
 
@@ -79,29 +78,64 @@ QString ArtemisWebPage::userAgentForUrl(const QUrl &url) const
     }
 }
 
+// Returns the element uniquely identified by the given XPath.
+// If no element is found, or multiple are matched, then a null element is returned.
+QWebElement ArtemisWebPage::getSingleElementByXPath(QString xPath)
+{
+    QWebElementCollection allMatches = getElementsByXPath(xPath);
+
+    if (allMatches.count() != 1) {
+        Log::debug(QString("getSingleElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(allMatches.count()).toStdString());
+        return QWebElement();
+    }
+
+    return allMatches.at(0);
+}
+
+QWebElementCollection ArtemisWebPage::getElementsByXPath(QString xPath)
+{
+    // To use QXmlQuery for XPath lookups we would need to parse the DOM as XML, and it will typically be invalid.
+    // Instead we will inject some JavaScript to do the XPath lookup and then look up those elements from here.
+
+    QString escapedXPath(xPath);
+    escapedXPath.replace('"', "\\\"");
+
+    QWebElement document = this->currentFrame()->documentElement();
+    QString jsInjection = QString("var ArtemisSearchElts = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);"
+                                  "for (var i=0; i < ArtemisSearchElts.snapshotLength; i++) {"
+                                  "    ArtemisSearchElts.snapshotItem(i).setAttribute('artemissearch', 'true');"
+                                  "};"
+                                  "ArtemisSearchElts.snapshotLength;").arg(escapedXPath);
+    int eltCount = document.evaluateJavaScript(jsInjection, QUrl(), true).toInt();
+
+    if (eltCount == 0) {
+        Log::debug(QString("getElementsByXPath: Found %1 elements, but the XPath should match at least one.").arg(eltCount).toStdString());
+        return QWebElementCollection();
+    }
+
+    QWebElementCollection searchedElts = document.findAll("*[artemissearch]");
+    assert(searchedElts.count() == eltCount);
+
+    // Remove the 'artemissearch' marker so we can re-use it and avoid polluting the DOM more than necessary.
+    foreach (QWebElement elt, searchedElts) {
+        elt.removeAttribute("artemissearch");
+    }
+
+    return searchedElts;
+}
+
 
 // This function is called whenever WebKit requests to navigate frame to the resource specified by request by means of the specified navigation type type.
 bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
-    // In demo mode it is useful to be able to intercept all page loads (so they can be passed through webkit executor).
-    // By returning false here we forbid any within-page (i.e. via links, buttons, etc) navigation.
-    // The request is passed via this signal to the demo mode and can be handled there.
-
     //qDebug() << "NAVIGATION: " << request.url().toString() << " Type: " << type;
 
-    if (mAcceptNavigation || type == NavigationTypeOther) {
-        // Allow NavigationTypeOther requests to pass through. It seems that these are really non-navigational XMLHttpRequests
-        return true;
-
-    } else {
+    // Allow NavigationTypeOther requests to pass through. It seems that these are really non-navigational XMLHttpRequests
+    if (type != NavigationTypeOther) {
         emit sigNavigationRequest(frame, request, type);
-        return false;
-
-        // NOTE: I thought there may be a problem here because this function cannot return until the signal has been
-        // dealt with (which may result in a new page load itself).
-        // However, it actually seems to be working correctly, so it looks like QWebView is able to handle these
-        // overlapping loads cleanly after all.
     }
+
+    return true;
 }
 
 

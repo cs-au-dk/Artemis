@@ -28,6 +28,9 @@ INCLUDEPATH += \
 LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so
 }
 
+LIBS += -lqjson
+LIBS += -lqhttpserver
+
 installtarget.path = $$(ARTMIS_PATH)/bin
 installtarget.files = dist/*
 INSTALLS += installtarget

@@ -17,7 +17,10 @@
 #include "formfieldinjector.h"
 
 #include <QDebug>
+#include <QKeyEvent>
+#include <QApplication>
 #include "statistics/statsstorage.h"
+#include "util/loggingutil.h"
 
 namespace artemis
 {
@@ -39,8 +42,6 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         // We do this using JavaScript because some values are only correctly set this way
         // E.g. if you set the value of a select box then this approach correctly updates the node,
         // where the setAttribute approach updates the value itself but not the remaining state of the node
-
-        // TODO this is a bit risky, what if this triggers other events?
 
         setValue = QString("this.value = \"") + value.getString() + "\";";
         element.evaluateJavaScript(setValue);
@@ -92,18 +93,254 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
     return true;
 }
 
+bool FormFieldInjector::injectAndTriggerChangeHandler(QWebElement element, InjectionValue value)
+{
+    if (inject(element, value)) {
+        triggerChangeHandler(element);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool FormFieldInjector::injectWithEventSimulation(QWebElement element, InjectionValue value, bool noBlur)
+{
+    /**
+     * Simulate a human filling the form field as follows:
+     *
+     * For text inputs:
+     *  focus
+     *  //click  // N.B. this is not strictly necessary but included because lots of sites listen to it.
+     *  //select // N.B. this is not strictly necessary but included because lots of sites listen to it.
+     *  For each character:
+     *      If capital:
+     *          keydown (shift)
+     *      keydown
+     *      keypress
+     *      input
+     *      keyup
+     *      If capital:
+     *          keyup (shift)
+     *  change
+     *  blur
+     *
+     * For checkbox inputs:
+     *  focus
+     *  click
+     *  change
+     *  blur
+     *
+     * For radio button inputs:
+     *  focus
+     *  click
+     *  change
+     *  blur
+     *
+     * N.B. These all fire on the newly checked radio button. There is no "deselect" or any other event on the
+     * previously selected button.
+     *
+     * For select box inputs:
+     *  focus
+     *  change
+     *  blur
+     *
+     * N.B. These fire on the select element itself. There is no event fired on the selected (or deselected) option
+     * element. This can happen when clicking with a mouse, but
+     *
+     */
+
+    // Handle each case separately.
+    // TODO: Similar code duplicated in analysisserverruntime.cpp.
+    if (element.tagName().toLower() == "input") {
+        // For input fields, the allowable value type depends on the inupt type.
+        // "radio" and "checkbox" inputs must have bool values, and all other input types must use "string".
+        QString inputType = element.attribute("type").toLower();
+        if (inputType == "checkbox" || inputType == "radio") {
+            if (value.getType() == QVariant::Bool) {
+                return simulateBooleanFieldFilling(element, value, noBlur);
+            } else {
+                Log::debug("Could not inject non-bool into boolean field.");
+                return false;
+            }
+        } else {
+            if (value.getType() == QVariant::String) {
+                return simulateTextFieldFilling(element, value.getString(), noBlur);
+            } else {
+                Log::debug("Could not inject non-string into text field.");
+                return false;
+            }
+        }
+    } else if (element.tagName().toLower() == "select") {
+        // For select boxes we support injection of string or int (as selectedIndex) but not bool.
+        if (value.getType() == QVariant::String || value.getType() == QVariant::Int) {
+            return simulateSelectBoxFilling(element, value, noBlur);
+        } else {
+            Log::debug("Could not inject non-string and non-int into a select box.");
+            return false;
+        }
+    } else {
+        Log::debug("Could not inject into non-input field. Only 'input' and 'select' elements are supported.");
+        return false;
+    }
+}
+
+bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString value, bool noBlur)
+{
+    // Define some event triggering 'skeletons' to be used later.
+
+
+    // %1 is the event name (e.g. "keydown"), %2 is the char (e.g. "H"), %3 is the keyCode/charCode, %4 is whether shift is used (e.g. "true").
+    QString keyboardEventJS = QString("var ArtemisKeyboardEvent = document.createEvent('Events');"
+                                      "ArtemisKeyboardEvent.initEvent('%1', true, true);"
+                                      "ArtemisKeyboardEvent.key = '%2';"
+                                      "ArtemisKeyboardEvent.char = '%2';"
+                                      "ArtemisKeyboardEvent.keyCode = %3;"
+                                      "ArtemisKeyboardEvent.charCode = %3;"
+                                      "ArtemisKeyboardEvent.which = %3;"
+                                      "ArtemisKeyboardEvent.shiftKey = %4;"
+                                      "this.dispatchEvent(ArtemisKeyboardEvent);");
+
+    QString inputEventJS = QString("var ArtemisInputEvent = document.createEvent('InputEvent');"
+                                   "ArtemisInputEvent.initEvent('input', true, false);"
+                                   "this.dispatchEvent(ArtemisInputEvent);");
+
+    // %1 is ther value to inject.
+    QString injectionJS = QString("this.value = \"%1\";");
+
+    // First clear the field's contents
+    // TODO: Simulate this as well.
+    element.evaluateJavaScript(injectionJS.arg(""));
+
+    // TODO: These events do not have the appropriate parameters or even event types.
+    triggerHandler(element, "focus");
+    //triggerHandler(element, "click");
+    //triggerHandler(element, "select");
+
+    // Type the input charachter-by-character:
+    for (int i = 0; i < value.length(); i++) {
+        bool isCap = value[i].isUpper();
+        QString shiftKey = "false";
+        if (isCap) {
+            shiftKey = "true";
+            // Send 'Shift' keydown event.
+            element.evaluateJavaScript(keyboardEventJS.arg("keydown", "", "16", "false"));
+        }
+
+        QString charCode = QString::number(value[i].toAscii());
+        QString charCodeUC = QString::number(value[i].toUpper().toAscii());
+
+        // Send keydown event
+        element.evaluateJavaScript(keyboardEventJS.arg("keydown", value.at(i), charCodeUC, shiftKey));
+
+        // Send keypress event
+        //qDebug() << keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey);
+        element.evaluateJavaScript(keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey));
+
+        // Inject the input
+        element.evaluateJavaScript(injectionJS.arg(value.left(i+1)));
+
+        // Send input event
+        element.evaluateJavaScript(inputEventJS);
+
+        // Send keyup event
+        element.evaluateJavaScript(keyboardEventJS.arg("keyup", value.at(i), charCodeUC, shiftKey));
+
+        if (isCap) {
+            // Send 'Shift' keyup event.
+            element.evaluateJavaScript(keyboardEventJS.arg("keyup", "", "16", "false"));
+        }
+    }
+
+    // TODO: These events do not have the appropriate parameters or even event types.
+    triggerHandler(element, "change");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
+
+    return true;
+}
+
+bool FormFieldInjector::simulateBooleanFieldFilling(QWebElement element, InjectionValue value, bool noBlur)
+{
+    // TODO: These events do not have the appropriate parameters or even event types.
+
+    triggerHandler(element, "focus");
+    triggerHandler(element, "click");
+    bool result = inject(element, value);
+    triggerHandler(element, "change");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
+
+    return result;
+}
+
+bool FormFieldInjector::simulateSelectBoxFilling(QWebElement element, InjectionValue value, bool noBlur)
+{
+    // TODO: These events do not have the appropriate parameters or even event types.
+
+    triggerHandler(element, "focus");
+    bool result = inject(element, value);
+    triggerHandler(element, "change");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
+
+    return result;
+}
+
+
+
+void FormFieldInjector::triggerHandler(QWebElement element, QString eventName)
+{
+    // eventName should be "change", "focus", etc. not "onchange", "onfocus", ...
+
+    if (element.isNull()) {
+        qDebug() << "Warning: failed to trigger event handler.\n";
+        return;
+    }
+
+    // TODO: Strictly we should create an appropriate event type as listed in:
+    // https://developer.mozilla.org/en-US/docs/Web/Events
+    // https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent#Notes
+    // For now we use generic "Event".
+    QString eventType = "Event";
+    QString eventInitMethod = "initEvent";
+
+    QString bubbles = "true";
+    QString cancellable = "true";
+
+    QString jsInjection = QString("var event = document.createEvent('%1'); event.%2('%3', %4, %5); this.dispatchEvent(event);").arg(eventType, eventInitMethod, eventName, bubbles, cancellable);
+    element.evaluateJavaScript(jsInjection);
+}
 
 
 void FormFieldInjector::triggerChangeHandler(QWebElement element)
 {
+    triggerHandler(element, "change");
+}
+
+void FormFieldInjector::guiPressEnter(QWebElement element)
+{
     if (element.isNull()) {
-        qDebug() << "Warning: failed to trigger input handler.\n";
+        qDebug() << "Warning: failed to press enter on null element.\n";
         return;
     }
 
-    QString jsInjection = "event = document.createEvent('HTMLEvents'); event.initEvent('change', false, true); this.dispatchEvent(event);";
-    element.evaluateJavaScript(jsInjection);
+    // TODO: Sending a real GUI event does not do anything.
+
+    //QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    //QKeyEvent release(QEvent::KeyRelease, Qt::Key_Return, Qt::NoModifier);
+
+    //element.setFocus();
+    //webView->event(&press);
+    //webView->event(&release);
+
+    element.evaluateJavaScript("this.form.submit()");
 }
+
+
+
 
 
 } // namespace artemis

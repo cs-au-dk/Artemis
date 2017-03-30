@@ -20,6 +20,7 @@
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "strategies/inputgenerator/targets/concolictarget.h"
+#include "symbolic/symbolicinterpreter.h"
 
 #include "artemisruntime.h"
 
@@ -41,11 +42,13 @@ ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QU
     mWebView->setPage(mWebkitExecutor->getPage().data());
     mWebView->forceResize(1200,800); // TODO: Pull size from mOptions.
 
+    // Enable symbolic target support for ConcolicTargetGenerator to use.
+    Symbolic::SymbolicInterpreter::setFeatureSymbolicEventTargetEnabled(true);
+    
     // If the load-new-urls option is set, we need to log scheduled page loads.
     if (mOptions.artemisLoadUrls) {
         QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                          this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
-        mWebkitExecutor->getPage()->mAcceptNavigation = false;
     }
 }
 

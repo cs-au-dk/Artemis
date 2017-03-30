@@ -38,7 +38,18 @@ public:
     // Returns whether the injection was successful or not.
     static bool inject(QWebElement element, InjectionValue value);
 
+    static bool injectAndTriggerChangeHandler(QWebElement element, InjectionValue value);
+    static bool injectWithEventSimulation(QWebElement element, InjectionValue value, bool noBlur);
+
+    static void triggerHandler(QWebElement element, QString eventName);
     static void triggerChangeHandler(QWebElement element);
+
+    static void guiPressEnter(QWebElement element);
+
+protected:
+    static bool simulateTextFieldFilling(QWebElement element, QString value, bool noBlur);
+    static bool simulateBooleanFieldFilling(QWebElement element, InjectionValue value, bool noBlur);
+    static bool simulateSelectBoxFilling(QWebElement element, InjectionValue value, bool noBlur);
 };
 
 

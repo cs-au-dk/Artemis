@@ -41,6 +41,7 @@ void ExecutionResultBuilder::reset()
 {
     mResult = QSharedPointer<ExecutionResult>(new ExecutionResult());
     mElementPointers.clear();
+    mTargetObjects.clear();
     mPageStateAfterLoad = QString("");
 }
 
@@ -77,6 +78,13 @@ QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
 
 void ExecutionResultBuilder::registerEventHandlersIntoResult()
 {
+    mResult->mEventHandlers = getCurrentEventHandlers();
+}
+
+QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHandlers()
+{
+    QList<EventHandlerDescriptorConstPtr> handlerList;
+
     QList<QWebElement> userClickableElements;
     if (mEnableEventVisibilityFiltering) {
         userClickableElements = mPage->getAllUserClickableElementsAndAncestors();
@@ -90,12 +98,12 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         }
 
         if (p.first->isNull()) {
-            qWarning() << "Got event handler with NULL element. Assuming document is reciever";
+            qWarning() << "Got event handler with NULL element." << mTargetObjects[p.first] << "is reciever.";
         }
 
         qDebug() << "Finalizing " << p.second << " xpath=" << p.first->xPath() << " _T: "
                  << p.first->attribute(QString("title"));
-        EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second));
+        EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second, mTargetObjects[p.first]));
 
         if (handler->isInvalid()) {
             qWarning() << "element was invalid, skipping";
@@ -110,7 +118,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
             // TODO: There are three visibility check methods available to use here.
             // !userClickableElements.contains(actualSource)    - Checks if the viewport includes a pixel of this element (slow and only works in the viewport).
             // !actualSource.isUserVisible()                    - Checks if the element has a bounding box.
-            // !actualSource.isUserVisibleIncludingChildren()   - As above bu including children and text nodes.
+            // !actualSource.isUserVisibleIncludingChildren()   - As above but including children and text nodes.
             // The ideal solution would be some combination of these.
 
             if (!userClickableElements.contains(actualSource)) {
@@ -127,10 +135,11 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         }
 
         Statistics::statistics()->accumulate("WebKit::events::added", 1);
-        mResult->mEventHandlers.append(handler);
+        handlerList.append(handler);
 
     }
 
+    return handlerList;
 }
 
 void ExecutionResultBuilder::registerFromFieldsIntoResult()
@@ -139,7 +148,7 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
 
     foreach(QWebFrame* frame, getAllFrames()) {
         // Gather all form field elements.
-        // We select them all at once so we can maintain the DOM ordering of the form filds list.
+        // We select them all at once so we can maintain the DOM ordering of the form fields list.
         foreach(QWebElement field, frame->findAllElements("input, textarea, select")) {
             if(field.tagName().toLower() == "input") {
                 FormFieldTypes type =  getTypeFromAttr(field.attribute("type"));
@@ -210,7 +219,7 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
 
 /** LISTENERS **/
 
-void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName)
+void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName, QString targetObject)
 {
     Q_CHECK_PTR(elem);
 
@@ -228,6 +237,7 @@ void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eve
     }
 
     mElementPointers.append(QPair<QWebElement*, QString>(elem, eventName));
+    mTargetObjects.insert(elem, targetObject);
 }
 
 void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString name)
@@ -241,6 +251,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
     }
 
     mElementPointers.removeAt(mElementPointers.indexOf(QPair<QWebElement*, QString>(elem, name)));
+    mTargetObjects.remove(elem);
     delete elem; //TODO look at these elements (QWebElements) and delete them when they are removed from the list
 }
 

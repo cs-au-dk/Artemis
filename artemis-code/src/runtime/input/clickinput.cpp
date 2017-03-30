@@ -16,12 +16,12 @@
 
 #include <assert.h>
 
-#include <QApplication>
-#include <QMouseEvent>
 #include <QWebElement>
 #include <QWebElementCollection>
 #include <QWebFrame>
 #include <QHash>
+
+#include "clicksimulator.h"
 
 #include "clickinput.h"
 
@@ -39,84 +39,16 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
 
     mFormInput->writeToPage(page);
 
-    // Trigger event
+    // Look up the element and trigger the event
 
-    // TODO: This code is duplicated in DemoModeMainWindow.
-
-    // Find the element on the page (by injecting JS to do the XPath lookup)
-
-    QWebElement document = page->currentFrame()->documentElement();
-    QString escapedXPath(mTargetXPath);
-    escapedXPath.replace('"', "\\\"");
-    QString jsInjection = QString("var ArtFormButtons = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ArtFormButtons.snapshotLength; i++){ ArtFormButtons.snapshotItem(i).setAttribute('artformbutton', 'true'); };").arg(escapedXPath);
-    document.evaluateJavaScript(jsInjection, QUrl(), true);
-    // TODO: look into whether we could read any useful results from this call.
-
-    QWebElementCollection matches = document.findAll("*[artformbutton]");
-
-    // Check that the result exists and is unique.
-    if(matches.count() != 1){
-        Log::fatal(QString("Error: The manual entry point XPath specified found %1 elements; there should be exactly 1.").arg(matches.count()).toStdString());
-        exit(1);
-    }
-    QWebElement targetElement = matches.at(0);
-
-    // Find the coordinates of the element
-    // For some reason targetElement.geometry().center(); does not seem to update correctly if the button moves during
-    // the injection, so we are forced to pull the position from JavaScript. See issue #110.
-    // We also can't simply use getBoundingClientRect() as this is only relative to the viewport.
-    QVariant clickPoint = targetElement.evaluateJavaScript("function findPos(obj) { var l=t=0; do { l+=obj.offsetLeft; t+=obj.offsetTop; }while(obj=obj.offsetParent); return [l,t]; } bb=this.getBoundingClientRect(); width=bb.right-bb.left; height=bb.bottom-bb.top; absPos=findPos(this); clickX=absPos[0] + width/2; clickY = absPos[1] + height/2; [Math.floor(clickX), Math.floor(clickY)];");
-    QPoint targetCoords = QPoint(clickPoint.toList()[0].toInt(), clickPoint.toList()[1].toInt());
-
-    QSize viewportSize = page->viewportSize();
-
-    Log::debug(QString("ClickInput: Clicking on coordinates (%1, %2) for XPath query \"%3\"").arg(targetCoords.x()).arg(targetCoords.y()).arg(mTargetXPath).toStdString());
-    Log::debug(targetElement.toOuterXml().toStdString());
-    Log::debug((QString("Dimensions of web view are X: ") + QString::number(viewportSize.width()) + " Y: " + QString::number(viewportSize.height()) + " Scrollbar position is X: " + QString::number(page->mainFrame()->scrollBarValue(Qt::Horizontal)) + " Y:" + QString::number(page->mainFrame()->scrollBarValue(Qt::Vertical))).toStdString());
-
-    if ((viewportSize.width() + page->mainFrame()->scrollBarValue(Qt::Horizontal)) < targetCoords.x() ||
-        (viewportSize.height() + page->mainFrame()->scrollBarValue(Qt::Vertical)) < targetCoords.y()) {
-
-        Log::debug("Target outside viewport, repositioning");
-
-        int xScroll = std::min(
-            page->mainFrame()->contentsSize().width() - viewportSize.width(), // scroll to the far left
-            std::max(
-                0, // don't scroll
-                targetCoords.x() - (viewportSize.width() / 2)
-            )
-        );
-
-        page->mainFrame()->setScrollBarValue(Qt::Horizontal, xScroll);
-
-        int yScroll = std::min(
-            page->mainFrame()->contentsSize().height() - viewportSize.height(), // scroll to the bottom
-            std::max(
-                0, // don't scroll
-                targetCoords.y() - (viewportSize.height() / 2)
-            )
-        );
-
-        page->mainFrame()->setScrollBarValue(Qt::Vertical, yScroll);
-
-        targetCoords = QPoint(targetCoords.x() - xScroll, targetCoords.y() - yScroll);
-
-        Log::debug(QString("ClickInput: Changed coordinates to (%1, %2)").arg(targetCoords.x()).arg(targetCoords.y()).toStdString());
-
+    QWebElement target = page->getSingleElementByXPath(mTargetXPath);
+    if (target.isNull()) {
+        Log::error("ClickInput: Tried to click target XPath which could not be identified.");
+        return;
     }
 
-    targetElement.setFocus();
-
-    // Click the target element's coordinates.
-
-    QMouseEvent mouseButtonPress(QEvent::MouseButtonPress, targetCoords, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QApplication::sendEvent(page.data(), &mouseButtonPress);
-    //assert(mouseButtonPress.isAccepted());
-
-    QMouseEvent mouseButtonRelease(QEvent::MouseButtonRelease, targetCoords, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QApplication::sendEvent(page.data(), &mouseButtonRelease);
-    //assert(mouseButtonRelease.isAccepted());
-
+    ClickSimulator::clickByGuiSimulation(target, page);
+    return;
 }
 
 BaseInputConstPtr ClickInput::getPermutation(const FormInputGeneratorConstPtr &formInputGenerator, const EventParameterGeneratorConstPtr &eventParameterGenerator, const TargetGeneratorConstPtr &targetGenerator, const ExecutionResultConstPtr &result) const

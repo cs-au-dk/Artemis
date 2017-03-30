@@ -32,6 +32,7 @@
 #include "runtime/browser/webkitexecutor.h"
 #include "runtime/browser/executionresult.h"
 #include "runtime/browser/cookies/immutablecookiejar.h"
+#include "runtime/browser/cookies/resettablecookiejar.h"
 #include "runtime/executableconfiguration.h"
 #include "runtime/appmodel.h"
 
@@ -74,8 +75,8 @@ protected:
 private:
     QString* mHeapReport;
 
-private slots:
-    void slAbortedExecution(QString reason);
+protected slots:
+    virtual void slAbortedExecution(QString reason);
 
 signals:
     void sigTestingDone();

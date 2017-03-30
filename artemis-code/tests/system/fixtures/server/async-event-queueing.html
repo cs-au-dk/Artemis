@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    
+    <script type="text/javascript">
+        /*
+            The idea of this test is to simulate race conditions between timers or AJAX requests on the page.
+            
+            If Artemis queues and fires the events deterministically we should get a well-known order of execution.
+        */
+        
+        window.addEventListener("load", function() {
+            var status = document.getElementById("status");
+            status.textContent += "Load; "
+            
+            var elt_a = document.getElementById("click-a");
+            var elt_b = document.getElementById("click-b");
+            var elt_c = document.getElementById("click-c");
+            var elt_d = document.getElementById("click-d");
+            
+            // Standard timeouts
+            window.setTimeout(function() {
+                status.textContent += "Timeout-0; "
+            }, 0)
+            window.setTimeout(function() {
+                status.textContent += "Timeout-100; "
+            }, 100)
+            window.setTimeout(function() {
+                status.textContent += "Timeout-500; "
+            }, 500)
+            window.setTimeout(function() {
+                status.textContent += "Timeout-2000; "
+            }, 2000)
+            
+            // Interval timers
+            var intervalCount = 1;
+            var intervalId = window.setInterval(function() {
+                status.textContent += "Interval-500 ["+intervalCount+"/5]; "
+                intervalCount++;
+                if (intervalCount > 5) {
+                    window.clearInterval(intervalId);
+                }
+            }, 500)
+            
+            var intervalCount2 = 1;
+            var intervalId2 = window.setInterval(function() {
+                status.textContent += "Interval-2-500 ["+intervalCount2+"/2]; "
+                intervalCount2++;
+                if (intervalCount2 > 2) {
+                    window.clearInterval(intervalId2);
+                }
+            }, 500)
+            
+            // AJAX requests
+            var xhr_connection_fail_reported = false
+            function slow_xhr_custom(timeout, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://localhost:8098/slow-response/" + timeout, true);
+                xhr.onload = callback;
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == XMLHttpRequest.DONE && this.status == 0 && !xhr_connection_fail_reported) {
+                        xhr_connection_fail_reported = true;
+                        alert("XHR connection failed");
+                        status.textContent += "XHR connection failed; "
+                    }
+                };
+                xhr.send();
+            }
+            function slow_xhr(timeout, message) {
+                slow_xhr_custom(timeout, function () {
+                    status.textContent += message;
+                });
+            }
+            slow_xhr(0, "XHR-0; ");
+            slow_xhr(100, "XHR-100; ");
+            slow_xhr(500, "XHR-500; ");
+            slow_xhr(1000, "XHR-1000; ");
+            
+            
+            // Event handlers, including new async events.
+            elt_a.addEventListener("click", function() {
+                status.textContent += "Click-A; ";
+                
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-A-100; ";
+                    slow_xhr(100, "XHR-A-100 [From T-100]; ");
+                }, 100)
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-A-200; ";
+                    slow_xhr(200, "XHR-A-200 [From T-200]; ");
+                }, 200)
+                
+                slow_xhr_custom(500, function() {
+                    status.textContent += "XHR-A-500; ";
+                    window.setTimeout(function() {
+                        status.textContent += "Timeout-A-100 [From X-500]; ";
+                    }, 100);
+                });
+                
+            });
+            
+            elt_b.addEventListener("click", function() {
+                status.textContent += "Click-B; ";
+                
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-B-100; ";
+                }, 100)
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-B-200; ";
+                }, 200)
+                
+                slow_xhr_custom(100, function() {
+                    status.textContent += "XHR-B-Recursive-100 [1/5]; ";
+                    slow_xhr_custom(100, function() {
+                        status.textContent += "XHR-B-Recursive-100 [2/5]; ";
+                        slow_xhr_custom(100, function() {
+                            status.textContent += "XHR-B-Recursive-100 [3/5]; ";
+                            slow_xhr_custom(100, function() {
+                                status.textContent += "XHR-B-Recursive-100 [4/5]; ";
+                                slow_xhr_custom(100, function() {
+                                    status.textContent += "XHR-B-Recursive-100 [5/5]; ";
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            
+            elt_c.addEventListener("click", function() {
+                status.textContent += "Click-C; ";
+                
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-C-200; ";
+                }, 200)
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-C-100; ";
+                }, 100)
+                
+                slow_xhr(200, "XHR-C-200; ");
+                slow_xhr(100, "XHR-C-100; ");
+            });
+            
+            elt_d.addEventListener("click", function() {
+                status.textContent += "Click-D; ";
+                
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-D-Nested-100 [1/5]; ";
+                    window.setTimeout(function() {
+                        status.textContent += "Timeout-D-Nested-100 [2/5]; ";
+                        window.setTimeout(function() {
+                            status.textContent += "Timeout-D-Nested-100 [3/5]; ";
+                            window.setTimeout(function() {
+                                status.textContent += "Timeout-D-Nested-100 [4/5]; ";
+                                window.setTimeout(function() {
+                                    status.textContent += "Timeout-D-Nested-100 [5/5]; ";
+                                }, 100)
+                            }, 100)
+                        }, 100)
+                    }, 100)
+                }, 100)
+            });
+            
+            status.textContent += "Load-finished; "
+        });
+        
+    </script>
+    
+</head>
+<body>
+    <ul>
+        <li><a id="click-a" >Click A</a></li>
+        <li><a id="click-b" >Click B</a></li>
+        <li><a id="click-c" >Click C</a></li>
+        <li><a id="click-d" >Click D</a></li>
+    </ul>
+    
+    <p>Async events: <span id="status"></span></p>
+</body>
+</html>

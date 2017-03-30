@@ -93,9 +93,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
 
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
 
-    ImmutableCookieJar* immutableCookieJar = new ImmutableCookieJar(
-        options.presetCookies, url.host());
-    ajaxRequestListner->setCookieJar(immutableCookieJar);
+    QNetworkCookieJar* cookieJar;
+    if (mOptions.saveCookiesForSession) {
+        cookieJar = new ResettableCookieJar(options.presetCookies, url.host());
+    } else {
+        cookieJar = new ImmutableCookieJar(options.presetCookies, url.host());
+    }
+    ajaxRequestListner->setCookieJar(cookieJar);
 
     /** JQuery support **/
 

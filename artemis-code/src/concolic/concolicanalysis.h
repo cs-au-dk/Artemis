@@ -130,9 +130,10 @@ public:
     TraceNodePtr getExecutionTree();
     uint getExplorationIndex();
 
+    void setName(QString name);
 
 signals:
-    void sigExecutionTreeUpdated(TraceNodePtr tree);
+    void sigExecutionTreeUpdated(TraceNodePtr tree, QString name);
 
 protected:
 
@@ -171,6 +172,8 @@ protected:
     void concolicRuntimeInfo(QString message);
     void concolicRuntimeDebug(QString message);
 
+    // The name for this concolic analysis is never used, but is passed out in sigExecutionTreeUpdated.
+    QString mConcolicAnalysisName;
 };
 
 typedef QSharedPointer<ConcolicAnalysis> ConcolicAnalysisPtr;

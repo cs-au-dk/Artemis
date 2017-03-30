@@ -2,8 +2,8 @@ ARCH := $(shell uname -m)
 
 help:
 	@echo "Targets:"
-	@echo "    all                          - Build webkit,  artemis, and the constraint solver"
-	@echo "    all-debug                    - Build webkit (debug),  artemis, and the constraint solver"
+	@echo "    all                          - Build webkit,  artemis, the constraint solver, and QHttpServer"
+	@echo "    all-debug                    - Build webkit (debug),  artemis, the constraint solver, and QHttpServer"
 	@echo "    all-clean                    - Cleans WebKit (debug and normal) and Artemis"
 	@echo ""
 	@echo "    webkit-minimal[-debug]       - Build a minimal WebKit Qt port [with debug info]"
@@ -15,6 +15,7 @@ help:
 	@echo "    artemis-format-code          - Format artemis code"
 	@echo ""
 	@echo "    constraintsolver             - Build the constraint solver"
+	@echo "    qhttpserver                  - Build and install the QHttpServer library"
 	@echo ""
 	@echo "    fetch-[apt|yum]              - Fetch dependencies from [apt|yum]"
 	@echo "    fetch-qt                     - Fetch, configure and makes Qt 4.8.x"
@@ -25,17 +26,18 @@ WEBKIT_TEST_SCRIPT = ./WebKit/Tools/Scripts/run-javascriptcore-tests --qmakearg=
 
 CONTRIB_Z3 = ./contrib/Z3
 CONTRIB_Z3_STR = ./contrib/Z3-str
+CONTRIB_QHTTPSERVER = ./contrib/QHttpServer
 
 build: check webkit-minimal artemis
 
-all: webkit-minimal constraintsolver artemis
-all-debug: webkit-minimal-debug constraintsolver artemis
+all: webkit-minimal constraintsolver qhttpserver artemis
+all-debug: webkit-minimal-debug constraintsolver qhttpserver artemis
 all-clean: webkit-clean webkit-clean-debug artemis-clean 
 
 webkit-jscore-test:
 	${WEBKIT_TEST_SCRIPT}
 
-webkit-minimal: check check-env check-sys
+webkit-minimal:	check check-env check-sys
 	@if test -d "./WebKit/WebKitBuild/Debug"; then \
 		rm -f ./WebKit/WebKitBuild/Release; \
 		rm -rf ./WebKit/WebKitBuild/Debug; \
@@ -81,6 +83,12 @@ constraintsolver:
 
 	cd ${CONTRIB_Z3_STR}; make
 
+qhttpserver:
+	cd ${CONTRIB_QHTTPSERVER}; qmake
+	cd ${CONTRIB_QHTTPSERVER}; make
+	cd ${CONTRIB_QHTTPSERVER}; sudo make install
+	cd ${CONTRIB_QHTTPSERVER}; sudo ldconfig
+
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"
 	which g++ > /dev/null
@@ -105,9 +113,9 @@ ifneq ($(ARCH),x86_64)
 	@exit 1
 endif
 
-DEPENDENCIES = g++ g++-4.7 flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 php5-sqlite sqlite3 qt4-qmake libqt4-core  autoconf dos2unix python-nose graphviz libqt4-dev libqt4-core libqt4-gui libqt4-opengl libqt4-opengl-dev xdot
+DEPENDENCIES = g++ g++-4.7 flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 php5-sqlite sqlite3 qt4-qmake libqt4-core  autoconf dos2unix python-nose graphviz libqt4-dev libqt4-core libqt4-gui libqt4-opengl libqt4-opengl-dev xdot libqjson0 libqjson-dev
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php php-devel perl-Tk perl-Digest-MD5 autoconf dos2unix python-nose qt qt-devel glibc-static libstdc++-static python-xdot
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php php-devel perl-Tk perl-Digest-MD5 autoconf dos2unix python-nose qt qt-devel glibc-static libstdc++-static python-xdot qjson qjson-devel
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}

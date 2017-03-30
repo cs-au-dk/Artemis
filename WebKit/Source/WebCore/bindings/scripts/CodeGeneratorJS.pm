@@ -1838,14 +1838,15 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
 
-                        push(@implContent, "    Node* base = impl->currentTarget()->toNode();\n");
-                        push(@implContent, "    if (base != 0) {\n");
-
-                        push(@implContent, "        std::ostringstream sessionId;\n");
-                        push(@implContent, "        sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
-                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
-                        push(@implContent, "    }\n");
+                        push(@implContent, "    if (JSC::Interpreter::m_symbolic->isFeatureSymbolicEventTargetEnabled()) {\n");
+                        push(@implContent, "        Node* base = impl->currentTarget()->toNode();\n");
+                        push(@implContent, "        if (base != 0) {\n");
+                        push(@implContent, "            std::ostringstream sessionId;\n");
+                        push(@implContent, "            sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
+                        push(@implContent, "            Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
+                        push(@implContent, "            result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
+                        push(@implContent, "        }\n");
+                        push(@implContent, "    }\n\n");
                         # ARTEMIS END
                     }
 

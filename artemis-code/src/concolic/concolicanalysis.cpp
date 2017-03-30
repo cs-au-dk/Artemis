@@ -46,8 +46,12 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
 // Add a new trace to the tree.
 void ConcolicAnalysis::addTrace(TraceNodePtr trace, ExplorationHandle target)
 {
-    uint index = target.noExplorationTarget ? 1 : target.explorationIndex;
-    TraceIndexer::index(trace, index);
+    // If there is no exploration target we do not know the trace index, unless it is the initial trace.
+    // For these "unknown" traces, leave the index blank.
+    if (!target.noExplorationTarget || mExecutionTree.isNull()) {
+        uint index = target.noExplorationTarget ? 1 : target.explorationIndex;
+        TraceIndexer::index(trace, index);
+    }
 
     // If this is the first trace, then we need to intialise the tree and search procedure.
     // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
@@ -59,7 +63,7 @@ void ConcolicAnalysis::addTrace(TraceNodePtr trace, ExplorationHandle target)
         mergeTraceIntoTree(trace, target);
     }
 
-    emit sigExecutionTreeUpdated(mExecutionTree);
+    emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
 }
 
 // Initilises mSearchProcedure.
@@ -74,6 +78,8 @@ void ConcolicAnalysis::initSearchProcedure()
         mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mExecutionTree,
                                                              mOptions.concolicDfsDepthLimit,
                                                              mOptions.concolicDfsRestartLimit));
+        QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)),
+                         mSearchStrategy.dynamicCast<DepthFirstSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)));
         break;
 
     case SEARCH_SELECTOR:
@@ -244,7 +250,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
             concolicRuntimeInfo(QString("    %1").arg(solution->getUnsolvableReason()));
             concolicRuntimeDebug("Skipping this target!");
 
-            emit sigExecutionTreeUpdated(mExecutionTree);
+            emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
             canRetry = false;
 
         } else {
@@ -277,7 +283,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
         TreeManager::markNodeUnsat(target);
         concolicRuntimeInfo("  Constraint is UNSAT.");
         concolicRuntimeDebug("Skipping this target!");
-        emit sigExecutionTreeUpdated(mExecutionTree);
+        emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
     }
 
     return solution;
@@ -306,7 +312,7 @@ void ConcolicAnalysis::handleEmptyPC(ExplorationDescriptor target)
     concolicRuntimeInfo("    All branches on path were known to be difficult.");
     concolicRuntimeDebug("Skipping this target!");
 
-    emit sigExecutionTreeUpdated(mExecutionTree);
+    emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
 }
 
 
@@ -404,6 +410,11 @@ void ConcolicAnalysis::concolicRuntimeDebug(QString message)
     if (mOutput == CONCOLIC_RUNTIME) {
         Log::debug(message.toStdString());
     }
+}
+
+void ConcolicAnalysis::setName(QString name)
+{
+    mConcolicAnalysisName = name;
 }
 
 } //namespace artemis

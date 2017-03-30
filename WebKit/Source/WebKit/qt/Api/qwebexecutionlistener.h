@@ -89,12 +89,14 @@ public:
 
     void ajaxCallbackFire(int callbackId);
     void clearAjaxCallbacks();
+    void doNotCaptureAjaxCallbacks();
 
     void page_load_scheduled(const char* url);
 
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
     virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
     void timerFire(int timerId);
+    void timerCancel(int timerId);
     void clearTimers();
 
     void enableHeapReport(bool namedOnly, int heapReportNumber, int factor);
@@ -112,6 +114,7 @@ private:
 
     QMap<int, WebCore::LazyXMLHttpRequest*> m_ajax_callbacks;
     int m_ajax_callback_next_id;
+    bool m_do_not_capture_ajax_callbacks; // If set, the AJAX events are handled synchronously.
 
     QSourceRegistry m_sourceRegistry;
     QList<QString> m_heapReport;
@@ -119,7 +122,7 @@ private:
     int m_heapReportNumber;
     int m_heapReportFactor;
 signals:
-    void addedEventListener(QWebElement*, QString);
+    void addedEventListener(QWebElement*, QString, QString);
     void removedEventListener(QWebElement*, QString);
     void triggeredEventListener(QWebElement*, QString);
     

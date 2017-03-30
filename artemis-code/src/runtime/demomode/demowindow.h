@@ -70,7 +70,7 @@ private:
     // Artemis
     AppModelPtr mAppModel;
     ArtemisWebViewPtr mWebView;
-    ArtemisWebPage* mWebPage;
+    ArtemisWebPagePtr mWebPage;
     WebKitExecutor* mWebkitExecutor;
 
     // GUI

@@ -74,7 +74,7 @@ PathConditionPtr RandomAccessSearch::calculatePC(ExplorationDescriptor target)
 
     // Null parent marks the first symbolic branch on each trace.
     while (!current.first.isNull()) {
-        qDebug() << "Adding" << current << "Difficult:" << current.first->isDifficult();
+        //qDebug() << "Adding" << current << "Difficult:" << current.first->isDifficult();
 
         // Add the current node's condition to the PC.
         // We prepend so the resulting PC is given in root to leaf order, which is required.

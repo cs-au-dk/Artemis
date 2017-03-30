@@ -46,7 +46,7 @@ namespace artemis
 {
 
 enum SYMBOLIC_MODE {
-    MODE_CONCRETE, MODE_CONCOLIC_CONTINOUS, MODE_CONCOLIC, MODE_CONCOLIC_LAST_EVENT, MODE_CONCOLIC_NO_TRACE
+    MODE_CONCRETE, MODE_CONCOLIC_CONTINUOUS, MODE_CONCOLIC, MODE_CONCOLIC_LAST_EVENT, MODE_CONCOLIC_NO_TRACE
 };
 
 /**
@@ -72,6 +72,7 @@ public:
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
     void executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode);
+    void notifyNewSequence(bool noNewSymbolicSession = false);
     void detach();
 
     ArtemisWebPagePtr getPage();
@@ -79,7 +80,13 @@ public:
     TraceBuilder* getTraceBuilder();
     DomSnapshotStoragePtr getDomSnapshotStorage();
 
+    QList<EventHandlerDescriptorConstPtr> getCurrentEventHandlers();
+
     QWebExecutionListener* mWebkitListener; // TODO should not be public
+
+    QNetworkCookieJar* getCookieJar();
+
+    bool mIgnoreCancelledPageLoad;
 
 private:
 

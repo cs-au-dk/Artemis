@@ -61,8 +61,8 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
                      &mHandlerTracker, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
 
     // Link the ConcolicAnalysis signals.
-    QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr)),
-                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr)));
+    QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr, QString)),
+                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr, QString)));
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -229,7 +229,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
 
 
-void ConcolicRuntime::slExecutionTreeUpdated(TraceNodePtr tree)
+void ConcolicRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString name)
 {
     outputTreeGraph();
 }
@@ -823,6 +823,7 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
     }
 
     // Proper JSON support added in Qt5.0 unfortunately.
+    // TODO: Now that we include the QJson lib, this part could be rewritten with that instead.
     QString json = "{\n";
     //json += QString("  \"url\": \"%1\",\n").arg(mUrl.toString());
     json += QString("  \"entrypoint\": \"%1\",\n").arg(entryPoint);

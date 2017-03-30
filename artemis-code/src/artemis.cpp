@@ -69,6 +69,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           manual - open a browser window for manual testing of web applications\n"
             "           concolic - perform an automated concolic analysis of form validation code\n"
             "           concolic-test - perform a concolic analysis of standalone JavaScript snippets (for testing)\n"
+            "           server - provides an API to control the Artemis browser and report information\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -215,6 +216,15 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           The following built-in user agents can also be specified (case sensitive):\n"
             "           default, iphone4, ipad4, nexus5, chrome35\n"
             "\n"
+            "--analysis-server-port <port>\n"
+            "           The port the analysis server major-mode will listen on (default 8008).\n"
+            "\n"
+            "--analysis-server-debug-view\n"
+            "           The analysis server will display a (non-interactive) window showing the internal browser.\n"
+            "\n"
+            "--analysis-server-log\n"
+            "           The analysis server will dump a log of all commands and responses.\n"
+            "\n"
             "--testing-concolic-send-iteration-count-to-server\n"
             "           Only used as part of our test suite. Adds a query of ArtemisIteration=X to each URL in concolic mode.\n"
             "\n"
@@ -252,10 +262,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
+    {"analysis-server-port", required_argument, NULL, 'p'},
+    {"analysis-server-debug-view", no_argument, NULL, 'V'},
+    {"analysis-server-log", no_argument, NULL, 'K'},
     {"load-new-urls", required_argument, NULL, 'L'},
     {"concolic-test-mode-js", required_argument, NULL, 'J'},
     {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'M'},
-    {"event-delegation-testing", no_argument, NULL, 'K'},
+    {"event-delegation-testing", no_argument, NULL, 'N'},
     {0, 0, 0, 0}
     };
 
@@ -436,7 +449,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'K': {
-            options.delegationTestingMode = true;
+            options.analysisServerLog = true;
             break;
         }
 
@@ -463,8 +476,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::AUTOMATED;
             } else if (string(optarg).compare("manual") == 0) {
                 options.majorMode = artemis::MANUAL;
+                options.saveCookiesForSession = true;
             } else if (string(optarg).compare("concolic") == 0) {
                 options.majorMode = artemis::CONCOLIC;
+            } else if (string(optarg).compare("server") == 0) {
+                options.majorMode = artemis::ANALYSIS_SERVER;
+                options.saveCookiesForSession = true;
             } else if (string(optarg).compare("concolic-test") == 0) {
                 options.majorMode = artemis::CONCOLIC_TEST;
             } else {
@@ -496,13 +513,28 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
-        case 'o':{
+        case 'N': {
+            options.delegationTestingMode = true;
+            break;
+        }
+
+        case 'o': {
             if(string(optarg).compare("selenium") == 0){
                 options.exportEventSequence = artemis::EXPORT_SELENIUM;
             } else if(string(optarg).compare("json") == 0){
                 options.exportEventSequence = artemis::EXPORT_JSON;
             } else {
                 cerr << "ERROR: Invalid choice of export-event-sequnce " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+
+        case 'p': {
+            bool ok;
+            options.analysisServerPort = QString(optarg).toUShort(&ok);
+            if(!ok) {
+                cerr << "ERROR: Invalid choice of analysis-server-port " << optarg << endl;
                 exit(1);
             }
             break;
@@ -556,7 +588,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--input-strategy-same-length "
                              "--function-call-heap-report "
                              "--function-call-heap-report-random-factor "
-                             "--export-event-sequence";
+                             "--export-event-sequence "
+                             "--analysis-server-port ";
             }
 
             exit(0);
@@ -647,6 +680,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
            break;
        }
+
+        case 'V': {
+            options.analysisServerDebugView = true;
+            break;
+        }
 
         case 'w': {
             if (string(optarg).compare("ignore") == 0) {
@@ -847,6 +885,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             url = QUrl("about:blank");
         } else if (options.majorMode == artemis::MANUAL) { // If we are in manual mode then the url is optional.
             url = artemis::examplesIndexUrl();
+        } else if (options.majorMode == artemis::ANALYSIS_SERVER) { // If we are in server mode then the URL is optional.
+            url = QUrl("about:blank");
         } else {
             // In all other cases, a URL is required.
             cerr << "Error: You must specify a URL" << endl;
@@ -889,6 +929,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
     }
+
+    QStringList allArguments;
+    for (int i = 0; i < argc; i++) {
+        allArguments.append(argv[i]);
+    }
+    options.allArguments = allArguments.join(" ");
 
     return url;
 }

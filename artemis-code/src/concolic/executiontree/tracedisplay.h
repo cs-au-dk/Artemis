@@ -43,7 +43,7 @@ public:
     TraceDisplay(bool linkToCoverage);
 
     // The function which is called to generate the output.
-    QString makeGraph(TraceNodePtr tree, QString title);
+    QString makeGraph(TraceNodePtr tree, QString title = QString());
     void writeGraphFile(TraceNodePtr tree, QString &pathToFile, QString title = QString());
     void writeGraphFile(TraceNodePtr tree, QString &pathToFile, bool autoName, QString title = QString());
 

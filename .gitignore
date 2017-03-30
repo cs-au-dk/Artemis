@@ -36,3 +36,13 @@ WebKit/WebKit.pro.user*
 contrib/Kaluza/corecstrs.tmp*
 contrib/Kaluza/stderr
 contrib/Kaluza/stdout
+
+
+coverage.html
+handlers.gv
+tree*.gv
+traces*.html
+event*.gv
+graph*.gv
+server-log.txt
+server-tree-*.gv

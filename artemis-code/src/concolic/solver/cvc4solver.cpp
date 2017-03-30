@@ -65,7 +65,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     std::ofstream clog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
     std::ofstream constraintIndex("/tmp/constraintindex", std::ofstream::out | std::ofstream::app);
 
-    Log::info(QString("  Constraint file: %1").arg(identifier).toStdString());
+    Log::debug(QString("  Constraint file: %1").arg(identifier).toStdString());
 
     clog << "********************************************************************************" << std::endl;
     clog << "Identifier " << identifier.toStdString() << std::endl;
@@ -105,7 +105,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         return emitError(clog, "Could not find CVC4 binary.");
     }
 
-    Log::info("Solving...");
+    Log::debug("Solving...");
     QElapsedTimer timer;
 
     // --rewrite-divk enables div and mod by a constant factor
@@ -116,7 +116,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     // However we can use it to check whether the timeout script had to kill CVC4 or not.
 
     double time = (double)timer.elapsed()/1000;
-    Log::info(QString("  Took %1s").arg(time).toStdString());
+    Log::debug(QString("  Took %1s").arg(time).toStdString());
     Statistics::statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
     clog << "Duration: " << time << "s" << std::endl;
 

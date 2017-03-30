@@ -57,7 +57,8 @@ public:
     void setCustomUserAgent(QString ua);
     QString userAgentForUrl ( const QUrl & url ) const;
 
-    bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
+    QWebElement getSingleElementByXPath(QString xPath);
+    QWebElementCollection getElementsByXPath(QString xPath);
 
     // This is an *extremely slow* brute-force method of checking user-visibility of elements.
     QList<QWebElement> getAllUserClickableElements();

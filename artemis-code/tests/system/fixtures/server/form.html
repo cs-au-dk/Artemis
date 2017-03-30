@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        function validate(id) {
+            x = document.getElementById(id);
+            if (x.value != "testme") {
+                alert("Field '" + id + "' should be set to 'testme'.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Button handlers read different form fields</h1>
+
+    <form action="" method="GET" >
+        <input type="text" id="first" onchange="validate('first')" ><br>
+        <input type="text" id="second" onchange="validate('second')" ><br>
+        <br>
+        <button type="button" onclick="validate('first')" >Validate first</button><br>
+        <button type="button" onclick="validate('second')" >Validate second</button><br>
+        <button type="button" onclick="validate('first'); validate('second')" >Validate both</button><br>
+    </form>
+
+</body>
+</html>

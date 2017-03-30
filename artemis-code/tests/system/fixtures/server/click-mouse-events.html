@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function() {
+            
+            var status = document.getElementById("status");
+            
+            var btn = document.getElementById("button");
+            var btn2 = document.getElementById("button-below-fold");
+            
+            var evts = ["mousedown", "mouseup", "mouseover", "mouseout", "mousemove", "click", "focus", "blur"];
+            
+            evts.forEach(function (event, idx, arr) {
+                
+                btn.addEventListener(event, function (e) {
+                    status.textContent += event + " "
+                }, false);
+                
+            });
+            
+            btn2.addEventListener("click", function (e) {
+                status.textContent += "below-fold-click "
+            }, false);
+            
+        }
+        
+    </script>
+</head>
+<body>
+
+    <h1>Mouse event testing</h1>
+    <hr>
+    <p>Mouse events: <span id="status"></span></p>
+    <hr>
+
+    <button id="button" >Test button</button>
+
+    <hr style="margin-top: 1500px;" >
+    <button id="button-below-fold" >Below the fold button</button>
+
+</body>
+</html>
