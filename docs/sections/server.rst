@@ -585,6 +585,39 @@ Commands
     
     Receive: ``{ "evaluatejs": "done" }``
     
+* ``setsymbolicvalues``
+    Sets the internal symbolic values of variables accessed via ``artemisInputBoolean()``, ``artemisInputInteger()``,
+    and ``artemisInputString()``. This can be used for testing the internal concolic engine of the platform.
+    For normal testing of web pages the ``forminput`` command should be used instead for concolic testing.
+    
+    The ``values`` parameter is a mapping from variable names (strings) to values, whihc may be strings, integers or
+    booleans.
+    
+    The ``reset`` parameter is optional, and if set to ``true``, the internal symbolic value table will be cleared
+    before setting these replacement values.
+    
+    Send::
+    
+        {
+            "command": "setsymbolicvalues",
+            "values": {
+                    "X": "Hello",
+                    "Y": 123,
+                    "Z": true
+                },
+            "reset": true
+        }
+    
+    Receive: ``{ "setsymbolicvalues": "done" }``
+    
+    Now a call like the following would update the DOM with the injected symbolic values::
+    
+        {
+            "command": "evaluatejs",
+            "js": "document.getElementById('status').textContent = artemisInputString('X') + ' ' + artemisInputInteger('Y') + ' ' + artemisInputBoolean('Z');"
+        }
+    
+
 
 
 

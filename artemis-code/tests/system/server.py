@@ -2600,11 +2600,11 @@ Your email address is: test@example.com
         self.assertIn("error", click_response)
     
     def test_evaluate_js_command(self):
-        self.loadFixture("click.html")
+        self.loadFixture("empty.html")
         
         eval_message = {
                 "command": "evaluatejs",
-                "js": "document.getElementById('clickable').click()"
+                "js": "document.getElementById('status').textContent = 'TESTING'"
             }
         
         eval_resonse = send_to_server(eval_message)
@@ -2613,15 +2613,122 @@ Your email address is: test@example.com
         self.assertIn("evaluatejs", eval_resonse)
         self.assertEqual(eval_resonse["evaluatejs"], u"done")
         
-        # Use the handlers command to confirm the click worked.
-        handlers_message = {
-                "command": "handlers"
+        self.assertStatusElementContains("TESTING")
+    
+    def test_set_symbolic_values_command(self):
+        self.loadFixture("empty.html")
+        
+        # First check the default symbolic value.
+        check_sym_values_message = {
+                "command": "evaluatejs",
+                "js": "document.getElementById('status').textContent = artemisInputString('mystr') + ' ' + artemisInputInteger('mynum') + ' ' + artemisInputBoolean('myflag');"
             }
         
-        handlers_response = send_to_server(handlers_message)
+        check_sym_values_resonse_1 = send_to_server(check_sym_values_message)
+        self.assertNotIn("error", check_sym_values_resonse_1)
         
-        self.assertIn("handlers", handlers_response)
-        self.assertEqual(len(handlers_response["handlers"]), 2)
+        self.assertStatusElementContains(" 0 false")
+        
+        # Now, do the injection
+        inject_message = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "testme",
+                    "mynum": 123,
+                    "myflag": True
+                }
+            }
+        
+        inject_resonse = send_to_server(inject_message)
+        
+        self.assertNotIn("error", inject_resonse)
+        self.assertIn("setsymbolicvalues", inject_resonse)
+        self.assertEqual(inject_resonse["setsymbolicvalues"], u"done")
+        
+        # Finally, check the updated symbolic value can be read back
+        check_sym_values_resonse_2 = send_to_server(check_sym_values_message)
+        self.assertNotIn("error", check_sym_values_resonse_2)
+        
+        self.assertStatusElementContains("testme 123 true")
+    
+    def test_set_symbolic_values_command_reset(self):
+        self.loadFixture("empty.html")
+        
+        # The initial injection
+        inject_message_1 = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "testme",
+                    "mynum": 123,
+                    "myflag": True
+                }
+            }
+        
+        inject_resonse_1 = send_to_server(inject_message_1)
+        self.assertNotIn("error", inject_resonse_1)
+        
+        # Now overwrite one of the values, with a reset of the whole internal symbolic value table.
+        inject_message_2 = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "secondstring"
+                },
+                "reset": True
+            }
+        
+        inject_resonse_2 = send_to_server(inject_message_2)
+        self.assertNotIn("error", inject_resonse_2)
+        
+        # The old values are cleared.
+        check_sym_values_message = {
+                "command": "evaluatejs",
+                "js": "document.getElementById('status').textContent = artemisInputString('mystr') + ' ' + artemisInputInteger('mynum') + ' ' + artemisInputBoolean('myflag');"
+            }
+        
+        check_sym_values_resonse = send_to_server(check_sym_values_message)
+        self.assertNotIn("error", check_sym_values_resonse)
+        
+        self.assertStatusElementContains("secondstring 0 false")
+        
+    
+    def test_set_symbolic_values_command_no_reset(self):
+        self.loadFixture("empty.html")
+        
+        # The initial injection
+        inject_message_1 = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "testme",
+                    "mynum": 123,
+                    "myflag": True
+                }
+            }
+        
+        inject_resonse_1 = send_to_server(inject_message_1)
+        self.assertNotIn("error", inject_resonse_1)
+        
+        # Now overwrite one of the values, leaving the existing values as-is.
+        inject_message_2 = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "secondstring"
+                }
+                # "reset": False is the default.
+            }
+        
+        inject_resonse_2 = send_to_server(inject_message_2)
+        self.assertNotIn("error", inject_resonse_2)
+        
+        # The old values are not cleared.
+        check_sym_values_message = {
+                "command": "evaluatejs",
+                "js": "document.getElementById('status').textContent = artemisInputString('mystr') + ' ' + artemisInputInteger('mynum') + ' ' + artemisInputBoolean('myflag');"
+            }
+        
+        check_sym_values_resonse = send_to_server(check_sym_values_message)
+        self.assertNotIn("error", check_sym_values_resonse)
+        
+        self.assertStatusElementContains("secondstring 123 true")
     
 
 

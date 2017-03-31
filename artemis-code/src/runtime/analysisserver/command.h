@@ -296,6 +296,23 @@ public:
 
 typedef QSharedPointer<EvaluateJsCommand> EvaluateJsCommandPtr;
 
+// Command to add entries to the internal symbolic values table (used for testing standalone JavaScript).
+class SetSymbolicValuesCommand : public Command
+{
+public:
+    SetSymbolicValuesCommand(QMap<QString, QVariant> values, bool reset)
+        : values(values)
+        , reset(reset)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QMap<QString, QVariant> values;
+    bool reset;
+};
+
+typedef QSharedPointer<SetSymbolicValuesCommand> SetSymbolicValuesCommandPtr;
+
+
 
 
 } // namespace artemis

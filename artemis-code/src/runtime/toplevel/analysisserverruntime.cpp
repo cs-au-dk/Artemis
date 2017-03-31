@@ -26,6 +26,7 @@
 #include "runtime/input/clicksimulator.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
+#include "symbolic/directaccesssymbolicvalues.h"
 
 #include "analysisserverruntime.h"
 
@@ -651,6 +652,47 @@ void AnalysisServerRuntime::execute(EvaluateJsCommand *command)
 
     QVariantMap result;
     result.insert("evaluatejs", "done");
+
+    emit sigCommandFinished(result);
+}
+
+void AnalysisServerRuntime::execute(SetSymbolicValuesCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing an evaluate-js command.");
+    assert(command);
+    // N.B. It is optional whether we have loaded a page already.
+
+    // Similar injection code in ConcolicStandaloneRuntime::doneConcolicIteration().
+    Symbolic::DirectAccessSymbolicValues* symValueStore = Symbolic::get_direct_access_symbolic_values_store();
+    if (command->reset) {
+        symValueStore->reset();
+    }
+
+    foreach (QString variable, command->values.keys()) {
+        QVariant value = command->values[variable];
+
+        switch (value.type()) {
+        case QVariant::String:
+            symValueStore->setString(variable, value.toString());
+            break;
+        case QVariant::Int:
+        case QVariant::UInt:
+        case QVariant::LongLong:
+        case QVariant::ULongLong:
+            symValueStore->setInteger(variable, value.toInt());
+            break;
+        case QVariant::Bool:
+            symValueStore->setBoolean(variable, value.toBool());
+            break;
+        default:
+            // NOTREACHED - This is ensured by RequestHandler::setSymbolicValuesCommand().
+            emit sigCommandFinished(errorResponse("Unexpected value type found in setsymbolicvalue command."));
+            return;
+        }
+    }
+
+    QVariantMap result;
+    result.insert("setsymbolicvalues", "done");
 
     emit sigCommandFinished(result);
 }

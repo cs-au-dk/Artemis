@@ -181,7 +181,11 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         expectedFields = QStringList() << "js";
         cmdObject = evaluateJsCommand(mainObject);
 
-   } else {
+    } else if (command == "setsymbolicvalues") {
+        expectedFields = QStringList() << "values" << "reset";
+        cmdObject = setSymbolicValuesCommand(mainObject);
+
+    } else {
         return parseError("Command was not recognised.");
     }
 
@@ -638,7 +642,7 @@ CommandPtr RequestHandler::evaluateJsCommand(QVariantMap mainObject)
 {
     Log::debug("  Request handler: Building evaluate-js command.");
 
-    // Fetch the message
+    // Fetch the js code to execute
     if (!mainObject.contains("js")) {
         return parseError("Could not find the 'js' property for an echo command.");
     }
@@ -648,6 +652,45 @@ CommandPtr RequestHandler::evaluateJsCommand(QVariantMap mainObject)
     }
 
     return EvaluateJsCommandPtr(new EvaluateJsCommand(mainObject["js"].toString()));
+}
+
+CommandPtr RequestHandler::setSymbolicValuesCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building set-symbolic-values command.");
+
+    // 'values' is a (non-empty) mapping of variable names to string, int or bool values.
+    if (!mainObject.contains("values")) {
+        return parseError("Could not find the 'values' property for a setsymbolicvalues command.");
+    }
+    if (mainObject["values"].type() != QVariant::Map) {
+        return parseError("The 'values' property for a setsymbolicvalues command must be an object mapping strings to values.");
+    }
+
+    QVariantMap valuesObject = mainObject["values"].toMap();
+    if (valuesObject.size() <=0 ) {
+        // This is not required by the implementation, it is simply a sanity check.
+        return parseError("The 'values' property for a setsymbolicvalues command should not be empty.");
+    }
+
+    foreach (QVariant value, valuesObject.values()) {
+        if (value.type() != QVariant::Bool &&
+                value.type() != QVariant::Int && value.type() != QVariant::UInt && value.type() != QVariant::LongLong && value.type() != QVariant::ULongLong &&
+                value.type() != QVariant::String) {
+            return parseError(QString("The variable values for a setsymbolicvalues command can only be booleans, integers, or strings (type %1).").arg(value.type()));
+        }
+    }
+
+    // 'reset' is an optional bool flag (default false).
+    bool reset = false;
+    if (mainObject.contains("reset")) {
+        if (mainObject["reset"].type() == QVariant::Bool) {
+            reset = mainObject["reset"].toBool();
+        } else {
+            return parseError("The 'reset' property for a setsymbolicvalues command must be a boolean.");
+        }
+    }
+
+    return SetSymbolicValuesCommandPtr(new SetSymbolicValuesCommand(valuesObject, reset));
 }
 
 

@@ -68,6 +68,7 @@ protected:
     CommandPtr windowsizeCommand(QVariantMap mainObject);
     CommandPtr concolicAdviceCommand(QVariantMap mainObject);
     CommandPtr evaluateJsCommand(QVariantMap mainObject);
+    CommandPtr setSymbolicValuesCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();
