@@ -262,9 +262,9 @@ Commands
         }
     
 * ``element``
-    Returns the string representation of each element (if any) matching a gven XPath.
+    Returns the string representation of each element (if any) matching a given XPath.
     
-    Send: (e.g. for click.html test page) ::
+    Send: (e.g. for the click.html test page) ::
     
         {
             "command": "element",
