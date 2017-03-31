@@ -2556,7 +2556,7 @@ Sent:
         self.assertNotIn("error", check_response)
         
         self.assertIn("url", check_response)
-        self.assertEqual(check_response["url"], u"http://www.w3schools.com/php/welcome.php")
+        self.assertEqual(check_response["url"], u"https://www.w3schools.com/php/welcome.php")
         
         self.assertIn("dom", check_response)
         self.assertEqual(check_response["dom"], u"""<!DOCTYPE html><html><head></head><body>
