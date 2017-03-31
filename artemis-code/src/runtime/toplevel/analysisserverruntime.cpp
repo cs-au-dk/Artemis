@@ -638,6 +638,24 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
 }
 
 
+void AnalysisServerRuntime::execute(EvaluateJsCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing an evaluate-js command.");
+    assert(command);
+    // N.B. It is optional whether we have loaded a page already.
+
+    mWebView->page()->currentFrame()->documentElement().evaluateJavaScript(command->jsString, QUrl(), false);
+    // TODO: Maybe we should return the result in the response?
+
+    clearAsyncEvents();
+
+    QVariantMap result;
+    result.insert("evaluatejs", "done");
+
+    emit sigCommandFinished(result);
+}
+
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;

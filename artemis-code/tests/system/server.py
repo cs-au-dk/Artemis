@@ -2568,7 +2568,7 @@ Your email address is: test@example.com
     
     def test_frame_support(self):
         # Frames are supported in Artemis, so there should be no crashes or errors.
-        # The Artemis infrstructure inspects frames recursively so for example we can see handlers within a frame.
+        # The Artemis infrastructure inspects frames recursively so for example we can see handlers within a frame.
         # However, server-mode comands do not support frames, so far example the XPaths returned by the handlers
         # command are frame-local, and commands to click an element cannot reach an element inside a frame.
         
@@ -2598,6 +2598,30 @@ Your email address is: test@example.com
         click_response = send_to_server(click_command)
         
         self.assertIn("error", click_response)
+    
+    def test_evaluate_js_command(self):
+        self.loadFixture("click.html")
+        
+        eval_message = {
+                "command": "evaluatejs",
+                "js": "document.getElementById('clickable').click()"
+            }
+        
+        eval_resonse = send_to_server(eval_message)
+        
+        self.assertNotIn("error", eval_resonse)
+        self.assertIn("evaluatejs", eval_resonse)
+        self.assertEqual(eval_resonse["evaluatejs"], u"done")
+        
+        # Use the handlers command to confirm the click worked.
+        handlers_message = {
+                "command": "handlers"
+            }
+        
+        handlers_response = send_to_server(handlers_message)
+        
+        self.assertIn("handlers", handlers_response)
+        self.assertEqual(len(handlers_response["handlers"]), 2)
     
 
 

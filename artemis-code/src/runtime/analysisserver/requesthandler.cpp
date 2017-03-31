@@ -177,7 +177,11 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         expectedFields = QStringList() << "action" << "sequence" << "amount" << "implicitendtrace" << "allowduringtrace";
         cmdObject = concolicAdviceCommand(mainObject);
 
-    } else {
+    } else if (command == "evaluatejs") {
+        expectedFields = QStringList() << "js";
+        cmdObject = evaluateJsCommand(mainObject);
+
+   } else {
         return parseError("Command was not recognised.");
     }
 
@@ -628,6 +632,22 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
     }
 
     return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence, amount, implicitEndTrace, allowDuringTrace));
+}
+
+CommandPtr RequestHandler::evaluateJsCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building evaluate-js command.");
+
+    // Fetch the message
+    if (!mainObject.contains("js")) {
+        return parseError("Could not find the 'js' property for an echo command.");
+    }
+
+    if (mainObject["js"].type() != QVariant::String) {
+        return parseError("The 'js' property for an echo command must be a string.");
+    }
+
+    return EvaluateJsCommandPtr(new EvaluateJsCommand(mainObject["js"].toString()));
 }
 
 

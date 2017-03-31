@@ -282,6 +282,19 @@ public:
 
 typedef QSharedPointer<ConcolicAdviceCommand> ConcolicAdviceCommandPtr;
 
+// Command to execute arbitrary JS string in the browser.
+class EvaluateJsCommand : public Command
+{
+public:
+    EvaluateJsCommand(QString jsString)
+        : jsString(jsString)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QString jsString;
+};
+
+typedef QSharedPointer<EvaluateJsCommand> EvaluateJsCommandPtr;
 
 
 

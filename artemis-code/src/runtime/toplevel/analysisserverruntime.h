@@ -55,6 +55,7 @@ public:
     void execute(EventTriggerCommand* command);
     void execute(WindowSizeCommand* command);
     void execute(ConcolicAdviceCommand* command);
+    void execute(EvaluateJsCommand* command);
 
 protected:
     virtual void done();

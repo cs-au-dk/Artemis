@@ -572,7 +572,19 @@ Commands
     which can lead to new exploration.
     
     See the :ref:`server-concolic-advice` documentation for details.
-
+    
+* ``evaluate-js``
+    Evaluates a JavaScript string on the current page.
+    
+    Send::
+    
+        {
+            "command": "evaluatejs",
+            "js": "document.getElementById('clickable').click()"
+        }
+    
+    Receive: ``{ "evaluatejs": "done" }``
+    
 
 
 
