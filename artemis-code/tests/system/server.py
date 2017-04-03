@@ -2730,6 +2730,44 @@ Your email address is: test@example.com
         
         self.assertStatusElementContains("secondstring 123 true")
     
+    def test_set_symbolic_values_command_empty(self):
+        # Setting an empty mapping of values is useful to just use the reset parameter alone, cearing all symbolic values.
+        self.loadFixture("empty.html")
+        
+        # The initial injection
+        inject_message_1 = {
+                "command": "setsymbolicvalues",
+                "values": {
+                    "mystr": "testme",
+                    "mynum": 123,
+                    "myflag": True
+                }
+            }
+        
+        inject_resonse_1 = send_to_server(inject_message_1)
+        self.assertNotIn("error", inject_resonse_1)
+        
+        # Now clear all values.
+        inject_message_2 = {
+                "command": "setsymbolicvalues",
+                "values": {},
+                "reset": True
+            }
+        
+        inject_resonse_2 = send_to_server(inject_message_2)
+        self.assertNotIn("error", inject_resonse_2)
+        
+        # The old values are ALL cleared.
+        check_sym_values_message = {
+                "command": "evaluatejs",
+                "js": "document.getElementById('status').textContent = artemisInputString('mystr') + ' ' + artemisInputInteger('mynum') + ' ' + artemisInputBoolean('myflag');"
+            }
+        
+        check_sym_values_resonse = send_to_server(check_sym_values_message)
+        self.assertNotIn("error", check_sym_values_resonse)
+        
+        self.assertStatusElementContains(" 0 false")
+        
 
 
 class AnalysisServerSystemTests(AnalysisServerTestBase):

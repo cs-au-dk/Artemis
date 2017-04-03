@@ -658,7 +658,7 @@ CommandPtr RequestHandler::setSymbolicValuesCommand(QVariantMap mainObject)
 {
     Log::debug("  Request handler: Building set-symbolic-values command.");
 
-    // 'values' is a (non-empty) mapping of variable names to string, int or bool values.
+    // 'values' is a (possibly empty) mapping of variable names to string, int or bool values.
     if (!mainObject.contains("values")) {
         return parseError("Could not find the 'values' property for a setsymbolicvalues command.");
     }
@@ -667,10 +667,6 @@ CommandPtr RequestHandler::setSymbolicValuesCommand(QVariantMap mainObject)
     }
 
     QVariantMap valuesObject = mainObject["values"].toMap();
-    if (valuesObject.size() <=0 ) {
-        // This is not required by the implementation, it is simply a sanity check.
-        return parseError("The 'values' property for a setsymbolicvalues command should not be empty.");
-    }
 
     foreach (QVariant value, valuesObject.values()) {
         if (value.type() != QVariant::Bool &&
