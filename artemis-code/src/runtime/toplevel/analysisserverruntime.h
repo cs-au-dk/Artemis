@@ -96,6 +96,7 @@ protected:
     QVariant concolicBeginTrace(QString sequence, bool implicitEndTrace);
     QVariant concolicEndTrace(QString sequence);
     QVariant concolicAdvice(QString sequence, uint amount, bool allowDuringTrace);
+    QVariant concolicStatistics(QString sequence);
     QString concolicSymbolToXPath(QString sequence, QString symbol);
     QVariant concolicResponseOk();
     void concolicCreateNewAnalysis(QString sequence);

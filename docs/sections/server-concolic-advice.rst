@@ -257,6 +257,44 @@ Commands
     **Errors:** If there has not been any trace recorded with that id; if there is any trace in-progress (unless
     ``allowduringtrace`` is set).
     
-
-
-
+* ``concolicadvice`` > ``statistics``
+    Retrieves the statistics about a certain concolic tree.
+    This is purely informational, and not intended to be used to drive the analysis.
+    
+    Send::
+    
+        {
+            "command": "concolicadvice",
+            "action": "statistics",
+            "sequence": "MySequenceID"
+        }
+    
+    Receive::
+    
+        {
+            "concolicadvice": "done",
+            "sequence": "MySequenceID",
+            "values" : {
+                "Alerts": 1,
+                "ConcreteBranchesFullyExplored": 0,
+                "ConcreteBranchesTotal": 0,
+                "CouldNotSolve": 0,
+                "EndFailure": 0,
+                "EndSuccess": 0,
+                "EndUnknown": 1,
+                "InterestingDomModifications": 0,
+                "Missed": 0,
+                "PageLoads": 0,
+                "Queued": 1,
+                "SymbolicBranchesFullyExplored": 0,
+                "SymbolicBranchesTotal": 0,
+                "TracesRecordedInTree": 1,
+                "Unexplored": 0,
+                "UnexploredSymbolicChild": 1,
+                "Unsat": 0
+            }
+        }
+    
+    The keys here are mostly the same as those from the output of the normal concolic runtime.
+    There are some missing, as in this case the stats are only generated from the tree, not the entire concolic runtime.
+    There are also a couple of new keys: ``TracesRecordedInTree`` (expected to be the same as ``DistinctTracesExplored``, although it is calculated from the tree, not the trace merger), and ``Queued``, the number of branches which have been suggested but not yet explored.

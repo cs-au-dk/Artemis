@@ -27,6 +27,7 @@
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
 #include "symbolic/directaccesssymbolicvalues.h"
+#include "concolic/tracestatistics.h"
 
 #include "analysisserverruntime.h"
 
@@ -630,6 +631,9 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
     case ConcolicAdviceCommand::Advice:
         result = concolicAdvice(command->sequence, command->amount, command->allowDuringTrace);
         break;
+    case ConcolicAdviceCommand::Statistics:
+        result = concolicStatistics(command->sequence);
+        break;
     default:
         emit sigCommandFinished(errorResponse("Unexpected action in concolicadvice command."));
         return;
@@ -1064,6 +1068,44 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount, bo
     result.insert("concolicadvice", "done");
     result.insert("sequence", sequence);
     result.insert("values", suggestions);
+    return result;
+}
+
+QVariant AnalysisServerRuntime::concolicStatistics(QString sequence)
+{
+    if (sequence.isEmpty() || !mConcolicTrees.contains(sequence)) {
+        return errorResponse("Tried to get concolic statistics for a non-existent sequence ID.");
+    }
+
+    TraceNodePtr tree = mConcolicTrees[sequence]->getExecutionTree();
+    TraceStatistics stats;
+    stats.processTrace(tree);
+
+    QVariantMap result_stats;
+    result_stats.insert("ConcreteBranchesTotal", stats.mNumConcreteBranches);
+    result_stats.insert("ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+    result_stats.insert("SymbolicBranchesTotal", stats.mNumSymBranches);
+    result_stats.insert("SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+    result_stats.insert("Alerts", stats.mNumAlerts);
+    result_stats.insert("PageLoads", stats.mNumPageLoads);
+    result_stats.insert("InterestingDomModifications", stats.mNumInterestingDomModifications);
+    result_stats.insert("EndSuccess", stats.mNumEndSuccess); // Can't occur in server mode.
+    result_stats.insert("EndFailure", stats.mNumEndFailure); // Can't occur in server mode.
+    result_stats.insert("EndUnknown", stats.mNumEndUnknown);
+    result_stats.insert("Unexplored", stats.mNumUnexplored);
+    result_stats.insert("UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
+    result_stats.insert("Unsat", stats.mNumUnexploredUnsat);
+    result_stats.insert("Missed", stats.mNumUnexploredMissed); // Can't occur in server mode.
+    result_stats.insert("CouldNotSolve", stats.mNumUnexploredUnsolvable);
+    result_stats.insert("SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+    result_stats.insert("SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+    result_stats.insert("TracesRecordedInTree", stats.mNumEndUnknown + stats.mNumEndSuccess + stats.mNumEndFailure); // TODO: I think this should be the same a DistinctTracesExplored in the mian concolic runtime. In server mode it will be the same as TraceEndUnknown, as we do not use the classifier.
+    result_stats.insert("Queued", stats.mNumUnexploredQueued);
+
+    QVariantMap result;
+    result.insert("concolicadvice", "done");
+    result.insert("sequence", sequence);
+    result.insert("statistics", result_stats);
     return result;
 }
 

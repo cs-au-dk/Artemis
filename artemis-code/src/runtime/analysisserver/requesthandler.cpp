@@ -590,6 +590,8 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
         action = ConcolicAdviceCommand::EndTrace;
     } else if (actionString == "advice") {
         action = ConcolicAdviceCommand::Advice;
+    } else if (actionString == "statistics") {
+        action = ConcolicAdviceCommand::Statistics;
     } else {
         return parseError("The 'action' property for a concolicadvice command was not recognised.");
     }

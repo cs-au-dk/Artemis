@@ -262,7 +262,7 @@ typedef QSharedPointer<WindowSizeCommand> WindowSizeCommandPtr;
 class ConcolicAdviceCommand : public Command
 {
 public:
-    enum ConcolicAdviceAction { BeginTrace, EndTrace, Advice };
+    enum ConcolicAdviceAction { BeginTrace, EndTrace, Advice, Statistics };
 
     ConcolicAdviceCommand(ConcolicAdviceAction action, QString sequence, uint amount, bool implicitEndTrace, bool allowDuringTrace)
         : action(action)

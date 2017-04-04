@@ -2827,6 +2827,21 @@ class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
         self.assertEqual(response["sequence"], unicode(identifier))
         self.assertIn("values", response)
         return response["values"]
+    
+    def concolicStatistics(self, identifier):
+        message = {
+                "command": "concolicadvice",
+                "action": "statistics",
+                "sequence": identifier
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        self.assertIn("concolicadvice", response)
+        self.assertEqual(response["concolicadvice"], u"done")
+        self.assertIn("statistics", response)
+        return response["statistics"]
 
 class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase):
     
@@ -3598,6 +3613,49 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.maxDiff = None
         self.assertEqual(values, expected_values)
+    
+    def test_concolic_tree_statistics(self):
+        # Record two traces, get some advice, then fetch the statistics.
+        self.loadFixture("concolic-multiple-branches.html")
+        
+        # Record trace 1.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Record trace 2.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "test3")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get some of the available advice.
+        values_1 = self.concolicAdvice("TestSequence", 3)
+        
+        # Get the statistics
+        stats = self.concolicStatistics("TestSequence")
+        
+        expected = {
+                u"Alerts": 1,
+                u"ConcreteBranchesFullyExplored": 0,
+                u"ConcreteBranchesTotal": 0,
+                u"CouldNotSolve": 0,
+                u"EndFailure": 0,
+                u"EndSuccess": 0,
+                u"EndUnknown": 2,
+                u"InterestingDomModifications": 0,
+                u"Missed": 0,
+                u"PageLoads": 1,
+                u"Queued": 3,
+                u"SymbolicBranchesFullyExplored": 0,
+                u"SymbolicBranchesTotal": 0,
+                u"TracesRecordedInTree": 2,
+                u"Unexplored": 1,
+                u"UnexploredSymbolicChild": 4,
+                u"Unsat": 0
+            }
+        self.assertEqual(stats, expected)
     
 
 
