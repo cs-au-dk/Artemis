@@ -312,6 +312,17 @@ public:
 
 typedef QSharedPointer<SetSymbolicValuesCommand> SetSymbolicValuesCommandPtr;
 
+// Command to execute arbitrary JS string in the browser.
+class CoverageCommand : public Command
+{
+public:
+    CoverageCommand()
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+};
+
+typedef QSharedPointer<CoverageCommand> CoverageCommandPtr;
+
 
 
 

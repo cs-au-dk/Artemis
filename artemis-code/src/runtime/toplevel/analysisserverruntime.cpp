@@ -701,6 +701,55 @@ void AnalysisServerRuntime::execute(SetSymbolicValuesCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(CoverageCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a coverage command.");
+    assert(command);
+    // N.B. It is optional whether we have loaded a page already.
+
+    QVariantList coverage_info;
+
+    // Grab the coverage info source-by-source and add it to the result.
+    // Adapted from covergaetooutputstream.cpp writeCoverageStdout()
+    CoverageListenerPtr coverage = mAppmodel->getCoverageListener();
+    foreach(int sourceID, coverage->getSourceIDs()) {
+        QVariantMap source_coverage_info;
+
+        const SourceInfoPtr sourceInfo = coverage->getSourceInfo(sourceID);
+        source_coverage_info["url"] = sourceInfo->getURL();
+        source_coverage_info["line"] = sourceInfo->getStartLine();
+
+        QString src = sourceInfo->getSource();
+        QTextStream read(&src);
+
+        QSet<uint> lineCoverage = sourceInfo->getLineCoverage();
+
+        QList<uint> sortedLines = QList<uint>::fromSet(lineCoverage);
+        qSort(sortedLines);
+        QVariantList sortedLines_qv;
+        foreach (uint val, sortedLines) {
+            sortedLines_qv.append(val);
+        }
+        source_coverage_info["linescovered"] = sortedLines_qv;
+
+        int lineNumber = sourceInfo->getStartLine();
+        QString source_coverage_report;
+        while (!read.atEnd()) {
+            QString prefix = lineCoverage.contains(lineNumber) ? ">>>" : "   ";
+            source_coverage_report += prefix + read.readLine() + "\n";
+            lineNumber++;
+        }
+        source_coverage_info["coverage"] = source_coverage_report;
+
+        coverage_info.append(source_coverage_info);
+    }
+
+    QVariantMap result;
+    result.insert("coverage", coverage_info);
+    emit sigCommandFinished(result);
+
+}
+
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {

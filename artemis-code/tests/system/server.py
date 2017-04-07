@@ -2767,6 +2767,43 @@ Your email address is: test@example.com
         self.assertNotIn("error", check_sym_values_resonse)
         
         self.assertStatusElementContains(" 0 false")
+    
+    def test_coverage_command(self):
+        self.loadFixture("click.html")
+        
+        click_command = {
+                "command": "click",
+                "element": "//a"
+            }
+        
+        click_response = send_to_server(click_command)
+        self.assertNotIn("error", click_response)
+        
+        coverage_command = {
+                "command": "coverage"
+            }
+        
+        coverage_response = send_to_server(coverage_command)
+        
+        self.assertNotIn("error", coverage_response)
+        self.assertIn("coverage", coverage_response)
+        
+        expected_coverage = [
+                {
+                    "coverage": ">>>this.click()\n",
+                    "line": 1,
+                    "linescovered": [ 1 ],
+                    "url": ""
+                },
+                {
+                  "coverage": ">>>\n>>>        window.onload = function () {\n               \n>>>            x = document.getElementById(\"clickable\");\n>>>            x.addEventListener(\"click\", function (e) {\n                   \n                   // Add a new button to the page.\n                   // This will be visible in the API as a new handler, so we can confirm this worked.\n                   \n>>>                y = document.createElement(\"button\");\n>>>                y.type = \"button\";\n>>>                y.textContent = \"Button\";\n>>>                y.style.display = \"block\";\n                   \n>>>                y.addEventListener(\"click\", function (e) {\n                       alert(\"I am a button.\");\n                       e.preventDefault();\n>>>                }, false);\n                   \n>>>                z = document.getElementById(\"container\");\n>>>                z.appendChild(y);\n                   \n>>>                e.preventDefault();\n>>>            }, false);\n               \n>>>        }\n       \n",
+                  "line": 9,
+                  "linescovered": [ 9, 10, 12, 13, 18, 19, 20, 21, 23, 26, 28, 29, 31, 32, 34 ],
+                  "url": "file:///home/ben/Artemis/artemis-code/tests/system/fixtures/server/click.html"
+                }
+            ]
+        
+        self.assertEqual(coverage_response["coverage"], expected_coverage)
         
 
 

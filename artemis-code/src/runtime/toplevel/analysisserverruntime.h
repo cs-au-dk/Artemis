@@ -57,6 +57,7 @@ public:
     void execute(ConcolicAdviceCommand* command);
     void execute(EvaluateJsCommand* command);
     void execute(SetSymbolicValuesCommand* command);
+    void execute(CoverageCommand* command);
 
 protected:
     virtual void done();

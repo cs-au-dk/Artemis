@@ -69,6 +69,7 @@ protected:
     CommandPtr concolicAdviceCommand(QVariantMap mainObject);
     CommandPtr evaluateJsCommand(QVariantMap mainObject);
     CommandPtr setSymbolicValuesCommand(QVariantMap mainObject);
+    CommandPtr coverageCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

@@ -185,6 +185,10 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         expectedFields = QStringList() << "values" << "reset";
         cmdObject = setSymbolicValuesCommand(mainObject);
 
+    } else if (command == "coverage") {
+        expectedFields = QStringList();
+        cmdObject = coverageCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -689,6 +693,15 @@ CommandPtr RequestHandler::setSymbolicValuesCommand(QVariantMap mainObject)
     }
 
     return SetSymbolicValuesCommandPtr(new SetSymbolicValuesCommand(valuesObject, reset));
+}
+
+CommandPtr RequestHandler::coverageCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building coverage command.");
+
+    // There are no parameters!
+
+    return CoverageCommandPtr(new CoverageCommand);
 }
 
 

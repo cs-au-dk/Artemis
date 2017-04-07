@@ -104,6 +104,11 @@ void SetSymbolicValuesCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void CoverageCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis
