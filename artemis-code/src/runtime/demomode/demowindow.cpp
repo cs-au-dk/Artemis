@@ -154,7 +154,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mAnalysisLayout->addWidget(mManualEntryPointClickBtn);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* curTraceLabel = new QLabel("Trace Recording:");
+    QLabel* curTraceLabel = new QLabel("Symbolic Trace Recording:");
     curTraceLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(curTraceLabel);
     mAnalysisLayout->addWidget(mStartTraceRecordingBtn);
@@ -180,7 +180,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     // Execution reports section.
     QLabel* reportsLabel = new QLabel("Execution Reports");
     reportsLabel->setFont(sectionFont);
-    QLabel* reportsExplanation = new QLabel("These reports (currently) record all trace and\ncoverage information since the start of the\nsession.");
+    QLabel* reportsExplanation = new QLabel("These reports record all path trace and\ncoverage information since the start of the\nsession.");
     mAnalysisLayout->addWidget(reportsLabel);
     mAnalysisLayout->addWidget(reportsExplanation);
     mGenerateReportsBtn = new QPushButton("Generate Reports");
