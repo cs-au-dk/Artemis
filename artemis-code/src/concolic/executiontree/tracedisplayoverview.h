@@ -43,6 +43,7 @@ public:
     //void visit(TraceUnexploredUnsolvable* node);  // Handled by TraceDisplay
     //void visit(TraceUnexploredMissed* node);      // Handled by TraceDisplay
     void visit(TraceAlert* node);
+    void visit(TraceConsoleMessage* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);
     void visit(TraceMarker* node);

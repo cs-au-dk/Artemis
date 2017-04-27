@@ -3675,6 +3675,7 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         expected = {
                 u"Alerts": 1,
+                u"ConsoleMessages": 0,
                 u"ConcreteBranchesFullyExplored": 0,
                 u"ConcreteBranchesTotal": 0,
                 u"CouldNotSolve": 0,

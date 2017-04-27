@@ -34,9 +34,10 @@ void TraceVisitor::visit(TraceSymbolicBranch* node)     { visit(static_cast<Trac
 
 void TraceVisitor::visit(TraceAnnotation* node)         { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceAlert* node)              { visit(static_cast<TraceAnnotation*>(node)); }
+void TraceVisitor::visit(TraceConsoleMessage *node)     { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TraceDomModification* node)    { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TracePageLoad* node)           { visit(static_cast<TraceAnnotation*>(node)); }
-void TraceVisitor::visit(TraceMarker *node)             { visit(static_cast<TraceAnnotation*>(node));  }
+void TraceVisitor::visit(TraceMarker *node)             { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TraceFunctionCall* node)       { visit(static_cast<TraceAnnotation*>(node)); }
 
 void TraceVisitor::visit(TraceConcreteSummarisation *node){visit(static_cast<TraceNode*>(node)); }

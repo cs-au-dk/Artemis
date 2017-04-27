@@ -58,6 +58,7 @@ public:
     void visit(TraceUnexploredMissed* node);
     void visit(TraceUnexploredQueued* node);
     void visit(TraceAlert* node);
+    void visit(TraceConsoleMessage* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);
     void visit(TraceMarker* node);

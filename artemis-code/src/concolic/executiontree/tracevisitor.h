@@ -36,6 +36,7 @@ class TraceUnexploredMissed;
 class TraceUnexploredQueued;
 class TraceAnnotation;
 class TraceAlert;
+class TraceConsoleMessage;
 class TraceDomModification;
 class TracePageLoad;
 class TraceMarker;
@@ -83,6 +84,7 @@ public:
     virtual void visit(TraceUnexploredQueued* node);
     virtual void visit(TraceAnnotation* node);
     virtual void visit(TraceAlert* node);
+    virtual void visit(TraceConsoleMessage* node);
     virtual void visit(TraceDomModification* node);
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);

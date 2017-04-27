@@ -48,6 +48,7 @@ public:
     int mNumEventSequenceSymBranchesFullyExplored;
 
     int mNumAlerts;
+    int mNumConsoleMessages;
     int mNumFunctionCalls;
     int mNumDomModifications;
     int mNumInterestingDomModifications;
@@ -77,6 +78,7 @@ public:
     virtual void visit(TraceSymbolicBranch* node);
 
     virtual void visit(TraceAlert* node);
+    virtual void visit(TraceConsoleMessage* node);
     virtual void visit(TraceFunctionCall* node);
     virtual void visit(TraceDomModification* node);
     virtual void visit(TracePageLoad* node);

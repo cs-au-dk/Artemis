@@ -99,6 +99,11 @@ void FormSubmissionClassifier::visit(TraceDivergence* node)
     node->next->accept(this);
 }
 
+void FormSubmissionClassifier::visit(TraceConsoleMessage *node)
+{
+    node->next->accept(this);
+}
+
 void FormSubmissionClassifier::visit(TraceNode *node)
 {
     Log::fatal("Trace Classifier: visited a node which was not handled correctly.");

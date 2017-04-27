@@ -246,6 +246,22 @@ void TraceDisplayOverview::visit(TraceAlert *node)
     node->next->accept(this);
 }
 
+void TraceDisplayOverview::visit(TraceConsoleMessage *node)
+{
+    // TODO: For simplicity I am treating these as alerts in the tree output.
+
+    QString name = QString("cm_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    // Always show console messages, but no longer include messages.
+    mHeaderAlerts.append(name);
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
+    node->next->accept(this);
+}
+
 
 void TraceDisplayOverview::visit(TraceDomModification *node)
 {

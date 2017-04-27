@@ -20,8 +20,7 @@
 #include <QSharedPointer>
 
 #include "concolic/executiontree/classifier/traceclassifier.h"
-#include "concolic/executiontree/tracenodes.h"
-#include "concolic/executiontree/tracevisitor.h"
+
 
 namespace artemis
 {
@@ -47,6 +46,7 @@ protected:
     virtual void visit(TraceMarker* node);
     virtual void visit(TraceFunctionCall* node);
     virtual void visit(TraceDivergence* node);
+    virtual void visit(TraceConsoleMessage* node);
 
     // Catch-all. Should not be called.
     virtual void visit(TraceNode* node);

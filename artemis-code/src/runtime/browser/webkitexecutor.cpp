@@ -160,6 +160,12 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
     mTraceBuilder->addDetector(alertDetector);
 
+    // The console message detector.
+    QSharedPointer<TraceConsoleMessageDetector> consoleMessageDetector(new TraceConsoleMessageDetector());
+    QObject::connect(mPage.data(), SIGNAL(sigJavascriptConsoleMessage(QString)),
+                     consoleMessageDetector.data(), SLOT(slJavascriptConsoleMessage(QString)));
+    mTraceBuilder->addDetector(consoleMessageDetector);
+
     // The function call detector.
     QSharedPointer<TraceFunctionCallDetector> functionCallDetector(new TraceFunctionCallDetector());
     QObject::connect(mWebkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),

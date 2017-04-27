@@ -42,6 +42,7 @@ public:
     virtual void visit(TraceSymbolicBranch* node);
     virtual void visit(TraceUnexplored* node);
     virtual void visit(TraceAlert* node);
+    virtual void visit(TraceConsoleMessage* node);
     virtual void visit(TraceDomModification* node);
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);

@@ -97,6 +97,20 @@ public slots:
 
 
 /*
+ *  Detector for messages printed to the console.
+ */
+class TraceConsoleMessageDetector : public TraceEventDetector
+{
+    Q_OBJECT
+
+public slots:
+    void slJavascriptConsoleMessage(QString msg);
+
+};
+
+
+
+/*
  *  Detector for application-code function calls.
  */
 class TraceFunctionCallDetector : public TraceEventDetector

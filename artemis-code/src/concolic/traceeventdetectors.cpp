@@ -116,7 +116,18 @@ void TraceAlertDetector::slJavascriptAlert(QWebFrame* frame, QString msg)
 }
 
 
+// Console message detector
 
+void TraceConsoleMessageDetector::slJavascriptConsoleMessage(QString msg)
+{
+    // Create a new console-message node.
+    QSharedPointer<TraceConsoleMessage> node = QSharedPointer<TraceConsoleMessage>(new TraceConsoleMessage());
+    node->message = msg;
+    // Leave node.next as null.
+
+    // Pass this new node to the trace builder and pass a pointer to where the sucessor should be attached.
+    newNode(node.staticCast<TraceNode>(), &(node->next));
+}
 
 
 // Function Call Detector

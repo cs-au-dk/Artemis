@@ -130,6 +130,12 @@ void TraceViewerDialog::visit(TraceAlert *node)
     node->next->accept(this);
 }
 
+void TraceViewerDialog::visit(TraceConsoleMessage *node)
+{
+    mNodeList->addItem(QString("Console message: %1").arg((node->message).replace('\n', "\\n")));
+    node->next->accept(this);
+}
+
 void TraceViewerDialog::visit(TraceDomModification *node)
 {
     mNodeList->addItem(QString("DOM Modification: %1%").arg(node->amountModified));

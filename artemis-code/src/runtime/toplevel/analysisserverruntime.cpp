@@ -1136,6 +1136,7 @@ QVariant AnalysisServerRuntime::concolicStatistics(QString sequence)
     result_stats.insert("SymbolicBranchesTotal", stats.mNumSymBranches);
     result_stats.insert("SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
     result_stats.insert("Alerts", stats.mNumAlerts);
+    result_stats.insert("ConsoleMessages", stats.mNumConsoleMessages);
     result_stats.insert("PageLoads", stats.mNumPageLoads);
     result_stats.insert("InterestingDomModifications", stats.mNumInterestingDomModifications);
     result_stats.insert("EndSuccess", stats.mNumEndSuccess); // Can't occur in server mode.

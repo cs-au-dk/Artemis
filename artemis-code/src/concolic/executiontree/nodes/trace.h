@@ -83,6 +83,27 @@ public:
 };
 
 
+class TraceConsoleMessage : public TraceAnnotation
+{
+
+public:
+
+    void accept(TraceVisitor* visitor)
+    {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceConsoleMessage>().isNull();
+    }
+
+    ~TraceConsoleMessage() {}
+
+    QString message;
+};
+
+
 class TraceDomModification : public TraceAnnotation
 {
 public:

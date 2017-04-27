@@ -53,9 +53,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
         mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
         break;
     case CLASSIFY_JS_ERROR:
-        Log::fatal("JS error classifier is not yet implemented.");
-        exit(1);
-        //mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
         break;
     default:
         Log::fatal("Unsupported classification method.");

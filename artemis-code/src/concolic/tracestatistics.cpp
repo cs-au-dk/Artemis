@@ -47,6 +47,7 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     mNumSymBranchesFullyExploredSinceLastMarker = 0;
 
     mNumAlerts = 0;
+    mNumConsoleMessages = 0;
     mNumFunctionCalls = 0;
     mNumDomModifications = 0;
     mNumInterestingDomModifications = 0;
@@ -137,6 +138,13 @@ void TraceStatistics::visit(TraceAlert *node)
 {
     mNumNodes++;
     mNumAlerts++;
+    node->next->accept(this);
+}
+
+void TraceStatistics::visit(TraceConsoleMessage *node)
+{
+    mNumNodes++;
+    mNumConsoleMessages++;
     node->next->accept(this);
 }
 

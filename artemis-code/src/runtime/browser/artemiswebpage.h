@@ -70,6 +70,7 @@ protected:
 
 signals:
     void sigJavascriptAlert(QWebFrame* frame, QString msg);
+    void sigJavascriptConsoleMessage(QString msg);
     void sigNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
 };
 

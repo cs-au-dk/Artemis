@@ -71,9 +71,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
         mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
         break;
     case CLASSIFY_JS_ERROR:
-        Log::fatal("JS error classifier is not yet implemented.");
-        exit(1);
-        //mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
         break;
     default:
         Log::fatal("Unsupported classification method.");
@@ -800,6 +798,7 @@ void ConcolicRuntime::reportStatistics()
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
 
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConsoleMessages", stats.mNumConsoleMessages);
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
 
