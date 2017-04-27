@@ -81,6 +81,10 @@ struct ConcolicSearchSelector
      QList<ConcolicSearchSelector> components;
 };
 
+enum ConcolicTraceClassifer {
+    CLASSIFY_FORM_SUBMISSION, CLASSIFY_JS_ERROR
+};
+
 
 typedef struct OptionsType {
 
@@ -106,6 +110,7 @@ typedef struct OptionsType {
         concolicDfsDepthLimit(5),
         concolicDfsRestartLimit(3),
         concolicSearchBudget(25),
+        concolicTraceClassifier(CLASSIFY_FORM_SUBMISSION),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
@@ -159,6 +164,8 @@ typedef struct OptionsType {
 
     ConcolicSearchSelector concolicSearchSelector;
     unsigned int concolicSearchBudget;
+
+    ConcolicTraceClassifer concolicTraceClassifier;
 
     SMTSolver solver;
 

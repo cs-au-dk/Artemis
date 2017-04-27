@@ -192,6 +192,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-test-mode-js <js-file>\n"
             "           Specifies the JavaScript source file to be used by major-mode concolic-test.\n"
             "\n"
+            "--concolic-trace-classifier <classifier>\n"
+            "           Sets the trace classification method used to mark concolic traces as successful or failed in major-modes concolic and manual.\n"
+            "\n"
+            "           form-submission (default) - determines whether a recorded trace represents a successful form submission.\n"
+            "           js-errors - classifies traces besed on unhandled JavaScript exceptions, calls to console.error, or failed console.assert calls.\n"
+            "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
             "           cvc4 (default) - Use the CVC4 SMT solver as backend.\n"
@@ -269,6 +275,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-test-mode-js", required_argument, NULL, 'J'},
     {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'M'},
     {"event-delegation-testing", no_argument, NULL, 'N'},
+    {"concolic-trace-classifier", required_argument, NULL, 'O'},
     {0, 0, 0, 0}
     };
 
@@ -525,6 +532,18 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.exportEventSequence = artemis::EXPORT_JSON;
             } else {
                 cerr << "ERROR: Invalid choice of export-event-sequnce " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+
+        case 'O': {
+            if(string(optarg).compare("form-submission") == 0){
+                options.concolicTraceClassifier = artemis::CLASSIFY_FORM_SUBMISSION;
+            } else if(string(optarg).compare("js-error") == 0){
+                options.concolicTraceClassifier = artemis::CLASSIFY_JS_ERROR;
+            } else {
+                cerr << "ERROR: Invalid choice of concolic-trace-classifier " << optarg << endl;
                 exit(1);
             }
             break;

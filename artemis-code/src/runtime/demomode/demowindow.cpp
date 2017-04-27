@@ -20,11 +20,13 @@
 
 #include "util/loggingutil.h"
 #include "runtime/input/clicksimulator.h"
+#include "concolic/executiontree/classifier/formsubmissionclassifier.h"
+#include "concolic/executiontree/classifier/jserrorclassifier.h"
 
 namespace artemis
 {
 
-DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* webkitExecutor, const QUrl &url) :
+DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* webkitExecutor, const QUrl &url, const Options &options) :
     mAppModel(appModel),
     mWebkitExecutor(webkitExecutor),
     mEntryPointDetector(mWebkitExecutor->getPage())
@@ -45,6 +47,20 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
                      this, SLOT(slUrlChanged(QUrl)));
     QObject::connect(mWebView->page(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      this, SLOT(slJavascriptAlert(QWebFrame*, QString)));
+
+    switch (options.concolicTraceClassifier) {
+    case CLASSIFY_FORM_SUBMISSION:
+        mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
+        break;
+    case CLASSIFY_JS_ERROR:
+        Log::fatal("JS error classifier is not yet implemented.");
+        exit(1);
+        //mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        break;
+    default:
+        Log::fatal("Unsupported classification method.");
+        exit(1);
+    }
 
     // The address bar for artemis' browser.
     mAddressBar = new QLineEdit();
@@ -443,7 +459,7 @@ void DemoModeMainWindow::postTraceExecution()
 
     mPreviousTrace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    TraceClassificationResult result = mTraceClassifier.classify(mPreviousTrace);
+    TraceClassificationResult result = mTraceClassifier->classify(mPreviousTrace);
 
     mTraceClassificationResult->setVisible(true);
     switch(result){

@@ -14,38 +14,40 @@
  * limitations under the License.
  */
 
-#include <QList>
+#ifndef TRACECLASSIFIER_H
+#define TRACECLASSIFIER_H
 
-#include "manualruntime.h"
+#include <QSharedPointer>
+
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/executiontree/tracevisitor.h"
 
 
 namespace artemis
 {
 
-ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl& url) :
-    Runtime(parent, options, url)
+
+enum TraceClassificationResult {
+    UNKNOWN, SUCCESS, FAILURE
+};
+
+
+/*
+ *  Classifies a complete annotated trace as either a success or a failure.
+ *  Also modifies the trace to include an END-SUCCESS or END-FAILURE marker.
+ */
+class TraceClassifier : public TraceVisitor
 {
-    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow(mAppmodel, mWebkitExecutor, url, options));
+public:
+    virtual TraceClassificationResult classify(TraceNodePtr &trace) = 0;
+};
 
-    QObject::connect(mDemoApp.data(), SIGNAL(sigClose()),
-                     this, SLOT(slApplicationClosed()));
-}
-
-void ManualRuntime::run(const QUrl& url)
-{
-    mDemoApp->run(url);
-    mDemoApp->show();
-}
+typedef QSharedPointer<TraceClassifier> TraceClassifierPtr;
 
 
-
-
-void ManualRuntime::slApplicationClosed()
-{
-    done();
-}
 
 
 
 } // namespace artemis
 
+#endif // TRACECLASSIFIER_H

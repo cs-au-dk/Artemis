@@ -21,6 +21,8 @@
 #include "util/fileutil.h"
 #include "concolic/traceeventdetectors.h"
 #include "statistics/statsstorage.h"
+#include "concolic/executiontree/classifier/formsubmissionclassifier.h"
+#include "concolic/executiontree/classifier/jserrorclassifier.h"
 
 #include "concolicruntime.h"
 
@@ -63,6 +65,20 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     // Link the ConcolicAnalysis signals.
     QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr, QString)),
                      this, SLOT(slExecutionTreeUpdated(TraceNodePtr, QString)));
+
+    switch (options.concolicTraceClassifier) {
+    case CLASSIFY_FORM_SUBMISSION:
+        mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
+        break;
+    case CLASSIFY_JS_ERROR:
+        Log::fatal("JS error classifier is not yet implemented.");
+        exit(1);
+        //mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        break;
+    default:
+        Log::fatal("Unsupported classification method.");
+        exit(1);
+    }
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -486,7 +502,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    TraceClassificationResult classification = mTraceClassifier.classify(trace);
+    TraceClassificationResult classification = mTraceClassifier->classify(trace);
 
     switch(classification){
     case SUCCESS:

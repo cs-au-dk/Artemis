@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef TRACECLASSIFIER_H
-#define TRACECLASSIFIER_H
+#ifndef FORMSUBMISSIONCLASSIFIER_H
+#define FORMSUBMISSIONCLASSIFIER_H
 
+#include <QSharedPointer>
+
+#include "concolic/executiontree/classifier/traceclassifier.h"
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/executiontree/tracevisitor.h"
 
@@ -24,23 +27,18 @@ namespace artemis
 {
 
 
-enum TraceClassificationResult {
-    UNKNOWN, SUCCESS, FAILURE
-};
-
-
 /*
- *  Classifies a complete annotated trace as either a success or a failure.
- *  Also modifies the trace to include an END-SUCCESS or END-FAILURE marker.
+ *  Classification is based on whether we think a form submission was successful.
  */
-class TraceClassifier : public TraceVisitor
+class FormSubmissionClassifier : public TraceClassifier
 {
 public:
-    TraceClassifier();
+    FormSubmissionClassifier();
 
     TraceClassificationResult classify(TraceNodePtr &trace);
-    TraceClassificationResult mResult;
 
+protected:
+    TraceClassificationResult mResult;
 
     // Annotation nodes are used in the classification
     virtual void visit(TraceAlert* node);
@@ -69,9 +67,6 @@ public:
 
 
 
-
-
-
 } // namespace artemis
 
-#endif // TRACECLASSIFIER_H
+#endif // FORMSUBMISSIONCLASSIFIER_H

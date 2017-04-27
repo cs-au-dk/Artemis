@@ -15,7 +15,7 @@
  */
 
 
-#include "traceclassifier.h"
+#include "formsubmissionclassifier.h"
 
 #include "util/loggingutil.h"
 
@@ -25,17 +25,17 @@ namespace artemis
 
 
 
-TraceClassifier::TraceClassifier()
+FormSubmissionClassifier::FormSubmissionClassifier()
 {
 }
 
-TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace)
+TraceClassificationResult FormSubmissionClassifier::classify(TraceNodePtr& trace)
 {
     // Simple implementation which will not be general enough for all sites.
     // Scan the trace and classify according to the following rules:
     //     * Alert -> failure
     //     * New page load -> success
-    //     * DOM modification which introduces indicator words -> failure
+    //     * DOM modification which introduces indicator words -> failure       // N.B. This is disabled currently because the DOM modification detector is expensive.
     //     * Otherwise unknown
 
     trace->accept(this);
@@ -44,18 +44,9 @@ TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace)
 }
 
 
-
-
-
-
-
-
-
 // Definitions for the visitor part
 
-
-
-void TraceClassifier::visit(TraceAlert *node)
+void FormSubmissionClassifier::visit(TraceAlert *node)
 {
     mResult = FAILURE;
 
@@ -65,7 +56,7 @@ void TraceClassifier::visit(TraceAlert *node)
     node->next = marker;
 }
 
-void TraceClassifier::visit(TraceDomModification *node)
+void FormSubmissionClassifier::visit(TraceDomModification *node)
 {
     // Check if there are any "indicator words" in this modification.
     if(node->words.size() > 0) {
@@ -82,7 +73,7 @@ void TraceClassifier::visit(TraceDomModification *node)
     }
 }
 
-void TraceClassifier::visit(TracePageLoad *node)
+void FormSubmissionClassifier::visit(TracePageLoad *node)
 {
     // We consider any page load (or POST request, etc.) as a success for getting through the *client-side* validation.
     mResult = SUCCESS;
@@ -93,46 +84,46 @@ void TraceClassifier::visit(TracePageLoad *node)
     node->next = marker;
 }
 
-void TraceClassifier::visit(TraceMarker *node)
+void FormSubmissionClassifier::visit(TraceMarker *node)
 {
     node->next->accept(this);
 }
 
-void TraceClassifier::visit(TraceFunctionCall *node)
+void FormSubmissionClassifier::visit(TraceFunctionCall *node)
 {
     node->next->accept(this);
 }
 
-void TraceClassifier::visit(TraceDivergence* node)
+void FormSubmissionClassifier::visit(TraceDivergence* node)
 {
     node->next->accept(this);
 }
 
-void TraceClassifier::visit(TraceNode *node)
+void FormSubmissionClassifier::visit(TraceNode *node)
 {
     Log::fatal("Trace Classifier: visited a node which was not handled correctly.");
     exit(1);
 }
 
-void TraceClassifier::visit(TraceBranch *node)
+void FormSubmissionClassifier::visit(TraceBranch *node)
 {
     node->getTrueBranch()->accept(this);
     node->getFalseBranch()->accept(this);
 }
 
-void TraceClassifier::visit(TraceConcreteSummarisation *node)
+void FormSubmissionClassifier::visit(TraceConcreteSummarisation *node)
 {
     foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
         execution.second->accept(this);
     }
 }
 
-void TraceClassifier::visit(TraceUnexplored *node)
+void FormSubmissionClassifier::visit(TraceUnexplored *node)
 {
     return;
 }
 
-void TraceClassifier::visit(TraceEndUnknown *node)
+void FormSubmissionClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
     // In this simple classifier, we don't know if this is a success or failure.
@@ -140,13 +131,11 @@ void TraceClassifier::visit(TraceEndUnknown *node)
     mResult = UNKNOWN;
 }
 
-void TraceClassifier::visit(TraceEnd *node)
+void FormSubmissionClassifier::visit(TraceEnd *node)
 {
     Log::fatal("Trace Classifier: classifying a trace which has already been classified.");
     exit(1);
 }
-
-
 
 
 

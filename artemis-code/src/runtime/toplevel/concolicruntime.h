@@ -27,7 +27,7 @@
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
-#include "concolic/traceclassifier.h"
+#include "concolic/executiontree/classifier/traceclassifier.h"
 #include "concolic/tracestatistics.h"
 #include "concolic/handlerdependencytracker.h"
 #include "concolic/search/abstractselector.h"
@@ -80,7 +80,7 @@ protected:
     bool mManualEntryPoint;
     QString mManualEntryPointXPath;
 
-    TraceClassifier mTraceClassifier;
+    TraceClassifierPtr mTraceClassifier;
 
     // Method and variables for generating a graphviz graph of the execution tree.
     void outputTreeGraph();

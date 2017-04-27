@@ -40,7 +40,7 @@
 
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/tracenodes.h"
-#include "concolic/traceclassifier.h"
+#include "concolic/executiontree/classifier/traceclassifier.h"
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/tracestatistics.h"
 #include "concolic/executiontree/tracedisplay.h"
@@ -58,7 +58,7 @@ class DemoModeMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor *webkitExecutor, const QUrl& url);
+    DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor *webkitExecutor, const QUrl& url, const Options& options);
     ~DemoModeMainWindow();
 
     void run(const QUrl &url);
@@ -116,7 +116,7 @@ private:
 
     // The analysis logic itself.
     EntryPointDetector mEntryPointDetector;
-    TraceClassifier mTraceClassifier;
+    TraceClassifierPtr mTraceClassifier;
     TraceNodePtr mPreviousTrace;
 
     void preTraceExecution(ExecutionResultPtr result);

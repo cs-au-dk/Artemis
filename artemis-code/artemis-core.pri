@@ -82,7 +82,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/entrypoints.h \
     src/concolic/executiontree/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
-    src/concolic/traceclassifier.h \
+    src/concolic/executiontree/classifier/traceclassifier.h \
     src/runtime/demomode/demowindow.h \
     src/concolic/executiontree/traceprinter.h \
     src/concolic/executiontree/tracevisitor.h \
@@ -161,7 +161,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/clicksimulator.h \
     src/model/domsnapshotstorage.h \
     src/runtime/toplevel/concolicstandaloneruntime.h \
-    src/concolic/executiontree/nodes/tracedivergence.h
+    src/concolic/executiontree/nodes/tracedivergence.h \
+    src/concolic/executiontree/classifier/formsubmissionclassifier.h \
+    src/concolic/executiontree/classifier/jserrorclassifier.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -219,7 +221,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/entrypoints.cpp \
     src/runtime/toplevel/concolicruntime.cpp \
     src/concolic/executiontree/tracebuilder.cpp \
-    src/concolic/traceclassifier.cpp \
     src/runtime/demomode/demowindow.cpp \
     src/concolic/executiontree/traceprinter.cpp \
     src/concolic/executiontree/tracevisitor.cpp \
@@ -291,6 +292,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/browser/cookies/resettablecookiejar.cpp \
     src/runtime/input/clicksimulator.cpp \
     src/model/domsnapshotstorage.cpp \
-    src/runtime/toplevel/concolicstandaloneruntime.cpp
+    src/runtime/toplevel/concolicstandaloneruntime.cpp \
+    src/concolic/executiontree/classifier/formsubmissionclassifier.cpp \
+    src/concolic/executiontree/classifier/jserrorclassifier.cpp
 
 QT += network
