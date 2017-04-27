@@ -493,8 +493,8 @@ void DemoModeMainWindow::displayTraceInformation()
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
 
-    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nSymbolic Branches: %3\nAlerts: %4\nFunction Calls: %5")
-                                .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumSymBranches).arg(stats.mNumAlerts)
+    mTraceAnalysisText->setText(QString("Events Recorded: %1\nSymbolic Branches: %2\nAlerts: %3\nFunction Calls: %4")
+                                .arg(stats.mNumNodes).arg(stats.mNumSymBranches).arg(stats.mNumAlerts)
                                 .arg(stats.mNumFunctionCalls));
 
     // If the trace is small enough to usefully disply, then print it in the temrinal.
