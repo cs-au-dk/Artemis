@@ -17,6 +17,7 @@
 #include "ajaxrequestlistener.h"
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
+#include <QDebug>
 
 
 namespace artemis
@@ -30,6 +31,32 @@ AjaxRequestListener::AjaxRequestListener(QObject* parent) :
 QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRequest& req, QIODevice* outgoingData)
 
 {
+    // TODO: Temporary hacking for the demo error injection.
+    qDebug() << "REQUEST:" << req.url();
+    QMap<QUrl, QUrl> urlReplacements;
+
+    urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("about:blank"));
+
+    if (urlReplacements.contains(req.url())) {
+        QUrl replacement = urlReplacements[req.url()];
+        qDebug() << "REPLACED WITH:" << replacement;
+
+        QNetworkRequest replacementRequest = QNetworkRequest(req);
+        replacementRequest.setUrl(replacement);
+
+
+        //super call
+        QNetworkReply* reply2 = QNetworkAccessManager::createRequest(op, replacementRequest, outgoingData);
+
+        if (op == GetOperation)
+            { emit this->pageGet(replacement); }
+        else if (op == PostOperation)
+            { emit this->pagePost(replacement); }
+
+        return reply2;
+    }
+
+
     //super call
     QNetworkReply* reply = QNetworkAccessManager::createRequest(op, req, outgoingData);
 
