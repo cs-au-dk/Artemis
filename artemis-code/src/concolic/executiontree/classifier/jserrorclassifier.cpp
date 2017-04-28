@@ -41,12 +41,8 @@ void JsErrorClassifier::visit(TraceNode *)
 
 void JsErrorClassifier::visit(TraceAlert *node)
 {
-    mResult = FAILURE;
-
-    // Add the failure marker immediately here, and do not scan any more of the trace.
-    QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
-    marker->next = node->next;
-    node->next = marker;
+    // Alerts are OK because they are part of the UI - not an "internal" error message.
+    node->next->accept(this);
 }
 
 void JsErrorClassifier::visit(TraceConsoleMessage *node)
