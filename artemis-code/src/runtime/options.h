@@ -82,7 +82,7 @@ struct ConcolicSearchSelector
 };
 
 enum ConcolicTraceClassifer {
-    CLASSIFY_FORM_SUBMISSION, CLASSIFY_JS_ERROR
+    CLASSIFY_FORM_SUBMISSION, CLASSIFY_JS_ERROR, CLASSIFY_NONE
 };
 
 

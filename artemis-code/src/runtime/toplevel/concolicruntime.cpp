@@ -23,6 +23,7 @@
 #include "statistics/statsstorage.h"
 #include "concolic/executiontree/classifier/formsubmissionclassifier.h"
 #include "concolic/executiontree/classifier/jserrorclassifier.h"
+#include "concolic/executiontree/classifier/nullclassifier.h"
 
 #include "concolicruntime.h"
 
@@ -72,6 +73,9 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
         break;
     case CLASSIFY_JS_ERROR:
         mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        break;
+    case CLASSIFY_NONE:
+        mTraceClassifier = TraceClassifierPtr(new NullClassifier());
         break;
     default:
         Log::fatal("Unsupported classification method.");

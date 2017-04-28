@@ -22,6 +22,7 @@
 #include "runtime/input/clicksimulator.h"
 #include "concolic/executiontree/classifier/formsubmissionclassifier.h"
 #include "concolic/executiontree/classifier/jserrorclassifier.h"
+#include "concolic/executiontree/classifier/nullclassifier.h"
 
 namespace artemis
 {
@@ -54,6 +55,9 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
         break;
     case CLASSIFY_JS_ERROR:
         mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        break;
+    case CLASSIFY_NONE:
+        mTraceClassifier = TraceClassifierPtr(new NullClassifier());
         break;
     default:
         Log::fatal("Unsupported classification method.");

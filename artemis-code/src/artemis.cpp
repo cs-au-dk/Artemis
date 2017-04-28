@@ -197,6 +197,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "           form-submission (default) - determines whether a recorded trace represents a successful form submission.\n"
             "           js-errors - classifies traces besed on unhandled JavaScript exceptions, calls to console.error, or failed console.assert calls.\n"
+            "           none - traces are not classified and are inserted into the tree unmodified.\n"
             "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
@@ -542,6 +543,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.concolicTraceClassifier = artemis::CLASSIFY_FORM_SUBMISSION;
             } else if(string(optarg).compare("js-error") == 0){
                 options.concolicTraceClassifier = artemis::CLASSIFY_JS_ERROR;
+            } else if(string(optarg).compare("none") == 0){
+                options.concolicTraceClassifier = artemis::CLASSIFY_NONE;
             } else {
                 cerr << "ERROR: Invalid choice of concolic-trace-classifier " << optarg << endl;
                 exit(1);
