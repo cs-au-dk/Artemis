@@ -35,7 +35,7 @@ QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRe
     qDebug() << "REQUEST:" << req.url();
     QMap<QUrl, QUrl> urlReplacements;
 
-    urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("about:blank"));
+    urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs.js"));
 
     if (urlReplacements.contains(req.url())) {
         QUrl replacement = urlReplacements[req.url()];
