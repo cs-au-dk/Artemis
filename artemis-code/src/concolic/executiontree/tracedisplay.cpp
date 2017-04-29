@@ -29,7 +29,7 @@ namespace artemis
 
 QString TraceDisplay::indent = "  ";
 
-bool TraceDisplay::mPassThroughEndMarkers = false;
+bool TraceDisplay::mPassThroughEndMarkers = true;
 bool TraceDisplay::mShowExplorationIndices = true;
 
 TraceDisplay::TraceDisplay()

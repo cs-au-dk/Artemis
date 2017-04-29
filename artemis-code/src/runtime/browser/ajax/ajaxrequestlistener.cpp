@@ -35,6 +35,12 @@ QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRe
     qDebug() << "REQUEST:" << req.url();
     QMap<QUrl, QUrl> urlReplacements;
 
+    // Beautified, non-bugged.
+    //urlReplacements.insert(QUrl("https://goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-beautified.js"));
+    //urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-beautified.js"));
+
+    // Minified, bugged.
+    urlReplacements.insert(QUrl("https://goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs.js"));
     urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs.js"));
 
     if (urlReplacements.contains(req.url())) {
