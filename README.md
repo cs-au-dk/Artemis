@@ -11,6 +11,8 @@ instrumented version of the WebKit code-base.
 
 The tool is being developed by the [Center for Advanced Software Analysis](http://cs.au.dk/CASA/), at Aarhus University. For more information, see [brics.dk/artemis](http://brics.dk/artemis/)
 
+For details on ArtForm and the concolic execution engine, there is an [ArtForm specific introduction](ArtForm.md).
+
 Contributors
 ------------
 
@@ -62,7 +64,7 @@ Artemis supports three different major modes for traversing websites:
 
 1. `artemis` *(default)*: Uses a feedback-directed approach as descriped in the [ICSE'11 Artemis paper](http://cs.au.dk/~amoeller/papers/artemis/paper.pdf).
 2. `manual`: Opens a browser window for manual testing.  
-3. `concolic`: Perform an automated concolic analysis of form validation code
+3. `concolic`: Perform an automated concolic analysis of form validation code (See [ArtForm](ArtForm.md))
 
 The major mode can be chosen by setting the `--major-mode <mode>` option. As an example the following opens [google.com](https://google.com) in a browser window:
 
