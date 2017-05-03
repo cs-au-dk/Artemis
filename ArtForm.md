@@ -4,9 +4,10 @@ ArtForm is the name for the form- and interface-analysis modes of Artemis.
 
 [Main Artemis Readme](README.md)
 
-## Goals
-
 ArtForm uses concolic execution to explore different execution paths of JavaScript code attached to web forms.
+
+For more information, see: [www.cs.ox.ac.uk/projects/ArtForm/](http://www.cs.ox.ac.uk/projects/ArtForm/)
+
 
 ## Installation
 The [main installation instructions](INSTALL) already include everything required for ArtForm.
