@@ -42,7 +42,7 @@ Whenever a form input value is used to control the JavaScript execution (e.g. in
 ArtForm can also run in an "advice server" mode, where the browser can be controlled externally via a JSON API.
 The client sends browser commands and can control the concolic execution - recording symbolic traces and requesting new suggested values.
 
-For full details on the advice API, see [the server mode documentation](https://artemis.readthedocs.io/en/latest/sections/server.html), and [concolic execution in advice mode](https://artemis.readthedocs.io/en/latest/sections/server-concolic-advice.html).
+For full details on the advice API, see [the server mode documentation](docs/sections/server.rst), and [concolic execution in advice mode](docs/sections/server-concolic-advice.rst).
 
 An example call might be:
 
@@ -54,3 +54,8 @@ At which point the API commands can be sent:
     { "pageload" : "done", "url" : "http://www.example.com/" }
     $ curl -w "\n" --data '{"command":"element","element":"//h1"}' localhost:8008
     { "elements" : [ "<h1>Example Domain</h1>" ] }
+
+
+
+
+
