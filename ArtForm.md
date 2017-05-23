@@ -8,6 +8,8 @@ ArtForm uses concolic execution to explore different execution paths of JavaScri
 
 For more information, see: [www.cs.ox.ac.uk/projects/ArtForm/](http://www.cs.ox.ac.uk/projects/ArtForm/)
 
+A demo screencast is available at: [www.cs.ox.ac.uk/projects/ArtForm/demo/](http://www.cs.ox.ac.uk/projects/ArtForm/demo/)
+
 
 ## Installation
 The [main installation instructions](INSTALL) already include everything required for ArtForm.
@@ -56,6 +58,32 @@ At which point the API commands can be sent:
     { "elements" : [ "<h1>Example Domain</h1>" ] }
 
 
+
+# ArtForm source code
+
+ArtForm is implemented as a set of new modes for the original Artemist tool.
+There are significant updates and chnges throughout Artemis, but the key new components are as follows:
+
+* The main controlling code (called a `Runtime`) for each of the new modes: [concolic](artemis-code/src/runtime/toplevel/concolicruntime.h), [concolic standalone](artemis-code/src/runtime/toplevel/concolicstandaloneruntime.h) (without forms support), [manual](artemis-code/src/runtime/demomode/demowindow.h), and [advice server](artemis-code/src/runtime/toplevel/analysisserverruntime.h).
+* [The symbolic interpreter](WebKit/Source/JavaScriptCore/symbolic), and [symbolic expressions](WebKit/Source/JavaScriptCore/symbolic/expression)
+* The creation of fresh symbolic values: [directly](WebKit/Source/JavaScriptCore/symbolic/expression) (see `globalFuncArtemisInput*`), and [from forms](WebKit/Source/WebCore/bindings/scripts/CodeGeneratorJS.pm) (this is the code generator for the relevant JS DOM API, search for `ARTEMIS` or `SymbolicInputElement`; the code is generated from [modified IDL files here](WebKit/Source/WebCore/html))
+* [Input simulation](artemis-code/src/runtime/input/clicksimulator.cpp)
+* [Form modelling](artemis-code/src/runtime/input/forms)
+* [The JSON server which forms the API for advice mode](artemis-code/src/runtime/analysisserver)
+* [The path trace reporting](artemis-code/src/model/pathtracer.h)
+* [The coverage report](artemis-code/src/model/coverage) (from the original Artemis)
+* [The main concolic advice infrastructure](artemis-code/src/concolic), including:
+    * [The concolic execution angine](artemis-code/src/concolic/concolicanalysis.h)
+    * [The different search procedures](artemis-code/src/concolic/search)
+    * [Constraint solving](artemis-code/src/concolic/solver)
+    * [Tracking form field dependencies](artemis-code/src/concolic/handlerdependencytracker.h)
+    * [Representation of symbolic traces and the execution tree](artemis-code/src/concolic/executiontree)
+    * [Trace classification](artemis-code/src/concolic/executiontree/classifier)
+* [Automated test suites](artemis-code/tests/system) for concolic and server modes, and various parts of the symbolic infrastructure
+* [A proxy which rewrites JavaScript code into an un-minified form](proxies/prettifyproxy.js)
+
+Further documentation of the low-level changes within WebKit is in the [docs](docs) directory ([or online](https://artemis.readthedocs.io/en/latest/)).
+In particular, see [Concolic Testing Framework](docs/sections/concolic.rst), [Concolic infrastructure test Mode](docs/sections/concolic-standalone.rst), [Server mode](docs/sections/server.rst), and [Server Mode - Concolic Advice](docs/sections/server-concolic-advice.rst).
 
 
 
