@@ -83,7 +83,7 @@ There are significant updates and chnges throughout Artemis, but the key new com
 * [A proxy which rewrites JavaScript code into an un-minified form](proxies/prettifyproxy.js)
 
 Further documentation of the low-level changes within WebKit is in the [docs](docs) directory ([or online](https://artemis.readthedocs.io/en/latest/)).
-In particular, see [Concolic Testing Framework](docs/sections/concolic.rst), [Concolic infrastructure test mode](docs/sections/concolic-standalone.rst), [Server Mode](docs/sections/server.rst), and [Server Mode - Concolic Advice](docs/sections/server-concolic-advice.rst).
+In particular, see [Concolic Testing Framework](docs/sections/concolic.rst), [Concolic infrastructure test mode](docs/sections/concolic-test.rst), [Server Mode](docs/sections/server.rst), and [Server Mode - Concolic Advice](docs/sections/server-concolic-advice.rst).
 
 
 
