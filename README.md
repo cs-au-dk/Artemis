@@ -73,7 +73,7 @@ The major mode can be chosen by setting the `--major-mode <mode>` option. As an 
 ### Directing testing in Artemis
 In major mode `artemis`, Artemis uses different heuristics in order to choose in which "direction" to test next: 
  
-####Prioritization Functions
+#### Prioritization Functions
 
 These functions are used to assign a priority to a given configuration in the worklist
 
@@ -88,7 +88,7 @@ Setting the prioritization function can be done by the `--strategy-priority <str
 
 
 
-####Form input generators
+#### Form input generators
 
 In order to gain a larger code coverage Artemis generates input to forms instead of just submitting them with default values. Choosing the input is done by form input generators where the following generators are available:  
 
@@ -112,7 +112,7 @@ Executing the following will generate a coverage report in the current folder, i
             --coverage-report-ignore-url http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js  
             --coverage-report-ignore-url http://cdn.sstatic.net/Js/stub.en.js?v=f7b42019ec56 
 
-###More infomation
+### More infomation
 
 Use the help command `artemis --help` for additional options.
 
