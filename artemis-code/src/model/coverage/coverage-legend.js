@@ -18,22 +18,22 @@ $(document).ready(function(){
         }
         
         if($(this).hasClass('symCovered')){
-            toggleBackground(this.checked, 'pre > ol > li.symCovered', '#E29C1D', true);
+            toggleBackground(this.checked, 'pre > ol > li.symCovered', '#AFDF08', true);
             return;
         }
         
         if($(this).hasClass('stmtCovered')){
-            toggleBackground(this.checked, 'pre > ol > li.covered > span.covered, pre > ol > li.symCovered > span.covered', '#FF6868', false);
+            toggleBackground(this.checked, 'pre > ol > li.covered > span.covered, pre > ol > li.symCovered > span.covered', '#E2C18C', false);
             return;
         }
         
         if($(this).hasClass('symStmtCovered')){
-            toggleBackground(this.checked, 'pre > ol > li.symCovered > span.symCovered, pre > ol > li.covered > span.symCovered', '#FF004E', false);
+            toggleBackground(this.checked, 'pre > ol > li.symCovered > span.symCovered, pre > ol > li.covered > span.symCovered', '#87AC06', false);
             return;
         }
         
         if($(this).hasClass('linkedLine')){
-            toggleBackground(this.checked, 'pre > ol > li.linkedLine', '#66FF99', true);
+            toggleBackground(this.checked, 'pre > ol > li.linkedLine', '#FF6600', true);
             return;
         }
     });
