@@ -73,7 +73,7 @@ There are significant updates and chnges throughout Artemis, but the key new com
 * [The path trace reporting](artemis-code/src/model/pathtracer.h)
 * [The coverage report](artemis-code/src/model/coverage) (from the original Artemis)
 * [The main concolic advice infrastructure](artemis-code/src/concolic), including:
-    * [The concolic execution angine](artemis-code/src/concolic/concolicanalysis.h)
+    * [The concolic execution engine](artemis-code/src/concolic/concolicanalysis.h)
     * [The different search procedures](artemis-code/src/concolic/search)
     * [Constraint solving](artemis-code/src/concolic/solver)
     * [Tracking form field dependencies](artemis-code/src/concolic/handlerdependencytracker.h)
