@@ -32,6 +32,7 @@ QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRe
 
 {
     // TODO: Temporary hacking for the demo error injection.
+    bool enable_url_replacements = false;
     qDebug() << "REQUEST:" << req.url();
     QMap<QUrl, QUrl> urlReplacements;
 
@@ -44,10 +45,10 @@ QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRe
     //urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs.js"));
 
     // Beautified, bugged.
-    urlReplacements.insert(QUrl("https://goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs-beautified.js"));
-    urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs-beautified.js"));
+    //urlReplacements.insert(QUrl("https://goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs-beautified.js"));
+    //urlReplacements.insert(QUrl("https://www.goair.in/scripts/combined_ED7BF75BFB56AA42C3CFA51B9EEFA774.js"), QUrl("https://www.cs.ox.ac.uk/people/ben.spencer/downloads/artform-demo-injections/goair-injected-bugs-beautified.js"));
 
-    if (urlReplacements.contains(req.url())) {
+    if (enable_url_replacements && urlReplacements.contains(req.url())) {
         QUrl replacement = urlReplacements[req.url()];
         qDebug() << "REPLACED WITH:" << replacement;
 
