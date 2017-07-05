@@ -28,7 +28,7 @@ namespace artemis
 
 /*
  *  Classification is based on whether errors ocurred in the JavaScript code.
- *  We detect: alerts, console.error, console.assert (failed), unhandled JS exceptions.
+ *  We detect console messages, such as console.error, console.assert, console.log, and some exceptions.
  */
 class JsErrorClassifier : public TraceClassifier
 {

@@ -1,0 +1,58 @@
+<!--
+TEST Concolic::Solver::ConstraintsWritten = 5
+TEST Concolic::Solver::ConstraintsSolved = 5
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var y = 4567;
+		var x = 123;
+		var z = 890;
+
+		function validate() {
+			var input = document.getElementById("testinput").value;
+
+			if(input <= y) {
+				if(input >= x){
+					if(input == z){
+						console.error("Input '" + input + "' is forbidden.");
+						return false;
+					}else{
+						return true;
+					}
+				}else{
+					throw new Error("Input '" + input + "' is too small.");
+					return false;
+				}
+			}else{
+				if(input <= 2*y){
+					console.assert(false, "Input '" + input + "' is a bit too large.");
+				}else{
+					my_nonexistant_error_function()
+					alert("Input '" + input + "' is much too large.");
+				}
+				return false;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Enter a number between 123 and 4567 but not 890.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="testinput" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
