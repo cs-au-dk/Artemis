@@ -61,8 +61,8 @@ At which point the API commands can be sent:
 
 # ArtForm source code
 
-ArtForm is implemented as a set of new modes for the original Artemist tool.
-There are significant updates and chnges throughout Artemis, but the key new components are as follows:
+ArtForm is implemented as a set of new modes for the original Artemis tool.
+There are significant updates and changes throughout Artemis, but the key new components are as follows:
 
 * The main controlling code (called a `Runtime`) for each of the new modes: [concolic](artemis-code/src/runtime/toplevel/concolicruntime.h), [concolic standalone](artemis-code/src/runtime/toplevel/concolicstandaloneruntime.h) (without forms support), [manual](artemis-code/src/runtime/demomode/demowindow.h), and [advice server](artemis-code/src/runtime/toplevel/analysisserverruntime.h).
 * [The symbolic interpreter](WebKit/Source/JavaScriptCore/symbolic), and [symbolic expressions](WebKit/Source/JavaScriptCore/symbolic/expression)
