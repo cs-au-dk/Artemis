@@ -126,7 +126,7 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
 
 
 def _artemis_runner(name, path, send_iteration_count=False, concolic_event_sequences='simple'):
-    print "artemis runnre", concolic_event_sequences
+    #print "artemis runner", concolic_event_sequences
     return execute_artemis(name, path,
                            iterations=0,
                            debug_concolic=' ',
@@ -155,7 +155,7 @@ def setup_concolic_tests():
 
 class ConcolicTraceDivergenceTests(unittest.TestCase):
     def run_artemis_and_get_final_graph(self, name, concolic_event_sequences='simple'):
-        print "run and get graph", concolic_event_sequences
+        #print "run and get graph", concolic_event_sequences
         
         address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
         report = _artemis_runner(name, address, True, concolic_event_sequences)

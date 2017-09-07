@@ -1,0 +1,44 @@
+<!--
+TEST PC[0]: (StringLength( SymbolicString ) < ConstantInteger)
+TEST PC[1]: ((StringSubstring( SymbolicString, 2, 4 ) != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 3
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = AATESTAA
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var x = "TEST";
+		
+		function validate() {
+			var y = document.getElementById("testinput").value;
+			
+			if (y.length < 8 || y.substr(2, 4) != x) {
+				alert("Error!");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+	
+</head>
+<body>
+
+	<p>Write a string matching <code>/..TEST.*/</code> (with length >= 8) in the field to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="testinput" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

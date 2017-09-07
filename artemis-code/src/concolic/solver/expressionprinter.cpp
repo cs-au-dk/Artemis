@@ -285,11 +285,11 @@ void ExpressionPrinter::visit(Symbolic::StringSubstring* obj, void* arg)
 {
     m_result += "StringSubstring( ";
     obj->getSource()->accept(this);
-    m_result += " ,";
+    m_result += ", ";
     std::ostringstream from;
     from << obj->getFrom();
     m_result += from.str();
-    m_result += " ,";
+    m_result += ", ";
     std::ostringstream length;
     length << obj->getLength();
     m_result += length.str();
