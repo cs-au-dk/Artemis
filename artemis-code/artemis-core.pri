@@ -164,7 +164,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/tracedivergence.h \
     src/concolic/executiontree/classifier/formsubmissionclassifier.h \
     src/concolic/executiontree/classifier/jserrorclassifier.h \
-    src/concolic/executiontree/classifier/nullclassifier.h
+    src/concolic/executiontree/classifier/nullclassifier.h \
+    src/runtime/toplevel/concolicreorderingruntime.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -296,6 +297,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/toplevel/concolicstandaloneruntime.cpp \
     src/concolic/executiontree/classifier/formsubmissionclassifier.cpp \
     src/concolic/executiontree/classifier/jserrorclassifier.cpp \
-    src/concolic/executiontree/classifier/nullclassifier.cpp
+    src/concolic/executiontree/classifier/nullclassifier.cpp \
+    src/runtime/toplevel/concolicreorderingruntime.cpp
 
 QT += network

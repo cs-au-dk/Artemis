@@ -18,6 +18,7 @@
 #include "runtime/toplevel/manualruntime.h"
 #include "runtime/toplevel/concolicruntime.h"
 #include "runtime/toplevel/concolicstandaloneruntime.h"
+#include "runtime/toplevel/concolicreorderingruntime.h"
 #include "runtime/toplevel/analysisserverruntime.h"
 
 #include "artemisapplication.h"
@@ -49,6 +50,9 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
         break;
     case CONCOLIC_TEST:
         mRuntime = new ConcolicStandaloneRuntime(this, options, url);
+        break;
+    case CONCOLIC_REORDERING:
+        mRuntime = new ConcolicReorderingRuntime(this, options, url);
         break;
     default:
         mRuntime = new ArtemisRuntime(this, options, url);

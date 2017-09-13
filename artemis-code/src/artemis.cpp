@@ -69,6 +69,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           manual - open a browser window for manual testing of web applications\n"
             "           concolic - perform an automated concolic analysis of form validation code\n"
             "           concolic-test - perform a concolic analysis of standalone JavaScript snippets (for testing)\n"
+            "           concolic-reordering - concolic analysis of form validation, including dynamic event ordering.\n"
             "           server - provides an API to control the Artemis browser and report information\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
@@ -492,6 +493,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.saveCookiesForSession = true;
             } else if (string(optarg).compare("concolic-test") == 0) {
                 options.majorMode = artemis::CONCOLIC_TEST;
+            } else if (string(optarg).compare("concolic-reordering") == 0) {
+                options.majorMode = artemis::CONCOLIC_REORDERING;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);

@@ -27,7 +27,6 @@
 namespace artemis
 {
 
-// TODO: Add something like ConcolicRuntime::reportStatistics() to call during done().
 // TODO: Add support for async events: timers and AJAX, as we do in server mode.
 
 class ConcolicStandaloneRuntime : public Runtime
