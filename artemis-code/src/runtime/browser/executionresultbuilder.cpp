@@ -276,11 +276,11 @@ void ExecutionResultBuilder::slStringEvaled(const QString exp)
 
 void ExecutionResultBuilder::slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber)
 {
-    string lineNumberString = static_cast<ostringstream*>( &(ostringstream() << lineNumber) )->str();
-    std::stringstream ss;
-    ss << sourceID;
-    qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
-             << sourceID << endl;
+    //string lineNumberString = static_cast<ostringstream*>( &(ostringstream() << lineNumber) )->str();
+    //std::stringstream ss;
+    //ss << sourceID;
+    //qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
+    //         << sourceID << endl;
 }
 
 void ExecutionResultBuilder::slAjaxCallbackHandlerAdded(int callbackId)
