@@ -1,0 +1,40 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // This requires the constraint v2 == "hello" ^ happens-before(A2, A1)
+        
+        function handler_A1() {
+            var v2 = document.getElementById("field_2").value;
+            
+            if (v2 != "hello") {
+                alert("Error");
+            }
+        }
+        
+        function handler_A2() {
+            // no-op
+        }
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <input type="text" id="field_2" onchange="handler_A2()" value="default2" >
+        
+    </form>
+    
+</body>
+</html>
