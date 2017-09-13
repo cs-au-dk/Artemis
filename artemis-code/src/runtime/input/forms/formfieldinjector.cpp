@@ -145,7 +145,7 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
      *  blur
      *
      * N.B. These fire on the select element itself. There is no event fired on the selected (or deselected) option
-     * element. This can happen when clicking with a mouse, but
+     * element. This can happen when clicking with a mouse, but is not simulated.
      *
      */
 

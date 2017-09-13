@@ -51,10 +51,9 @@ void ConcolicReorderingRuntime::run(const QUrl &url)
 {
     mUrl = url;
 
-    setupInitialActionSequence();
-
     // There is nothing else to prepare... Start the first iteration.
     Log::info(QString("Beginning analysis of %1").arg(url.toString()).toStdString());
+    mRunningFirstLoad = true;
     preConcreteExecution();
 }
 
@@ -101,6 +100,12 @@ void ConcolicReorderingRuntime::postConcreteExecution(ExecutableConfigurationCon
 
     // Process any async events which already exist immediately after the page load.
     clearAsyncEvents();
+
+    // If this is the first run, detect and set up the available actions.
+    if (mRunningFirstLoad) {
+        setupInitialActionSequence(result);
+        mRunningFirstLoad = false;
+    }
 
     // Execute the current action sequence
     executeCurrentActionSequence();
@@ -165,19 +170,88 @@ void ConcolicReorderingRuntime::clearAsyncEvents()
 
 
 
-void ConcolicReorderingRuntime::setupInitialActionSequence()
+void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<ExecutionResult> result)
 {
-    // TODO
+    // Populate mAvailableActions and set the default ordering in mCurrentActionOrder.
+    // TODO: mAvailaleActions should probably be given as input, or at least be configurable. For now (for testing) we can just take all fields.
+    // For the first iteration, the actions are taken in index order (i.e. DOM order).
+
+    QList<FormFieldDescriptorConstPtr> fieldsOnPage = result->getFormFields();
+    uint fieldIdx = 0;
+    foreach (FormFieldDescriptorConstPtr field, fieldsOnPage) {
+        Action action;
+        action.index = ++fieldIdx;
+        action.field = field;
+        action.variable = field->getDomElement()->getId();
+        //action.analysis // TODO
+
+        mAvailableActions[action.index] = action;
+        mCurrentActionOrder.append(action.index);
+    }
 }
 
 void ConcolicReorderingRuntime::executeCurrentActionSequence()
 {
-    // TODO
+    printCurrentActionSequence();
+    Log::debug("Executing...");
+
+    foreach (uint actionIdx, mCurrentActionOrder) {
+        Action action = mAvailableActions[actionIdx];
+
+        // Look up the value to inject in the solver's result.
+        // If it does not exist, or this is the first iteration, then use the default value.
+        // TODO
+        InjectionValue injection = getFieldCurrentValue(action.field);
+
+        // Begin trace recording for this action
+        // TODO
+
+        // Fill the field, simulating a user action.
+        Log::debug(QString("Executing action %1 (field %2, value %3, JS user simulation)").arg(action.index).arg(action.variable).arg(injection.toString()).toStdString());
+        bool couldInject = FormFieldInjector::injectWithEventSimulation(action.field->getDomElement()->getElement(mWebkitExecutor->getPage()), injection, false);
+        if (!couldInject) {
+            Log::error("Error: failed to inject.");
+        }
+        clearAsyncEvents();
+
+        // End trace recording
+        // TODO
+    }
+
+    // TODO: Should there be a way to set one action as "always last"?
+}
+
+void ConcolicReorderingRuntime::printCurrentActionSequence()
+{
+    Log::debug("Current action sequence:");
+
+    foreach (uint actionIdx, mCurrentActionOrder) {
+        Action action = mAvailableActions[actionIdx];
+        Log::debug(QString("  Action %1: %2").arg(action.index).arg(action.variable).toStdString());
+    }
+}
+
+InjectionValue ConcolicReorderingRuntime::getFieldCurrentValue(FormFieldDescriptorConstPtr field)
+{
+    // Get the defualt/current value for this field from the DOM and return it as an InjectionValue.
+    switch (field->getType()) {
+    case FormFieldTypes::TEXT:
+    case FormFieldTypes::FIXED_INPUT:
+        return InjectionValue(field->getDomElement()->getElement(mWebkitExecutor->getPage()).attribute("value"));
+    case FormFieldTypes::BOOLEAN:
+        return InjectionValue(field->getDomElement()->getElement(mWebkitExecutor->getPage()).hasAttribute("checked"));
+    case FormFieldTypes::NO_INPUT:
+    default:
+        Log::fatal("Trying to get the value for a form field which is not an input!");
+        Log::fatal(field->getDomElement()->getId().toStdString());
+        exit(1);
+    }
 }
 
 void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 {
     // TODO
+    Log::fatal("This analysis is not yet implemented. Quitting.");
     done();
 }
 

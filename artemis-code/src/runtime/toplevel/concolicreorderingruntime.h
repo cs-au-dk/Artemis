@@ -18,6 +18,7 @@
 #define CONCOLICREORDERINGRUNTIME_H
 
 #include <QUrl>
+#include <QMap>
 
 #include "runtime/runtime.h"
 #include "runtime/options.h"
@@ -48,11 +49,24 @@ protected:
     void clearStateForNewIteration();
     QMap<int, QPair<int, bool> > mTimers;
     void clearAsyncEvents();
+    bool mRunningFirstLoad;
 
     // Action ordering and execution
-    void setupInitialActionSequence();
+    void setupInitialActionSequence(QSharedPointer<ExecutionResult> result);
     void executeCurrentActionSequence();
     void chooseNextSequenceAndExplore();
+    void printCurrentActionSequence();
+    InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
+
+    struct Action {
+        // TODO: Currently Action only represents form fields, but we would like to extend it to include buttons and other widdgets which can be interacted with.
+        uint index;
+        FormFieldDescriptorConstPtr field;
+        QString variable; // The name of the symbolic variable from this field (which will be the field ID).
+        ConcolicAnalysisPtr analysis;
+    };
+    QMap<uint, Action> mAvailableActions; // Maps indices to actions
+    QList<uint> mCurrentActionOrder; // A permutation of mAvailableActions.
 
 protected slots:
     // Browser part
