@@ -23,6 +23,7 @@
 #include "runtime/runtime.h"
 #include "runtime/options.h"
 #include "runtime/browser/artemiswebview.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 #include "concolic/concolicanalysis.h"
 
@@ -63,10 +64,15 @@ protected:
         uint index;
         FormFieldDescriptorConstPtr field;
         QString variable; // The name of the symbolic variable from this field (which will be the field ID).
+        InjectionValue initialValue; // The default value for this field after a clean page load.
         ConcolicAnalysisPtr analysis;
     };
     QMap<uint, Action> mAvailableActions; // Maps indices to actions
     QList<uint> mCurrentActionOrder; // A permutation of mAvailableActions.
+
+    // Logging and reporting
+    QString mRunId;
+    void saveConcolicTrees();
 
 protected slots:
     // Browser part

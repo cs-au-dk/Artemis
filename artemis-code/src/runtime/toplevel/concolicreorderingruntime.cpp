@@ -17,6 +17,8 @@
 #include "concolicreorderingruntime.h"
 
 #include "util/loggingutil.h"
+#include "concolic/executiontree/tracedisplay.h"
+#include "concolic/executiontree/tracedisplayoverview.h"
 
 namespace artemis
 {
@@ -24,6 +26,7 @@ namespace artemis
 ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mNumIterations(0)
+    , mRunId(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"))
 {
     // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
     // renders the site being tested. It is required to have proper geometry in order to click correctly on elements.
@@ -183,10 +186,18 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
         action.index = ++fieldIdx;
         action.field = field;
         action.variable = field->getDomElement()->getId();
-        //action.analysis // TODO
+        action.initialValue = getFieldCurrentValue(action.field);
+        action.analysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
 
         mAvailableActions[action.index] = action;
         mCurrentActionOrder.append(action.index);
+
+        // Set all fields to be symbolic all the time.
+        // In the concolic mode this is only done during the injection, as we have a fixed ordering.
+        // In the server mode, everything is symbolic, and it causes some invalid suggestions.
+        // Here, it will be safe because we can explicitly model the relationships between events and the orderings.
+        action.field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.symbolictrigger == \"\";", QUrl(), true);
+        action.field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.options.symbolictrigger == \"\";", QUrl(), true);
     }
 }
 
@@ -199,12 +210,12 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         Action action = mAvailableActions[actionIdx];
 
         // Look up the value to inject in the solver's result.
-        // If it does not exist, or this is the first iteration, then use the default value.
-        // TODO
+        // If it does not exist, or this is the first iteration, then use the current/default value.
+        // TODO: get the solved value!
         InjectionValue injection = getFieldCurrentValue(action.field);
 
         // Begin trace recording for this action
-        // TODO
+        mWebkitExecutor->getTraceBuilder()->beginRecording();
 
         // Fill the field, simulating a user action.
         Log::debug(QString("Executing action %1 (field %2, value %3, JS user simulation)").arg(action.index).arg(action.variable).arg(injection.toString()).toStdString());
@@ -215,10 +226,17 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         clearAsyncEvents();
 
         // End trace recording
-        // TODO
+        mWebkitExecutor->getTraceBuilder()->endRecording();
+        TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
+        // TODO: trace classification
+
+        // TODO: Save the exploration target from a solver solution and use it here so the tree can match up targets and attempts.
+        action.analysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
     }
 
     // TODO: Should there be a way to set one action as "always last"?
+
+    saveConcolicTrees();
 }
 
 void ConcolicReorderingRuntime::printCurrentActionSequence()
@@ -253,6 +271,34 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     // TODO
     Log::fatal("This analysis is not yet implemented. Quitting.");
     done();
+}
+
+
+
+void ConcolicReorderingRuntime::saveConcolicTrees()
+{
+    if(mOptions.concolicTreeOutput == TREE_NONE){
+        return;
+    }
+
+    TraceDisplay display(mOptions.outputCoverage != NONE);
+    TraceDisplayOverview display_min(mOptions.outputCoverage != NONE);
+
+    foreach (uint actionIdx, mAvailableActions.keys()) {
+        Action action = mAvailableActions[actionIdx];
+
+        QString name = QString("tree-%1_%2_A%3.gv").arg(mRunId).arg(mNumIterations).arg(action.index);
+        QString name_min = QString("tree-%1_min_%2_A%3.gv").arg(mRunId).arg(mNumIterations).arg(action.index);
+        QString title = QString("URL: %1\\nRun: %2\\nAction %3 (%4)").arg(mUrl.toString()).arg(mRunId).arg(action.index).arg(action.variable);
+
+        Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
+        display.writeGraphFile(action.analysis->getExecutionTree(), name, false, title);
+        if (mOptions.concolicTreeOutputOverview) {
+            display.writeGraphFile(action.analysis->getExecutionTree(), name_min, false, title);
+        }
+    }
+
+    // TODO: Remove old files if we are in mode TREE_FINAL.
 }
 
 
