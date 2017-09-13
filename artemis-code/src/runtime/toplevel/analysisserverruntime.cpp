@@ -169,7 +169,7 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     assert(command);
 
     // Clear all cookies.
-    // In the server mode the cookie jar will always be of type ResettableCookieJar (see artemis.cpp).
+    // In the server mode the cookie jar will always be of type ResettableCookieJar (see options.saveCookiesForSession in artemis.cpp).
     QNetworkCookieJar* cookieJar = mWebkitExecutor->getCookieJar();
     ResettableCookieJar* resettableCookieJar = dynamic_cast<ResettableCookieJar*>(cookieJar);
     if (resettableCookieJar) {
@@ -1275,6 +1275,7 @@ void AnalysisServerRuntime::slTimerRemoved(int timerId)
     mTimers.remove(timerId);
 }
 
+// TODO: This function is duplicated in concolicreorderingruntime.cpp.
 void AnalysisServerRuntime::clearAsyncEvents()
 {
     // AJAX events are handled synchronously in server mode (see call to doNotCaptureAjaxCallbacks in the

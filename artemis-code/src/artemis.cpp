@@ -495,6 +495,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::CONCOLIC_TEST;
             } else if (string(optarg).compare("concolic-reordering") == 0) {
                 options.majorMode = artemis::CONCOLIC_REORDERING;
+                options.saveCookiesForSession = true;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);

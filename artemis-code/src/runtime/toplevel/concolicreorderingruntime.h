@@ -21,7 +21,10 @@
 
 #include "runtime/runtime.h"
 #include "runtime/options.h"
+#include "runtime/browser/artemiswebview.h"
+
 #include "concolic/concolicanalysis.h"
+
 
 namespace artemis
 {
@@ -36,6 +39,27 @@ public:
     void run(const QUrl& url);
 
 protected:
+    QUrl mUrl;
+    ArtemisWebViewPtr mWebView;
+    int mNumIterations;
+
+    // Browser part
+    void preConcreteExecution();
+    void clearStateForNewIteration();
+    QMap<int, QPair<int, bool> > mTimers;
+    void clearAsyncEvents();
+
+    // Action ordering and execution
+    void setupInitialActionSequence();
+    void executeCurrentActionSequence();
+    void chooseNextSequenceAndExplore();
+
+protected slots:
+    // Browser part
+    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void slTimerAdded(int timerId, int timeout, bool singleShot);
+    void slTimerRemoved(int timerId);
+
 
 };
 

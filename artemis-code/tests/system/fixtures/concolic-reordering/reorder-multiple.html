@@ -1,0 +1,32 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // This requires constraints in different handlers to "see" the different values of a field's value at different times.
+        // This test checks we can generate different v_i variables for different handlers.
+        
+        // TODO: Needs more thought.
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <input type="text" id="field_2" onchange="handler_A2()" value="default2" >
+        <input type="text" id="field_3" onchange="handler_A3()" value="default3" >
+        
+    </form>
+    
+</body>
+</html>
