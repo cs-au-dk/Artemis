@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-#include "concolic/executiontree/tracenodes.h"
-#include "concolic/executiontree/tracevisitor.h"
-
 #ifndef REACHABLEPATHSCONSTRAINTGENERATOR_H
 #define REACHABLEPATHSCONSTRAINTGENERATOR_H
+
+#include <QList>
+#include <QPair>
+
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/executiontree/tracevisitor.h"
+#include "reachablepathsconstraint.h"
 
 namespace artemis
 {
@@ -29,28 +33,25 @@ namespace artemis
  *
  * This corresponds to the OverApprox constraints from the paper.
  *
- * Traces considered "good": Unexplored, End-Success, End-Unknown
+ * Traces considered "good": Unexplored, End-Success, End-Unknown, Queued
  * Traces considered "bad": End-Failure
- * Ignored branches: UNSAT, CNS [treated as "don't care"]
+ * Ignored branches: UNSAT, CNS, Missed [treated as "don't care"]
  * The returned constraint will exactly charaterise the "good" traces.
  *
  */
 class ReachablePathsConstraintGenerator : public TraceVisitor
 {
 public:
-    QSet<Symbolic::Expression*> generateConstraint(TraceNodePtr tree);
+    ReachablePathConstraintPtr generateConstraint(TraceNodePtr tree);
 
 protected:
     ReachablePathsConstraintGenerator();
-    bool mSubtreeAllOk;
-    bool mSubtreeAllAbort;
-    QSet<Symbolic::Expression*> mSubtreeExpressions;
+    ReachablePathConstraintPtr mSubtreeExpression;
 
-    // The visitor works from the bottom up.
-    // If the curent subtree only contains known good or known bad nodes, then mSubtreeAllOK or mSubtreeAllAbort are
-    // set, and mSubTreeExpressions is empty.
-    // If the current subtree contains a mix of terminating and aborting branches, the the flags are both unset,
-    // and mSubtreeExpressions contains the set of symbolic expressions whihch correspond to terminating traces.
+    // The visitor works from the bottom up, setting mSubtreeExpression to represent the set of all terminating traces.
+    // If both sides of a branch are known to have the same value, then the branch can be dropped.
+    // TODO: Currently this is only done for constants True and False, not for sub-expressions.
+    // TODO: It would be better to have a check for constraint equality and merge all equal (even equivalent) branches.
 
     // Catch-all (error)
     virtual void visit(TraceNode* node);

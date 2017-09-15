@@ -166,7 +166,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/classifier/jserrorclassifier.h \
     src/concolic/executiontree/classifier/nullclassifier.h \
     src/runtime/toplevel/concolicreorderingruntime.h \
-    src/concolic/reordering/reachablepathsconstraintgenerator.h
+    src/concolic/reordering/reachablepathsconstraintgenerator.h \
+    src/concolic/reordering/reachablepathsconstraint.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \

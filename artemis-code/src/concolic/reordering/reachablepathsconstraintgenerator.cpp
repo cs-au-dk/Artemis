@@ -19,14 +19,10 @@
 namespace artemis
 {
 
-QSet<Symbolic::Expression *> ReachablePathsConstraintGenerator::generateConstraint(TraceNodePtr tree)
+ReachablePathConstraintPtr ReachablePathsConstraintGenerator::generateConstraint(TraceNodePtr tree)
 {
     // Call the visitor part to process the tree.
     // TODO
-
-    // If the tree is all-terminating or all-aborting, then return a constant value.
-
-    // Otherwise, we can just return the characterisation of the terminating paths whihc is already given in mSubtreeExpressions.
 
     // TODO
 }
@@ -42,69 +38,106 @@ void ReachablePathsConstraintGenerator::visit(TraceNode *node)
     exit(1);
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceConcreteBranch *node)
+void ReachablePathsConstraintGenerator::visit(TraceConcreteBranch* node)
 {
 
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch *node)
+void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
+{
+    // If one branch is of an ignored type (UNSAT, CNS, missed), then we can return the other branch directly.
+    if (isImmediatelyNotAttempted(node->getFalseBranch()) || isImmediatelyMissed(node->getFalseBranch()) || isImmediatelyUnsolvable(node->getFalseBranch())) {
+        node->getTrueBranch()->accept(this);
+        return;
+    }
+    if (isImmediatelyNotAttempted(node->getTrueBranch()) || isImmediatelyMissed(node->getTrueBranch()) || isImmediatelyUnsolvable(node->getTrueBranch())) {
+        node->getFalseBranch()->accept(this);
+        return;
+    }
+
+    // Run the visitor on each branch.
+    node->getFalseBranch()->accept(this);
+    ReachablePathConstraintPtr falseConstraint = mSubtreeExpression;
+
+    node->getTrueBranch()->accept(this);
+    ReachablePathConstraintPtr trueConstraint = mSubtreeExpression;
+
+    // If both subtrees are true or false, we can return directly.
+    if (falseConstraint->isAlwaysTerminating() && trueConstraint->isAlwaysTerminating()) {
+        mSubtreeExpression = ReachablePathsOk.getInstance();
+    } else if (falseConstraint->isAlwaysAborting() && trueConstraint->isAlwaysAborting()) {
+        mSubtreeExpression = ReachablePathsAbort.getInstance();
+    } else {
+        // Otherwise, generate an ITE constraint.
+        QSharedPointer<ReachablePathsITE> newExpr = QSharedPointer<ReachablePathsITE>(new ReachablePathsITE());
+        newExpr->condition = node->getSymbolicCondition();
+        newExpr->thenConstraint = trueConstraint;
+        newExpr->elseConstraint = falseConstraint;
+        mSubtreeExpression = newExpr;
+    }
+}
+
+void ReachablePathsConstraintGenerator::visit(TraceConcreteSummarisation* node)
 {
 
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceConcreteSummarisation *node)
+void ReachablePathsConstraintGenerator::visit(TraceUnexplored* node)
 {
-
+    mSubtreeExpression = ReachablePathsOk.getInstance();
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceUnexplored *node)
+void ReachablePathsConstraintGenerator::visit(TraceUnexploredUnsat* node)
 {
-
+    // Should be handled in the branch nodes.
+    Log::fatal("ReachablePathsConstraintGenerator should not visit TraceUnexploredUnsat directly.");
+    exit(1);
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceUnexploredUnsat *node)
+void ReachablePathsConstraintGenerator::visit(TraceUnexploredUnsolvable* node)
 {
-
+    // Should be handled in the branch nodes.
+    Log::fatal("ReachablePathsConstraintGenerator should not visit TraceUnexploredUnsolvable directly.");
+    exit(1);
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceUnexploredUnsolvable *node)
+void ReachablePathsConstraintGenerator::visit(TraceUnexploredMissed* node)
 {
-
+    // Should be handled in the branch nodes.
+    Log::fatal("ReachablePathsConstraintGenerator should not visit TraceUnexploredMissed directly.");
+    exit(1);
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceUnexploredMissed *node)
+void ReachablePathsConstraintGenerator::visit(TraceUnexploredQueued* node)
 {
-
+    // Should be handled in the branch nodes.
+    Log::fatal("ReachablePathsConstraintGenerator should not visit TraceUnexploredQueued directly.");
+    exit(1);
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceUnexploredQueued *node)
+void ReachablePathsConstraintGenerator::visit(TraceEndSuccess* node)
 {
-
+    mSubtreeExpression = ReachablePathsOk.getInstance();
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceEndSuccess *node)
+void ReachablePathsConstraintGenerator::visit(TraceEndFailure* node)
 {
-
+    mSubtreeExpression = ReachablePathsAbort.getInstance();
 }
 
-void ReachablePathsConstraintGenerator::visit(TraceEndFailure *node)
+void ReachablePathsConstraintGenerator::visit(TraceEndUnknown* node)
 {
-
-}
-
-void ReachablePathsConstraintGenerator::visit(TraceEndUnknown *node)
-{
-
+    mSubtreeExpression = ReachablePathsOk.getInstance();
 }
 
 // Annotation types are ignored; simply continue the visiting.
-void ReachablePathsConstraintGenerator::visit(TraceAnnotation *node)
+void ReachablePathsConstraintGenerator::visit(TraceAnnotation* node)
 {
     node->next->accept(this);
 }
 
 // These are not part of the "real" tree; ignore.
-void ReachablePathsConstraintGenerator::visit(TraceDivergence *node)
+void ReachablePathsConstraintGenerator::visit(TraceDivergence* node)
 {
     node->next->accept(this);
 }
