@@ -30,15 +30,15 @@ public:
     virtual bool isAlwaysTerminating() = 0;
     virtual bool isAlwaysAborting() = 0;
 };
-typedef QSharedPointer<ReachablePathsConstraint> ReachablePathConstraintPtr;
+typedef QSharedPointer<ReachablePathsConstraint> ReachablePathsConstraintPtr;
 
 
 class ReachablePathsITE : public ReachablePathsConstraint
 {
 public:
     Symbolic::Expression* condition;
-    ReachablePathConstraintPtr thenConstraint;
-    ReachablePathConstraintPtr elseConstraint;
+    ReachablePathsConstraintPtr thenConstraint;
+    ReachablePathsConstraintPtr elseConstraint;
 
     virtual bool isAlwaysTerminating() { return false; }
     virtual bool isAlwaysAborting() { return false; }

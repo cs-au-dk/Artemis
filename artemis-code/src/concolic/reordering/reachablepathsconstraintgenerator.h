@@ -35,18 +35,18 @@ namespace artemis
  *
  * Traces considered "good": Unexplored, End-Success, End-Unknown, Queued
  * Traces considered "bad": End-Failure
- * Ignored branches: UNSAT, CNS, Missed [treated as "don't care"]
+ * Ignored branches: UNSAT, CNS, Missed, unexplored children of concrete branches [all treated as "don't care"]
  * The returned constraint will exactly charaterise the "good" traces.
  *
  */
 class ReachablePathsConstraintGenerator : public TraceVisitor
 {
 public:
-    ReachablePathConstraintPtr generateConstraint(TraceNodePtr tree);
+    static ReachablePathsConstraintPtr generateConstraint(TraceNodePtr tree);
 
 protected:
     ReachablePathsConstraintGenerator();
-    ReachablePathConstraintPtr mSubtreeExpression;
+    ReachablePathsConstraintPtr mSubtreeExpression;
 
     // The visitor works from the bottom up, setting mSubtreeExpression to represent the set of all terminating traces.
     // If both sides of a branch are known to have the same value, then the branch can be dropped.

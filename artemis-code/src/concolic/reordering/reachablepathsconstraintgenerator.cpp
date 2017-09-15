@@ -19,12 +19,12 @@
 namespace artemis
 {
 
-ReachablePathConstraintPtr ReachablePathsConstraintGenerator::generateConstraint(TraceNodePtr tree)
+ReachablePathsConstraintPtr ReachablePathsConstraintGenerator::generateConstraint(TraceNodePtr tree)
 {
     // Call the visitor part to process the tree.
-    // TODO
-
-    // TODO
+    ReachablePathsConstraintGenerator generator;
+    tree->accept(&generator);
+    return generator.mSubtreeExpression;
 }
 
 ReachablePathsConstraintGenerator::ReachablePathsConstraintGenerator()
@@ -40,27 +40,43 @@ void ReachablePathsConstraintGenerator::visit(TraceNode *node)
 
 void ReachablePathsConstraintGenerator::visit(TraceConcreteBranch* node)
 {
+    // If one branch is unexplored (or queued), then ignore.
+    // Also ignore UNSAT, CNS, and Missed branches [although these should never appear under a concrete branch!].
+    if (isImmediatelyUnexplored(node->getFalseBranch())) {
+        node->getTrueBranch()->accept(this);
+        return;
+    }
+    if (isImmediatelyUnexplored(node->getTrueBranch())) {
+        node->getFalseBranch()->accept(this);
+        return;
+    }
 
+    // If both branches are explored, then what...?
+    // TODO
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
 {
     // If one branch is of an ignored type (UNSAT, CNS, missed), then we can return the other branch directly.
-    if (isImmediatelyNotAttempted(node->getFalseBranch()) || isImmediatelyMissed(node->getFalseBranch()) || isImmediatelyUnsolvable(node->getFalseBranch())) {
+    if (isImmediatelyUnsat(node->getFalseBranch())
+            || isImmediatelyMissed(node->getFalseBranch())
+            || isImmediatelyUnsolvable(node->getFalseBranch())) {
         node->getTrueBranch()->accept(this);
         return;
     }
-    if (isImmediatelyNotAttempted(node->getTrueBranch()) || isImmediatelyMissed(node->getTrueBranch()) || isImmediatelyUnsolvable(node->getTrueBranch())) {
+    if (isImmediatelyUnsat(node->getTrueBranch())
+            || isImmediatelyMissed(node->getTrueBranch())
+            || isImmediatelyUnsolvable(node->getTrueBranch())) {
         node->getFalseBranch()->accept(this);
         return;
     }
 
     // Run the visitor on each branch.
     node->getFalseBranch()->accept(this);
-    ReachablePathConstraintPtr falseConstraint = mSubtreeExpression;
+    ReachablePathsConstraintPtr falseConstraint = mSubtreeExpression;
 
     node->getTrueBranch()->accept(this);
-    ReachablePathConstraintPtr trueConstraint = mSubtreeExpression;
+    ReachablePathsConstraintPtr trueConstraint = mSubtreeExpression;
 
     // If both subtrees are true or false, we can return directly.
     if (falseConstraint->isAlwaysTerminating() && trueConstraint->isAlwaysTerminating()) {
@@ -79,7 +95,15 @@ void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
 
 void ReachablePathsConstraintGenerator::visit(TraceConcreteSummarisation* node)
 {
+    // If there is just a single child (a very common case), then we can just return its value directly.
+    if (node->executions.length() == 1) {
+        node->executions[0].second->accept(this);
+        return;
+    }
 
+
+    // If there are multiple children, then what...?
+    // TODO
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceUnexplored* node)
