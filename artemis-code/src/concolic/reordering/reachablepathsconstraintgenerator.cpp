@@ -51,10 +51,28 @@ void ReachablePathsConstraintGenerator::visit(TraceConcreteBranch* node)
         return;
     }
 
-    // If both branches are explored, then what...?
-    // TODO
-    Log::fatal("Unhandled case in ReachablePathsConstraintGenerator: fully explored concrete branch.");
-    exit(1);
+    // Run the visitor on each branch.
+    node->getFalseBranch()->accept(this);
+    ReachablePathsConstraintPtr falseConstraint = mSubtreeExpression;
+
+    node->getTrueBranch()->accept(this);
+    ReachablePathsConstraintPtr trueConstraint = mSubtreeExpression;
+
+    // If both subtrees are true or false, we can return directly.
+    if (falseConstraint->isAlwaysTerminating() && trueConstraint->isAlwaysTerminating()) {
+        mSubtreeExpression = ReachablePathsOk::getInstance();
+        // N.B. We could strictly return this if EITHER branch is always terminating.
+        // But I am leaving it as BOTH for the purposes of keeping the constraints more readable for debugging.
+    } else if (falseConstraint->isAlwaysAborting() && trueConstraint->isAlwaysAborting()) {
+        mSubtreeExpression = ReachablePathsAbort::getInstance();
+    } else {
+        // Otherwise, generate a Disjunction constraint.
+        // This is because we want to generate the overapproximation, so we assume either branch is reachable.
+        QSharedPointer<ReachablePathsDisjunction> newExpr = QSharedPointer<ReachablePathsDisjunction>(new ReachablePathsDisjunction());
+        newExpr->children.append(trueConstraint);
+        newExpr->children.append(falseConstraint);
+        mSubtreeExpression = newExpr;
+    }
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
@@ -103,11 +121,37 @@ void ReachablePathsConstraintGenerator::visit(TraceConcreteSummarisation* node)
         return;
     }
 
+    // If there are multiple children, then run the visitor on each and compare the results.
+    bool allTerminating = true;
+    bool allAborting = true;
+    QList<ReachablePathsConstraintPtr> constraints;
+    foreach (TraceConcreteSummarisation::SingleExecution trace, node->executions) {
+        trace.second->accept(this);
+        constraints.append(mSubtreeExpression);
 
-    // If there are multiple children, then what...?
-    // TODO
-    Log::fatal("Unhandled case in ReachablePathsConstraintGenerator: multiple paths in concrete execution.");
-    exit(1);
+        if (!mSubtreeExpression->isAlwaysTerminating()) {
+            allTerminating = false;
+        }
+        if (!mSubtreeExpression->isAlwaysAborting()) {
+            allAborting = false;
+        }
+    }
+
+    // If all branches are termnating or aborting, we can return directly.
+    if (allTerminating) {
+        mSubtreeExpression = ReachablePathsOk::getInstance();
+        // N.B. We could strictly return this if ANY terminating branch was found.
+        // But I am leaving it as ALL for the purposes of keeping the constraints more readable for debugging.
+    } else if (allAborting) {
+        mSubtreeExpression = ReachablePathsAbort::getInstance();
+    } else {
+        // Otherwise, generate a Disjunction constraint.
+        // This is because we want to generate the overapproximation, so we assume any branch is reachable.
+        QSharedPointer<ReachablePathsDisjunction> newExpr = QSharedPointer<ReachablePathsDisjunction>(new ReachablePathsDisjunction());
+        newExpr->children = constraints;
+        mSubtreeExpression = newExpr;
+    }
+
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceUnexplored* node)

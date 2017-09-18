@@ -155,18 +155,31 @@ std::string SMTConstraintWriter::reachablePathsConstraintExpression(ReachablePat
     // Otherwise, we must be at a ReachablePathsITE node.
     // TODO: Really we should use a visitor or something and avoid this constant casting...
     QSharedPointer<ReachablePathsITE> ite = expr.dynamicCast<ReachablePathsITE>();
-    assert(!ite.isNull());
+    if (!ite.isNull()) {
 
-    // Run the visitor over the branch constraint.
-    ite->condition->accept(this);
-    if(!checkType(Symbolic::BOOL) && !checkType(Symbolic::TYPEERROR)){
-        error("Writing the reachable-paths constraint did not result in a boolean constraint");
+        // Run the visitor over the branch constraint.
+        ite->condition->accept(this);
+        if(!checkType(Symbolic::BOOL) && !checkType(Symbolic::TYPEERROR)){
+            error("Writing the reachable-paths constraint did not result in a boolean constraint");
+        }
+        std::string conditionString = mExpressionBuffer;
+        std::string thenBranch = reachablePathsConstraintExpression(ite->thenConstraint, indent+2);
+        std::string elseBranch = reachablePathsConstraintExpression(ite->elseConstraint, indent+2);
+
+        return indentStr + "(" + ifLabel() + "\n" + indentStr + "  " + conditionString + "\n" + thenBranch + "\n" + elseBranch + "\n" + indentStr + ")";
+
+    } else {
+        QSharedPointer<ReachablePathsDisjunction> disjunct = expr.dynamicCast<ReachablePathsDisjunction>();
+        assert(!disjunct.isNull());
+
+        std::string childStrings;
+        foreach (ReachablePathsConstraintPtr childConstraint, disjunct->children) {
+            childStrings.append(reachablePathsConstraintExpression(childConstraint, indent+2));
+            childStrings.append("\n");
+        }
+
+        return indentStr + "(or\n" + childStrings + "\n" + indentStr + ")";
     }
-    std::string conditionString = mExpressionBuffer;
-    std::string thenBranch = reachablePathsConstraintExpression(ite->thenConstraint, indent+2);
-    std::string elseBranch = reachablePathsConstraintExpression(ite->elseConstraint, indent+2);
-
-    return indentStr + "(" + ifLabel() + "\n" + indentStr + "  " + conditionString + "\n" + thenBranch + "\n" + elseBranch + "\n" + indentStr + ")";
 }
 
 

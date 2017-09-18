@@ -51,6 +51,17 @@ public:
     virtual bool isAlwaysAborting() { return false; }
 };
 
+class ReachablePathsDisjunction : public ReachablePathsConstraint
+{
+public:
+    ReachablePathsDisjunction() {}
+
+    QList<ReachablePathsConstraintPtr> children;
+
+    virtual bool isAlwaysTerminating() { return false; }
+    virtual bool isAlwaysAborting() { return false; }
+};
+
 class ReachablePathsOk : public ReachablePathsConstraint
 {
 public:
