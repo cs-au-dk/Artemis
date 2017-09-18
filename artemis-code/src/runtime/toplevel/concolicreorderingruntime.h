@@ -24,6 +24,7 @@
 #include "runtime/options.h"
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/input/forms/injectionvalue.h"
+#include "concolic/executiontree/classifier/traceclassifier.h"
 
 #include "concolic/concolicanalysis.h"
 
@@ -55,8 +56,11 @@ protected:
     // Action ordering and execution
     void setupInitialActionSequence(QSharedPointer<ExecutionResult> result);
     void executeCurrentActionSequence();
-    void chooseNextSequenceAndExplore();
     void printCurrentActionSequence();
+    void chooseNextSequenceAndExplore();
+    uint chooseNextActionToSearch();
+    ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
+
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 
     struct Action {
@@ -69,6 +73,8 @@ protected:
     };
     QMap<uint, Action> mAvailableActions; // Maps indices to actions
     QList<uint> mCurrentActionOrder; // A permutation of mAvailableActions.
+
+    TraceClassifierPtr mTraceClassifier;
 
     // Logging and reporting
     QString mRunId;

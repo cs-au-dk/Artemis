@@ -24,6 +24,7 @@
 #include "concolic/search/search.h"
 #include "concolic/search/abstractselector.h"
 #include "concolic/solver/solver.h"
+#include "concolic/reordering/reachablepathsconstraint.h"
 
 #ifndef CONCOLICANALYSIS_H
 #define CONCOLICANALYSIS_H
@@ -126,6 +127,11 @@ public:
     // If this is set, the pointed-to DomSnapshotStorage should be updated by WebkitExecutor to contain up-to-date snapshots.
     void setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotStorage);
 
+    // Used to enable reachable-paths constraints in the output.
+    // This is updated wholesale, as the analysis has control over which restrictions should be used at each step.
+    // It is safe to update between calls to nextExploration and the new value will be used until reset.
+    void setReachablePathsConstraints(ReachablePathsConstraintSet reachablePathConstraints);
+
     // Accessor for the search tree, which should not be externally modified! (TODO: This is not enforced)
     TraceNodePtr getExecutionTree();
     uint getExplorationIndex();
@@ -150,6 +156,8 @@ protected:
     FormRestrictions updateFormRestrictionsForFeatureFlags(FormRestrictions restrictions);
 
     DomSnapshotStoragePtr mDomSnapshotStorage;
+
+    ReachablePathsConstraintSet mReachablePathsConstraints;
 
     // Logging
     uint mExplorationIndex;

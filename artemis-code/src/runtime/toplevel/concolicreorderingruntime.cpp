@@ -19,6 +19,10 @@
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
+#include "concolic/reordering/reachablepathsconstraintgenerator.h"
+#include "concolic/executiontree/classifier/formsubmissionclassifier.h"
+#include "concolic/executiontree/classifier/jserrorclassifier.h"
+#include "concolic/executiontree/classifier/nullclassifier.h"
 
 namespace artemis
 {
@@ -48,6 +52,25 @@ ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Opti
                      this, SLOT(slTimerRemoved(int)));
     // Do not capture AJAX callbacks, force them to be fired synchronously.
     QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
+
+    // Seed the RNG used when selecting an action to explore next.
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+
+    // Select the appropriate trace classifier.
+    switch (options.concolicTraceClassifier) {
+    case CLASSIFY_FORM_SUBMISSION:
+        mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
+        break;
+    case CLASSIFY_JS_ERROR:
+        mTraceClassifier = TraceClassifierPtr(new JsErrorClassifier());
+        break;
+    case CLASSIFY_NONE:
+        mTraceClassifier = TraceClassifierPtr(new NullClassifier());
+        break;
+    default:
+        Log::fatal("Unsupported classification method.");
+        exit(1);
+    }
 }
 
 void ConcolicReorderingRuntime::run(const QUrl &url)
@@ -228,7 +251,7 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         // End trace recording
         mWebkitExecutor->getTraceBuilder()->endRecording();
         TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
-        // TODO: trace classification
+        mTraceClassifier->classify(trace);
 
         // TODO: Save the exploration target from a solver solution and use it here so the tree can match up targets and attempts.
         action.analysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
@@ -268,9 +291,66 @@ InjectionValue ConcolicReorderingRuntime::getFieldCurrentValue(FormFieldDescript
 
 void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 {
+    // Choose the action to explore next.
+    uint nextActionIdx = chooseNextActionToSearch();
+    Action nextAction = mAvailableActions[nextActionIdx];
+    Log::debug("ConcolicReorderingRuntime: exploring action " + std::to_string(nextActionIdx) + " (" + nextAction.variable.toStdString() + ")");
+
+    // Collate the reachable-paths constraints for the other actions.
+    ReachablePathsConstraintSet reachablePaths = getReachablePathsConstraints(nextActionIdx);
+
+    // Select a target branch from the chosen action's concolic tree.
+    nextAction.analysis->setReachablePathsConstraints(reachablePaths);
+    ConcolicAnalysis::ExplorationResult result = nextAction.analysis->nextExploration();
+    if (result.newExploration) {
+        // Succesfully solved a PC in this action.
+        Log::debug("ConcolicReorderingRuntime: exploration succeeded.");
+
+        // Decode the variables to be injected.
+        // TODO
+
+        // Decode the ordering to be used.
+        // TODO
+
+        // Prepare the following execution.
+
+    } else {
+        // Couldn't explore in this action.
+        Log::debug("ConcolicReorderingRuntime: exploration faield.");
+        // TODO
+    }
+
     // TODO
     Log::fatal("This analysis is not yet implemented. Quitting.");
+    saveConcolicTrees();
     done();
+}
+
+uint ConcolicReorderingRuntime::chooseNextActionToSearch()
+{
+    // TODO: This should be chosen intelligently.
+    // TODO: For now, we just choose (roughly) randomly.
+    // TODO: We also need a way to record which trees are fully explored and ignore then from the selection.
+    return mAvailableActions.keys().at(qrand() % mAvailableActions.size());
+}
+
+ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstraints(uint ignoreIdx)
+{
+    // Collate the reachable-paths constraints for the actions other than ignoreIdx.
+    // TODO: Ideally this would be maintained and updated dynamically as-needed, and not re-built on every iteration.
+
+    ReachablePathsConstraintSet constraintSet;
+    foreach (uint actionIdx, mAvailableActions.keys()) {
+        if (actionIdx != ignoreIdx) {
+            Action action = mAvailableActions[actionIdx];
+            NamedReachablePathsConstraint constraint;
+            constraint.first = QString("Action %1 (%2)").arg(actionIdx).arg(action.variable);
+            constraint.second = ReachablePathsConstraintGenerator::generateConstraint(action.analysis->getExecutionTree());
+            constraintSet.insert(constraint);
+        }
+    }
+
+    return constraintSet;
 }
 
 

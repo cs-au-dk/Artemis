@@ -67,6 +67,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
 
     mFormRestrictions = formRestrictions;
     mDomSnapshots = domSnapshots;
+    mReachablePaths = reachablePaths;
 
     mOutput.str("");
 
@@ -135,6 +136,7 @@ void SMTConstraintWriter::emitReachablePathsConstraints()
     foreach (NamedReachablePathsConstraint constraint, mReachablePaths) {
         mOutput << std::endl;
         mOutput << "; Reachable-paths constraint for " << constraint.first.toStdString() << std::endl;
+        mOutput << "; TODO: Renaming variables for the ordering constraints." << std::endl;
         std::string exprString = reachablePathsConstraintExpression(constraint.second, 2);
         mOutput << "(assert \n" << exprString << "\n)" << std::endl;
     }

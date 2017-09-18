@@ -38,6 +38,7 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
     , mExecutionTree(TraceNodePtr())
     , mSearchStrategy(TreeSearchPtr())
     , mDomSnapshotStorage(DomSnapshotStoragePtr(new DomSnapshotStorage()))
+    , mReachablePathsConstraints()
     , mExplorationIndex(1)
     , mPreviousConstraintID()
 {
@@ -225,8 +226,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = Solver::getSolver(mOptions);
-    ReachablePathsConstraintSet nullReachablePaths;
-    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, nullReachablePaths);
+    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints);
     mPreviousConstraintID = solver->getLastConstraintID();
 
     // If the constraint could not be solved, then we have an oppourtunity to retry.
@@ -270,8 +270,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
                 canRetry = false;
             } else {
 
-                ReachablePathsConstraintSet nullReachablePaths; // TODO - take this from input when searching for a new target.
-                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, nullReachablePaths);
+                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints);
                 mPreviousConstraintID = solver->getLastConstraintID();
 
             }
@@ -331,6 +330,11 @@ void ConcolicAnalysis::setFormRestrictions(FormRestrictions restrictions)
 void ConcolicAnalysis::setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotStorage)
 {
     mDomSnapshotStorage = domSnapshotStorage;
+}
+
+void ConcolicAnalysis::setReachablePathsConstraints(ReachablePathsConstraintSet reachablePathConstraints)
+{
+    mReachablePathsConstraints = reachablePathConstraints;
 }
 
 TraceNodePtr ConcolicAnalysis::getExecutionTree()
