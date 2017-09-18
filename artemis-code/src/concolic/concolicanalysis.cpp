@@ -225,7 +225,8 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = Solver::getSolver(mOptions);
-    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage);
+    ReachablePathsConstraintSet nullReachablePaths;
+    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, nullReachablePaths);
     mPreviousConstraintID = solver->getLastConstraintID();
 
     // If the constraint could not be solved, then we have an oppourtunity to retry.
@@ -269,7 +270,8 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
                 canRetry = false;
             } else {
 
-                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage);
+                ReachablePathsConstraintSet nullReachablePaths; // TODO - take this from input when searching for a new target.
+                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, nullReachablePaths);
                 mPreviousConstraintID = solver->getLastConstraintID();
 
             }

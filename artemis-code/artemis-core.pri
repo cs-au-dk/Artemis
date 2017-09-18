@@ -301,6 +301,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/classifier/jserrorclassifier.cpp \
     src/concolic/executiontree/classifier/nullclassifier.cpp \
     src/runtime/toplevel/concolicreorderingruntime.cpp \
-    src/concolic/reordering/reachablepathsconstraintgenerator.cpp
+    src/concolic/reordering/reachablepathsconstraintgenerator.cpp \
+    src/concolic/reordering/reachablepathsconstraint.cpp
 
 QT += network

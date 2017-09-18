@@ -31,7 +31,7 @@ ReachablePathsConstraintGenerator::ReachablePathsConstraintGenerator()
 {
 }
 
-// We cover all ther cases below so this should never be called.
+// We cover all the other cases below so this should never be called.
 void ReachablePathsConstraintGenerator::visit(TraceNode *node)
 {
     Log::fatal("Getting the reachable paths constraint for a trace node of an unknown type.");
@@ -53,6 +53,8 @@ void ReachablePathsConstraintGenerator::visit(TraceConcreteBranch* node)
 
     // If both branches are explored, then what...?
     // TODO
+    Log::fatal("Unhandled case in ReachablePathsConstraintGenerator: fully explored concrete branch.");
+    exit(1);
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
@@ -80,9 +82,9 @@ void ReachablePathsConstraintGenerator::visit(TraceSymbolicBranch* node)
 
     // If both subtrees are true or false, we can return directly.
     if (falseConstraint->isAlwaysTerminating() && trueConstraint->isAlwaysTerminating()) {
-        mSubtreeExpression = ReachablePathsOk.getInstance();
+        mSubtreeExpression = ReachablePathsOk::getInstance();
     } else if (falseConstraint->isAlwaysAborting() && trueConstraint->isAlwaysAborting()) {
-        mSubtreeExpression = ReachablePathsAbort.getInstance();
+        mSubtreeExpression = ReachablePathsAbort::getInstance();
     } else {
         // Otherwise, generate an ITE constraint.
         QSharedPointer<ReachablePathsITE> newExpr = QSharedPointer<ReachablePathsITE>(new ReachablePathsITE());
@@ -104,11 +106,13 @@ void ReachablePathsConstraintGenerator::visit(TraceConcreteSummarisation* node)
 
     // If there are multiple children, then what...?
     // TODO
+    Log::fatal("Unhandled case in ReachablePathsConstraintGenerator: multiple paths in concrete execution.");
+    exit(1);
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceUnexplored* node)
 {
-    mSubtreeExpression = ReachablePathsOk.getInstance();
+    mSubtreeExpression = ReachablePathsOk::getInstance();
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceUnexploredUnsat* node)
@@ -141,17 +145,17 @@ void ReachablePathsConstraintGenerator::visit(TraceUnexploredQueued* node)
 
 void ReachablePathsConstraintGenerator::visit(TraceEndSuccess* node)
 {
-    mSubtreeExpression = ReachablePathsOk.getInstance();
+    mSubtreeExpression = ReachablePathsOk::getInstance();
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceEndFailure* node)
 {
-    mSubtreeExpression = ReachablePathsAbort.getInstance();
+    mSubtreeExpression = ReachablePathsAbort::getInstance();
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceEndUnknown* node)
 {
-    mSubtreeExpression = ReachablePathsOk.getInstance();
+    mSubtreeExpression = ReachablePathsOk::getInstance();
 }
 
 // Annotation types are ignored; simply continue the visiting.

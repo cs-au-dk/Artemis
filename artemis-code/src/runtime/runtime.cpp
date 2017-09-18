@@ -292,10 +292,12 @@ void Runtime::done()
         }
 
         SolverPtr solver = Solver::getSolver(mOptions);
+        ReachablePathsConstraintSet nullReachablePaths;
         SolutionPtr solution = solver->solve(
                     pc,
                     FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()),
-                    mWebkitExecutor->getDomSnapshotStorage());
+                    mWebkitExecutor->getDomSnapshotStorage(),
+                    nullReachablePaths);
 
         solution->toStatistics();
 

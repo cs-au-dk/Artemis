@@ -14,30 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef Z3SOLVER_H
-#define Z3SOLVER_H
-
-#include "solver.h"
+#include "reachablepathsconstraint.h"
 
 namespace artemis
 {
 
-/*
- *  Generic symbolic constrint solver interface.
- */
+QSharedPointer<ReachablePathsOk> ReachablePathsOk::instance;
+QSharedPointer<ReachablePathsAbort> ReachablePathsAbort::instance;
 
-class Z3Solver : public Solver
-{
-public:
+} // namespace artemis
 
-    Z3Solver(ConcolicBenchmarkFeatures disabledFeatures);
-
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths);
-
-};
-
-typedef QSharedPointer<Z3Solver> Z3SolverPtr;
-
-}
-
-#endif // Z3SOLVER_H

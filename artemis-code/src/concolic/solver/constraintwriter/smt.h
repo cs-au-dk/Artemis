@@ -75,7 +75,7 @@ public:
 
     SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -163,6 +163,9 @@ protected:
 
     virtual std::string ifLabel();
 
+    virtual void emitReachablePathsConstraints();
+    std::string reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent);
+
     /**
      * SMT does not support mixing constraints on strings,
      * bools and integers. Thus, we allow type coercions but
@@ -223,6 +226,7 @@ protected:
 
     FormRestrictions mFormRestrictions;
     DomSnapshotStoragePtr mDomSnapshots;
+    ReachablePathsConstraintSet mReachablePaths;
     QStringList mPreambleDefinitions;
 
     // Benchmarking

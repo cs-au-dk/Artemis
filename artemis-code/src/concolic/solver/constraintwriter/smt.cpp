@@ -55,11 +55,12 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
-bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile)
+bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile)
 {
     std::string preVisitHookOutput;
     std::string visitorOutput;
     std::string postVisitHookOutput;
+    std::string reachablePathsOutput;
 
     mError = false;
     mCurrentClause = -1;
@@ -92,8 +93,11 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     visitorOutput = mOutput.str();
     mOutput.str("");
 
-    postVisitPathConditionsHook();
+    emitReachablePathsConstraints();
+    reachablePathsOutput = mOutput.str();
+    mOutput.str("");
 
+    postVisitPathConditionsHook();
     postVisitHookOutput = mOutput.str();
     mOutput.str("");
 
@@ -103,6 +107,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     constraintFile << preVisitHookOutput;
     constraintFile << mPreambleDefinitions.join("\n").toStdString();
     constraintFile << visitorOutput;
+    constraintFile << reachablePathsOutput;
     constraintFile << postVisitHookOutput;
 
     constraintFile.close();
@@ -121,10 +126,53 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     return true;
 }
 
+void SMTConstraintWriter::emitReachablePathsConstraints()
+{
+    // mReachablePaths is a set of extra constraints. Each member is a pair: a name for that constraint and a
+    // ReachablePathsConstraintPtr to be written. Each constraint takes the form of a tree of ITE decisions with
+    // symbolic conditions and either "true" or "false" at each leaf of the tree.
+
+    foreach (NamedReachablePathsConstraint constraint, mReachablePaths) {
+        mOutput << std::endl;
+        mOutput << "; Reachable-paths constraint for " << constraint.first.toStdString() << std::endl;
+        std::string exprString = reachablePathsConstraintExpression(constraint.second, 2);
+        mOutput << "(assert \n" << exprString << "\n)" << std::endl;
+    }
+}
+
+std::string SMTConstraintWriter::reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent)
+{
+    std::string indentStr = std::string(indent, ' ');
+
+    // If the expression is just true or false, we have reached a leaf.
+    if (expr->isAlwaysTerminating()) {
+        return indentStr + "true";
+    }
+    if (expr->isAlwaysAborting()) {
+        return indentStr + "false";
+    }
+
+    // Otherwise, we must be at a ReachablePathsITE node.
+    // TODO: Really we should use a visitor or something and avoid this constant casting...
+    QSharedPointer<ReachablePathsITE> ite = expr.dynamicCast<ReachablePathsITE>();
+    assert(!ite.isNull());
+
+    // Run the visitor over the branch constraint.
+    ite->condition->accept(this);
+    if(!checkType(Symbolic::BOOL) && !checkType(Symbolic::TYPEERROR)){
+        error("Writing the reachable-paths constraint did not result in a boolean constraint");
+    }
+    std::string conditionString = mExpressionBuffer;
+    std::string thenBranch = reachablePathsConstraintExpression(ite->thenConstraint, indent+2);
+    std::string elseBranch = reachablePathsConstraintExpression(ite->elseConstraint, indent+2);
+
+    return indentStr + "(" + ifLabel() + "\n" + indentStr + "  " + conditionString + "\n" + thenBranch + "\n" + elseBranch + "\n" + indentStr + ")";
+}
+
+
 /** Symbolic Integer/String/Boolean **/
 
 
-//N.B. This will not currently be present in any of our PCs.
 void SMTConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
     // Checks this symbolic value is of type INT and raises an error otherwise.
@@ -139,7 +187,6 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* 
     error("NO SYMBOLIC STRING SUPPORT");
 }
 
-//N.B. This will not currently be present in any of our PCs.
 void SMTConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
     // Checks this symbolic value is of type BOOL and raises an error otherwise.

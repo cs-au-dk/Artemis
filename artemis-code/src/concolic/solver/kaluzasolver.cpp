@@ -37,15 +37,15 @@ KaluzaSolver::KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures)
 {
 }
 
-SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots)
+SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths)
 {
-    qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions.\n";
+    qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions, DOM snapshots, or reachable paths constraints.\n";
 
     // 1. translate pc to something solvable using the translator
 
     KaluzaConstraintWriterPtr constraintwriter = KaluzaConstraintWriterPtr(new KaluzaConstraintWriter());
 
-    if (!constraintwriter->write(pc, formRestrictions, domSnapshots, "/tmp/kaluza")) {
+    if (!constraintwriter->write(pc, formRestrictions, domSnapshots, reachablePaths, "/tmp/kaluza")) {
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false, false));
     }

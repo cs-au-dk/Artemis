@@ -18,6 +18,9 @@
 #define REACHABLEPATHSCONSTRAINT_H
 
 #include <QSharedPointer>
+#include <QSet>
+#include <QPair>
+#include <QString>
 
 #include "symbolic/expression/expression.h"
 
@@ -29,6 +32,8 @@ class ReachablePathsConstraint
 public:
     virtual bool isAlwaysTerminating() = 0;
     virtual bool isAlwaysAborting() = 0;
+
+    virtual ~ReachablePathsConstraint() {}
 };
 typedef QSharedPointer<ReachablePathsConstraint> ReachablePathsConstraintPtr;
 
@@ -36,6 +41,8 @@ typedef QSharedPointer<ReachablePathsConstraint> ReachablePathsConstraintPtr;
 class ReachablePathsITE : public ReachablePathsConstraint
 {
 public:
+    ReachablePathsITE() {}
+
     Symbolic::Expression* condition;
     ReachablePathsConstraintPtr thenConstraint;
     ReachablePathsConstraintPtr elseConstraint;
@@ -52,7 +59,7 @@ public:
     static QSharedPointer<ReachablePathsOk> getInstance()
     {
         if (instance.isNull()) {
-            instance = QSharedPointer(new ReachablePathsOk());
+            instance = QSharedPointer<ReachablePathsOk>(new ReachablePathsOk());
         }
         return instance;
     }
@@ -69,7 +76,7 @@ public:
     static QSharedPointer<ReachablePathsAbort> getInstance()
     {
         if (instance.isNull()) {
-            instance = QSharedPointer(new ReachablePathsAbort());
+            instance = QSharedPointer<ReachablePathsAbort>(new ReachablePathsAbort());
         }
         return instance;
     }
@@ -77,6 +84,9 @@ protected:
     ReachablePathsAbort() {}
     static QSharedPointer<ReachablePathsAbort> instance;
 };
+
+typedef QPair<QString, ReachablePathsConstraintPtr>  NamedReachablePathsConstraint;
+typedef QSet<NamedReachablePathsConstraint> ReachablePathsConstraintSet;
 
 } // namespace artemis
 #endif // REACHABLEPATHSCONSTRAINT_H

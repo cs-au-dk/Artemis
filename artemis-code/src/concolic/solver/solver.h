@@ -24,6 +24,7 @@
 #include "model/domsnapshotstorage.h"
 #include "concolic/benchmarking.h"
 #include "runtime/options.h"
+#include "concolic/reordering/reachablepathsconstraint.h"
 
 #include "solution.h"
 
@@ -41,7 +42,7 @@ public:
     Solver(ConcolicBenchmarkFeatures disabledFeatures);
     virtual ~Solver() {}
 
-    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots) = 0;
+    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths) = 0;
 
     virtual QString getLastConstraintID() { return ""; }
 
