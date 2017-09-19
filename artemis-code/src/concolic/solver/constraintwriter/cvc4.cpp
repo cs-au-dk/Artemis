@@ -44,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 {
 }
 
-bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile) {
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ReorderingConstraintInfoPtr reorderingInfo, std::string outputFile) {
 
     // pre analysis
     for (uint i = 0; i < pathCondition->size(); i++) {
@@ -54,7 +54,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     mSawToUpperCase = false;
 
     // main visitor
-    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, reachablePaths, renamer, outputFile);
+    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, reachablePaths, reorderingInfo, outputFile);
     // cleanup
     mTypeAnalysis->reset();
     mVisitedSymbolicObjects.clear();

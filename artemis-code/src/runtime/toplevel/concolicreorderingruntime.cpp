@@ -301,7 +301,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 
     // Select a target branch from the chosen action's concolic tree.
     nextAction.analysis->setReachablePathsConstraints(reachablePaths);
-    nextAction.analysis->setVariableRenamer(getVariableRenamer(nextAction.index));
+    nextAction.analysis->setReorderingInfo(getReorderingConstraintInfo(nextAction.index));
     ConcolicAnalysis::ExplorationResult result = nextAction.analysis->nextExploration();
     if (result.newExploration) {
         // Succesfully solved a PC in this action.
@@ -355,9 +355,9 @@ ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstrai
     return constraintSet;
 }
 
-ConcolicVariableRenamerPtr ConcolicReorderingRuntime::getVariableRenamer(uint actionIdx)
+ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintInfo(uint actionIdx)
 {
-    // Create a suitable renmaer for this aconcolic analysis.
+    // Create a suitable renamer for this concolic analysis.
     QStringList vars;
     foreach (Action action, mAvailableActions) {
         switch (action.field->getType()) {
@@ -378,8 +378,8 @@ ConcolicVariableRenamerPtr ConcolicReorderingRuntime::getVariableRenamer(uint ac
         }
     }
 
-    ConcolicVariableRenamerPtr renamer = ConcolicVariableRenamerPtr(new ConcolicVariableRenamer(vars, actionIdx));
-    return renamer;
+    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(vars, actionIdx));
+    return reorderingInfo;
 }
 
 

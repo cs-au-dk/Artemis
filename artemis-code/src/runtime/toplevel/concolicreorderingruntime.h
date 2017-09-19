@@ -66,7 +66,7 @@ protected:
     void chooseNextSequenceAndExplore();
     uint chooseNextActionToSearch();
     ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
-    ConcolicVariableRenamerPtr getVariableRenamer(uint actionIdx);
+    ReorderingConstraintInfoPtr getReorderingConstraintInfo(uint actionIdx);
 
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 

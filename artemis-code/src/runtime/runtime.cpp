@@ -293,13 +293,13 @@ void Runtime::done()
 
         SolverPtr solver = Solver::getSolver(mOptions);
         ReachablePathsConstraintSet nullReachablePaths;
-        ConcolicVariableRenamerPtr nullRenamer;
+        ReorderingConstraintInfoPtr nullReorderingInfo;
         SolutionPtr solution = solver->solve(
                     pc,
                     FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()),
                     mWebkitExecutor->getDomSnapshotStorage(),
                     nullReachablePaths,
-                    nullRenamer);
+                    nullReorderingInfo);
 
         solution->toStatistics();
 

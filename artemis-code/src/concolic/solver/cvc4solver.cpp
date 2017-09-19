@@ -43,7 +43,7 @@ CVC4Solver::~CVC4Solver()
 {
 }
 
-SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer)
+SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ReorderingConstraintInfoPtr reorderingInfo)
 {
     // 0. Emit debug information
 
@@ -77,7 +77,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter(mDisabledFeatures));
 
-    if (!cw->write(pc, formRestrictions, domSnapshots, reachablePaths, renamer, "/tmp/cvc4input")) {
+    if (!cw->write(pc, formRestrictions, domSnapshots, reachablePaths, reorderingInfo, "/tmp/cvc4input")) {
 
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
 

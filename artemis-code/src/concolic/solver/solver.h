@@ -25,7 +25,7 @@
 #include "concolic/benchmarking.h"
 #include "runtime/options.h"
 #include "concolic/reordering/reachablepathsconstraint.h"
-#include "concolic/reordering/concolicvariablerenamer.h"
+#include "concolic/reordering/reorderingconstraintinfo.h"
 
 #include "solution.h"
 
@@ -43,7 +43,7 @@ public:
     Solver(ConcolicBenchmarkFeatures disabledFeatures);
     virtual ~Solver() {}
 
-    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer) = 0;
+    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ReorderingConstraintInfoPtr reorderingInfo) = 0;
     // N.B. pc is the only mandatory parameter. The others are used in various modes to add extra features, and can be null otherwise.
 
     virtual QString getLastConstraintID() { return ""; }

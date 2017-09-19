@@ -60,7 +60,7 @@ bool SMTConstraintWriter::encodeUnderscore()
     return true;
 }
 
-bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile)
+bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ReorderingConstraintInfoPtr reorderingInfo, std::string outputFile)
 {
     std::string preVisitHookOutput;
     std::string visitorOutput;
@@ -73,8 +73,8 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     mFormRestrictions = formRestrictions;
     mDomSnapshots = domSnapshots;
     mReachablePaths = reachablePaths;
-    mRenamer = renamer;
-    mRenamer->setPcIndex();
+    mReorderingInfo = reorderingInfo;
+    mReorderingInfo->setPcIndex();
 
     mOutput.str("");
 
@@ -141,8 +141,8 @@ void SMTConstraintWriter::emitReachablePathsConstraints()
     // symbolic conditions and either "true" or "false" at each leaf of the tree.
 
     foreach (NamedReachablePathsConstraint constraint, mReachablePaths) {
-        if (!mRenamer.isNull()) {
-            mRenamer->setIndex(constraint.first.second);
+        if (!mReorderingInfo.isNull()) {
+            mReorderingInfo->setIndex(constraint.first.second);
         }
 
         mOutput << std::endl;
@@ -519,10 +519,10 @@ std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
  */
 std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier) {
     std::string identifier_modified;
-    if (mRenamer.isNull()) {
+    if (mReorderingInfo.isNull()) {
         identifier_modified = identifier;
     } else {
-        identifier_modified = mRenamer->encode(QString::fromStdString(identifier)).toStdString();
+        identifier_modified = mReorderingInfo->encode(QString::fromStdString(identifier)).toStdString();
     }
 
     std::string t = identifier_modified;
@@ -543,8 +543,8 @@ std::string SMTConstraintWriter::decodeIdentifier(const std::string& identifier)
     t = SMTConstraintWriter::stringfindreplace(t, "ZZZ", "]");
     t = SMTConstraintWriter::stringfindreplace(t, "CCC", ":");
 
-    if (!mRenamer.isNull()) {
-        t = mRenamer->decode(QString::fromStdString(t)).toStdString();
+    if (!mReorderingInfo.isNull()) {
+        t = mReorderingInfo->decode(QString::fromStdString(t)).toStdString();
     }
 
     return t;

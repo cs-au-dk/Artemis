@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CONCOLICVARIABLERENAMER_H
-#define CONCOLICVARIABLERENAMER_H
+#ifndef REORDERINGCONSTRAINTINFO_H
+#define REORDERINGCONSTRAINTINFO_H
 
 #include <QSharedPointer>
 #include <QString>
@@ -26,10 +26,10 @@
 namespace artemis
 {
 
-class ConcolicVariableRenamer
+class ReorderingConstraintInfo
 {
 public:
-    ConcolicVariableRenamer(QStringList variables, uint pcIndex);
+    ReorderingConstraintInfo(QStringList variables, uint pcIndex);
 
     void setIndex(uint index);
     void setPcIndex(); // Sets the current index to that of the currently-analysed action.
@@ -43,7 +43,7 @@ protected:
     uint mPcIndex;
     QMap<QString, QString> mEncodedVars;
 };
-typedef QSharedPointer<ConcolicVariableRenamer> ConcolicVariableRenamerPtr;
+typedef QSharedPointer<ReorderingConstraintInfo> ReorderingConstraintInfoPtr;
 
 } // namespace artemis
-#endif // CONCOLICVARIABLERENAMER_H
+#endif // REORDERINGCONSTRAINTINFO_H

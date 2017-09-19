@@ -168,7 +168,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/concolicreorderingruntime.h \
     src/concolic/reordering/reachablepathsconstraintgenerator.h \
     src/concolic/reordering/reachablepathsconstraint.h \
-    src/concolic/reordering/concolicvariablerenamer.h
+    src/concolic/reordering/reorderingconstraintinfo.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -304,6 +304,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/toplevel/concolicreorderingruntime.cpp \
     src/concolic/reordering/reachablepathsconstraintgenerator.cpp \
     src/concolic/reordering/reachablepathsconstraint.cpp \
-    src/concolic/reordering/concolicvariablerenamer.cpp
+    src/concolic/reordering/reorderingconstraintinfo.cpp
 
 QT += network
