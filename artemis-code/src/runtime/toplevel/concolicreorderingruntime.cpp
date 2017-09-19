@@ -357,28 +357,28 @@ ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstrai
 
 ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintInfo(uint actionIdx)
 {
-    // Create a suitable renamer for this concolic analysis.
-    QStringList vars;
+    // Create the concolic renaming/reordering info for this concolic analysis.
+    QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables;
     foreach (Action action, mAvailableActions) {
         switch (action.field->getType()) {
         case TEXT:
-            vars.append("SYM_IN_" + action.variable);
+            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
             break;
         case FIXED_INPUT:
-            vars.append("SYM_IN_" + action.variable);
-            vars.append("SYM_IN_INT_" + action.variable);
+            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
+            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_INT_" + action.variable, action.initialValue));
             break;
         case BOOLEAN:
-            vars.append("SYM_IN_BOOL" + action.variable);
+            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_BOOL" + action.variable, action.initialValue));
             break;
         case NO_INPUT:
         default:
-            Log::fatal("Unexpected variable type encountered in ConcolicReorderingRuntime::getVariableRenamer.");
+            Log::fatal("Unexpected variable type encountered in ConcolicReorderingRuntime::getReorderingConstraintInfo.");
             exit(1);
         }
     }
 
-    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(vars, actionIdx));
+    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIdx));
     return reorderingInfo;
 }
 

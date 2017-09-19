@@ -55,6 +55,10 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
+/**
+ * Z3 doesn't support "_" in identifiers, thus they should be encoded before
+ * writing constraints, and decoded before reading the constraints.
+ */
 bool SMTConstraintWriter::encodeUnderscore()
 {
     return true;
@@ -66,6 +70,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     std::string visitorOutput;
     std::string postVisitHookOutput;
     std::string reachablePathsOutput;
+    std::string linearOrderingOutput;
 
     mError = false;
     mCurrentClause = -1;
@@ -105,6 +110,10 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     reachablePathsOutput = mOutput.str();
     mOutput.str("");
 
+    emitLinearOrderingConstraints();
+    linearOrderingOutput = mOutput.str();
+    mOutput.str("");
+
     postVisitPathConditionsHook();
     postVisitHookOutput = mOutput.str();
     mOutput.str("");
@@ -116,6 +125,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     constraintFile << mPreambleDefinitions.join("\n").toStdString();
     constraintFile << visitorOutput;
     constraintFile << reachablePathsOutput;
+    constraintFile << linearOrderingOutput;
     constraintFile << postVisitHookOutput;
 
     constraintFile.close();
@@ -192,6 +202,74 @@ std::string SMTConstraintWriter::reachablePathsConstraintExpression(ReachablePat
 
         return indentStr + "(or\n" + childStrings + "\n" + indentStr + ")";
     }
+}
+
+void SMTConstraintWriter::emitLinearOrderingConstraints()
+{
+    if (mReorderingInfo.isNull()) {
+        return;
+    }
+    // If mReorderingInfo is set, then we will emit the reordering constraints.
+    // This consists of 1) renaming the variables (in encodeIdentifier), and 2) some extra set of constraints (here).
+    // The extra constraints must represent the ordering of actions, and force them to have a linear order.
+    // They also enforce different (default or non-default) values for each indexed variable depending on the ordering.
+
+
+    // Assume that the action indices are exactly the set 1..N.
+    QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables = mReorderingInfo->getActionVariables();
+    QList<uint> indices = actionVariables.keys();
+    int N = indices.length();
+    for (uint i=1; i<=(uint)N; i++) {
+        assert(indices.contains(i));
+    }
+
+
+    // For each action index we create an ordering variable. Those are constraint to be distinct and in the expected
+    // range, so the must form a linear order.
+    mOutput << "\n; Action linear ordering constraints\n";
+    std::string allOrderVars = "";
+    foreach (uint actionIdx, actionVariables.keys()) {
+        std::string orderVar = "ORDERING" + std::to_string(actionIdx);
+        recordAndEmitType(orderVar, Symbolic::INT);
+        mOutput << "(assert (and (< 0 " << orderVar << " ) (<= " << orderVar << " " << N << ")))\n";
+        allOrderVars.append(orderVar + " ");
+    }
+    mOutput << "(assert (distinct " + allOrderVars + "))\n";
+
+
+    // For each action pair (A, B), set the value injected at A as seen by B depending on their relative order.
+    mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
+    foreach (uint aIdx, indices) {
+        foreach (ActionInfo aInfo, actionVariables.values(aIdx)) {
+            foreach (uint bIdx, indices) {
+                // TODO: We will generate an error here for select box index variables.
+                // We only have one default value per action, even though there are two corresponding variables.
+                // The real solution is to let the form restrictions handle this.
+                // Here we would generate only one value, and the form restriction would imply the other.
+
+                // TODO: Emit rules only for variables which are actually used in the PC or the other constaints.
+
+                std::string aOrder = "ORDERING" + std::to_string(aIdx);
+                std::string bOrder = "ORDERING" + std::to_string(bIdx);
+                std::string aMainName = aInfo.first.toStdString();
+                std::string aDefault = "\"TODO\""; // TODO: Get the real value (e.g. aInfo.second.getString() )
+                std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, aIdx).toStdString();
+                recordAndEmitType(aMainName, Symbolic::STRING); // TODO: What type to emit?
+                recordAndEmitType(aAsSeenByB, Symbolic::STRING); // TODO: What type to emit?
+
+                if (aIdx == bIdx) {
+                    mOutput << "(assert (= " << aAsSeenByB << " " << aMainName << "))\n";
+                } else {
+                    mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
+                }
+            }
+        }
+    }
+
+
+
+    // TODO
+
 }
 
 
@@ -513,10 +591,6 @@ std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
     return newString;
 }
 
-/**
- * Z3 doesn't support "_" in identifiers, thus they should be encoded before
- * writing constraints, and decoded before reading the constraints.
- */
 std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier) {
     std::string identifier_modified;
     if (mReorderingInfo.isNull()) {
@@ -538,14 +612,18 @@ std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier)
 
 std::string SMTConstraintWriter::decodeIdentifier(const std::string& identifier) {
 
-    std::string t = SMTConstraintWriter::stringfindreplace(identifier, "QQQ", "_");
+    std::string t = identifier;
+    if (encodeUnderscore()) {
+        t = SMTConstraintWriter::stringfindreplace(t, "QQQ", "_");
+    }
     t = SMTConstraintWriter::stringfindreplace(t, "WWW", "[");
     t = SMTConstraintWriter::stringfindreplace(t, "ZZZ", "]");
     t = SMTConstraintWriter::stringfindreplace(t, "CCC", ":");
 
-    if (!mReorderingInfo.isNull()) {
-        t = mReorderingInfo->decode(QString::fromStdString(t)).toStdString();
-    }
+    // N.B. Do not undo the reordering renaming - leave the renamed names in the final solution.
+    //if (!mReorderingInfo.isNull()) {
+    //    t = mReorderingInfo->decode(QString::fromStdString(t)).toStdString();
+    //}
 
     return t;
 }

@@ -22,11 +22,15 @@
 namespace artemis
 {
 
-ReorderingConstraintInfo::ReorderingConstraintInfo(QStringList variables, uint pcIndex)
+ReorderingConstraintInfo::ReorderingConstraintInfo(QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables, uint pcIndex)
 {
     mIndex = pcIndex; // Really this is meaningless until setIndex or setPcIndex has been called.
     mPcIndex = pcIndex;
-    mVariablesToRename = variables;
+    mActionVariables = actionVariables;
+    mVariablesToRename = QStringList();
+    foreach (ActionInfo actionInfo, mActionVariables.values()) {
+        mVariablesToRename.append(actionInfo.first);
+    }
 }
 
 void ReorderingConstraintInfo::setIndex(uint index)
@@ -43,7 +47,7 @@ QString ReorderingConstraintInfo::encode(QString name)
 {
     // Only rename the variables which we know to be associated with the actions we're analysing.
     if (mVariablesToRename.contains(name)) {
-        QString result = QString("%1__%2").arg(name).arg(mIndex);
+        QString result = encodeWithExplicitIndex(name, mIndex);
         //Log::debug("ReorderingConstraintInfo: Encoding " + name.toStdString() + " to " + result.toStdString());
         assert(!mVariablesToRename.contains(result)); // Sanity check, not strictly impossible.
         mEncodedVars[result] = name;
@@ -52,6 +56,13 @@ QString ReorderingConstraintInfo::encode(QString name)
         //Log::debug("ReorderingConstraintInfo: Not encoding " + name.toStdString());
         return name;
     }
+}
+
+QString ReorderingConstraintInfo::encodeWithExplicitIndex(QString name, uint index)
+{
+    // N.B. This method does not include the sanity checking. It's just here to guarantee that other parts of the code
+    // that try to match the encoding can use the same method.
+    return QString("%1__%2").arg(name).arg(index);
 }
 
 QString ReorderingConstraintInfo::decode(QString name)
@@ -63,6 +74,11 @@ QString ReorderingConstraintInfo::decode(QString name)
         //Log::debug("ReorderingConstraintInfo: Not decoding " + name.toStdString());
         return name;
     }
+}
+
+QMultiMap<uint, QPair<QString, InjectionValue> > ReorderingConstraintInfo::getActionVariables()
+{
+    return mActionVariables;
 }
 
 } // namespace artemis

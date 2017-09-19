@@ -166,6 +166,7 @@ protected:
 
     virtual void emitReachablePathsConstraints();
     std::string reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent);
+    virtual void emitLinearOrderingConstraints();
 
     /**
      * SMT does not support mixing constraints on strings,

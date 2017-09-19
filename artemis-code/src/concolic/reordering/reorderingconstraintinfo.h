@@ -19,9 +19,12 @@
 
 #include <QSharedPointer>
 #include <QString>
+#include <QMap>
+#include <QMultiMap>
 #include <QPair>
 #include <QStringList>
-#include <QMap>
+
+#include "runtime/input/forms/injectionvalue.h"
 
 namespace artemis
 {
@@ -29,21 +32,26 @@ namespace artemis
 class ReorderingConstraintInfo
 {
 public:
-    ReorderingConstraintInfo(QStringList variables, uint pcIndex);
+    ReorderingConstraintInfo(QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables, uint pcIndex);
 
     void setIndex(uint index);
     void setPcIndex(); // Sets the current index to that of the currently-analysed action.
 
     QString encode(QString name);
+    static QString encodeWithExplicitIndex(QString name, uint index);
     QString decode(QString name);
 
+    QMultiMap<uint, QPair<QString, InjectionValue>> getActionVariables();
+
 protected:
+    QMultiMap<uint, QPair<QString, InjectionValue>> mActionVariables;
     QStringList mVariablesToRename;
     uint mIndex;
     uint mPcIndex;
     QMap<QString, QString> mEncodedVars;
 };
 typedef QSharedPointer<ReorderingConstraintInfo> ReorderingConstraintInfoPtr;
+typedef QPair<QString, InjectionValue> ActionInfo;
 
 } // namespace artemis
 #endif // REORDERINGCONSTRAINTINFO_H
