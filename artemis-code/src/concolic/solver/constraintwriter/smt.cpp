@@ -591,15 +591,17 @@ void SMTConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& sour
 
 void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic::Type type)
 {
-    std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(source);
+    std::string encodedSource = encodeIdentifier(source);
+
+    std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(encodedSource);
 
     if (iter != mTypemap.end()) {
         // type already recorded, update type info
         iter->second = iter->second == type ? type : Symbolic::TYPEERROR;
     } else {
         // type not recorded before, output definition and store type
-        mTypemap.insert(std::pair<std::string, Symbolic::Type>(source, type));
-        emitConst(SMTConstraintWriter::encodeIdentifier(source), type);
+        mTypemap.insert(std::pair<std::string, Symbolic::Type>(encodedSource, type));
+        emitConst(encodedSource, type);
     }
 
 }
