@@ -44,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 {
 }
 
-bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile) {
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile) {
 
     // pre analysis
     for (uint i = 0; i < pathCondition->size(); i++) {
@@ -54,8 +54,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     mSawToUpperCase = false;
 
     // main visitor
-    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, reachablePaths, outputFile);
-
+    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, reachablePaths, renamer, outputFile);
     // cleanup
     mTypeAnalysis->reset();
     mVisitedSymbolicObjects.clear();
@@ -116,7 +115,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
             Statistics::statistics()->accumulate("Concolic::Solver::IntegerVariableWithoutSelectRestriction", 1);
             // a select index, force positive numbers
             recordAndEmitType(var.toStdString(), Symbolic::INT);
-            mOutput << "(assert (>= " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " 0))" << std::endl;
+            mOutput << "(assert (>= " << encodeIdentifier(var.toStdString()) << " 0))" << std::endl;
         }
     }
 }
@@ -150,7 +149,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
             promise->isCoerced = true;
 
             recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
-            mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+            mExpressionBuffer = encodeIdentifier(symbolicstring->getSource().getIdentifier());
             mExpressionType = Symbolic::INT;
 
             mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
@@ -163,7 +162,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
 
-    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+    mExpressionBuffer = encodeIdentifier(symbolicstring->getSource().getIdentifier());
     mExpressionType = Symbolic::STRING;
 }
 
@@ -502,7 +501,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
 
             mUsedSymbolicObjectProperties[obj].insert("TOSTRING");
 
-            mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(ident.str());
+            mExpressionBuffer = encodeIdentifier(ident.str());
             mExpressionType = Symbolic::STRING;
 
             return;
@@ -515,7 +514,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
 
     mVisitedSymbolicObjects.insert(obj);
 
-    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(obj->getSource().getIdentifier());
+    mExpressionBuffer = encodeIdentifier(obj->getSource().getIdentifier());
     mExpressionType = Symbolic::OBJECT;
 }
 
@@ -524,7 +523,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, vo
     obj->getObj()->accept(this);
 
     std::stringstream ident;
-    ident << mExpressionBuffer << SMTConstraintWriter::encodeIdentifier("__") << obj->getPropertyname();
+    ident << mExpressionBuffer << encodeIdentifier("__") << obj->getPropertyname();
 
     // Checks this symbolic value is of type OBJECT and raises an error otherwise.
     recordAndEmitType(ident.str(), Symbolic::STRING);
@@ -911,8 +910,8 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream idxconstraint;
         std::stringstream valueconstraint;
 
-        valueconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"\"))";
-        idxconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " (- 1)))";
+        valueconstraint << "(assert (= " << encodeIdentifier(name.toStdString()) << " \"\"))";
+        idxconstraint << "(assert (= " << encodeIdentifier(idxname.toStdString()) << " (- 1)))";
 
         switch(type) {
         case VALUE_ONLY:
@@ -936,12 +935,12 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream idxconstraint;
         std::stringstream valueconstraint;
 
-        idxconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
+        idxconstraint << "(= " << encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
 
         if (coerceToInt) {
-            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
+            valueconstraint << "(= " << encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
         } else {
-            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+            valueconstraint << "(= " << encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
         }
 
         switch(type) {
@@ -984,9 +983,9 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
 
         foreach(QString var, names) {
             if(var == currentVar) {
-                mOutput << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " ";
+                mOutput << encodeIdentifier(var.toStdString()) << " ";
             } else {
-                mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+                mOutput << "(not " << encodeIdentifier(var.toStdString()) << ") ";
             }
         }
 
@@ -997,7 +996,7 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
     if(!constraint.alwaysSet) {
         mOutput << "    (and ";
         foreach(QString var, names) {
-            mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+            mOutput << "(not " << encodeIdentifier(var.toStdString()) << ") ";
         }
         mOutput << ")\n";
     }
@@ -1180,11 +1179,11 @@ void CVC4ConstraintWriter::emitDOMConstraints()
                 WebCore::DOMSnapshotNode* node = iter2->second;
 
                 // symbolic symbolic DOM must resolve to the concrete DOM id
-                mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(identifier) << " " << id << ")";
+                mOutput << "    (and (= " << encodeIdentifier(identifier) << " " << id << ")";
 
                 // special, emit the xpath to the result object. This is used later as the final result
                 mOutput << std::endl << "         (= " \
-                        << SMTConstraintWriter::encodeIdentifier(identifier + "_SOLUTIONXPATH") \
+                        << encodeIdentifier(identifier + "_SOLUTIONXPATH") \
                         << " \"" << CVC4RegexCompiler::escape(node->getXpath()) << "\")";
 
                 // all attributes must match
@@ -1196,7 +1195,7 @@ void CVC4ConstraintWriter::emitDOMConstraints()
                     std::string value = (result == attributes.end()) ? "" : result->second;
 
                     mOutput << std::endl << "         (= " \
-                            << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter3)) \
+                            << encodeIdentifier(identifier + "__" + (*iter3)) \
                             << " \"" << CVC4RegexCompiler::escape(value) << "\")";
                 }
 

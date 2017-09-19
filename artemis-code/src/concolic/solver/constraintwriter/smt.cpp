@@ -55,7 +55,7 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
-bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile)
+bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile)
 {
     std::string preVisitHookOutput;
     std::string visitorOutput;
@@ -68,6 +68,8 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     mFormRestrictions = formRestrictions;
     mDomSnapshots = domSnapshots;
     mReachablePaths = reachablePaths;
+    mRenamer = renamer;
+    mRenamer->setPcIndex();
 
     mOutput.str("");
 
@@ -134,9 +136,12 @@ void SMTConstraintWriter::emitReachablePathsConstraints()
     // symbolic conditions and either "true" or "false" at each leaf of the tree.
 
     foreach (NamedReachablePathsConstraint constraint, mReachablePaths) {
+        if (!mRenamer.isNull()) {
+            mRenamer->setIndex(constraint.first.second);
+        }
+
         mOutput << std::endl;
-        mOutput << "; Reachable-paths constraint for " << constraint.first.toStdString() << std::endl;
-        mOutput << "; TODO: Renaming variables for the ordering constraints." << std::endl;
+        mOutput << "; Reachable-paths constraint for " << constraint.first.first.toStdString() << std::endl;
         std::string exprString = reachablePathsConstraintExpression(constraint.second, 2);
         mOutput << "(assert \n" << exprString << "\n)" << std::endl;
     }
@@ -193,7 +198,7 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, void
     // Checks this symbolic value is of type INT and raises an error otherwise.
     recordAndEmitType(symbolicinteger->getSource(), Symbolic::INT);
 
-    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicinteger->getSource().getIdentifier());
+    mExpressionBuffer = encodeIdentifier(symbolicinteger->getSource().getIdentifier());
     mExpressionType = Symbolic::INT;
 }
 
@@ -207,7 +212,7 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void
     // Checks this symbolic value is of type BOOL and raises an error otherwise.
     recordAndEmitType(symbolicboolean->getSource(), Symbolic::BOOL);
 
-    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicboolean->getSource().getIdentifier());
+    mExpressionBuffer = encodeIdentifier(symbolicboolean->getSource().getIdentifier());
     mExpressionType = Symbolic::BOOL;
 }
 
@@ -508,8 +513,14 @@ std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
  * writing constraints, and decoded before reading the constraints.
  */
 std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier) {
+    std::string identifier_modified;
+    if (mRenamer.isNull()) {
+        identifier_modified = identifier;
+    } else {
+        identifier_modified = mRenamer->encode(QString::fromStdString(identifier)).toStdString();
+    }
 
-    std::string t = SMTConstraintWriter::stringfindreplace(identifier, "_" , "QQQ");
+    std::string t = SMTConstraintWriter::stringfindreplace(identifier_modified, "_" , "QQQ");
     t = SMTConstraintWriter::stringfindreplace(t, "[" , "WWW");
     t = SMTConstraintWriter::stringfindreplace(t, "]" , "ZZZ");
     t = SMTConstraintWriter::stringfindreplace(t, ":" , "CCC");
@@ -523,6 +534,10 @@ std::string SMTConstraintWriter::decodeIdentifier(const std::string& identifier)
     t = SMTConstraintWriter::stringfindreplace(t, "WWW", "[");
     t = SMTConstraintWriter::stringfindreplace(t, "ZZZ", "]");
     t = SMTConstraintWriter::stringfindreplace(t, "CCC", ":");
+
+    if (!mRenamer.isNull()) {
+        t = mRenamer->decode(QString::fromStdString(t)).toStdString();
+    }
 
     return t;
 }

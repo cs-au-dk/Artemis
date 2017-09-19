@@ -39,6 +39,7 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
     , mSearchStrategy(TreeSearchPtr())
     , mDomSnapshotStorage(DomSnapshotStoragePtr(new DomSnapshotStorage()))
     , mReachablePathsConstraints()
+    , mRenamer()
     , mExplorationIndex(1)
     , mPreviousConstraintID()
 {
@@ -226,7 +227,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = Solver::getSolver(mOptions);
-    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints);
+    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints, mRenamer);
     mPreviousConstraintID = solver->getLastConstraintID();
 
     // If the constraint could not be solved, then we have an oppourtunity to retry.
@@ -270,7 +271,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
                 canRetry = false;
             } else {
 
-                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints);
+                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage, mReachablePathsConstraints, mRenamer);
                 mPreviousConstraintID = solver->getLastConstraintID();
 
             }
@@ -335,6 +336,11 @@ void ConcolicAnalysis::setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotSt
 void ConcolicAnalysis::setReachablePathsConstraints(ReachablePathsConstraintSet reachablePathConstraints)
 {
     mReachablePathsConstraints = reachablePathConstraints;
+}
+
+void ConcolicAnalysis::setVariableRenamer(ConcolicVariableRenamerPtr renamer)
+{
+    mRenamer = renamer;
 }
 
 TraceNodePtr ConcolicAnalysis::getExecutionTree()

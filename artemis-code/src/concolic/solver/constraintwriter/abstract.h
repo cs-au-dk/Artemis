@@ -22,6 +22,7 @@
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
 #include "model/domsnapshotstorage.h"
 #include "concolic/reordering/reachablepathsconstraint.h"
+#include "concolic/reordering/concolicvariablerenamer.h"
 
 #ifndef CONSTRAINTWRITER_ABSTRACT_H
 #define CONSTRAINTWRITER_ABSTRACT_H
@@ -34,7 +35,7 @@ class ConstraintWriter
 
 public:
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile) = 0;
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile) = 0;
 
     virtual ~ConstraintWriter() {}
 

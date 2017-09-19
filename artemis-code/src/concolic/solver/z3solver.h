@@ -32,7 +32,7 @@ public:
 
     Z3Solver(ConcolicBenchmarkFeatures disabledFeatures);
 
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer);
 
 };
 

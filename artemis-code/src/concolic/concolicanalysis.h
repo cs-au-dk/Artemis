@@ -25,6 +25,7 @@
 #include "concolic/search/abstractselector.h"
 #include "concolic/solver/solver.h"
 #include "concolic/reordering/reachablepathsconstraint.h"
+#include "concolic/reordering/concolicvariablerenamer.h"
 
 #ifndef CONCOLICANALYSIS_H
 #define CONCOLICANALYSIS_H
@@ -132,6 +133,10 @@ public:
     // It is safe to update between calls to nextExploration and the new value will be used until reset.
     void setReachablePathsConstraints(ReachablePathsConstraintSet reachablePathConstraints);
 
+    // Used to set a "renamer" which will be called for each variable name emitted during constraint generation.
+    // This is used b the ConcolicReorderingRuntime to mix constraints with different instances of the same variable.
+    void setVariableRenamer(ConcolicVariableRenamerPtr renamer);
+
     // Accessor for the search tree, which should not be externally modified! (TODO: This is not enforced)
     TraceNodePtr getExecutionTree();
     uint getExplorationIndex();
@@ -158,6 +163,8 @@ protected:
     DomSnapshotStoragePtr mDomSnapshotStorage;
 
     ReachablePathsConstraintSet mReachablePathsConstraints;
+
+    ConcolicVariableRenamerPtr mRenamer;
 
     // Logging
     uint mExplorationIndex;

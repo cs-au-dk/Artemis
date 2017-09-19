@@ -43,7 +43,7 @@ CVC4Solver::~CVC4Solver()
 {
 }
 
-SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths)
+SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer)
 {
     // 0. Emit debug information
 
@@ -77,7 +77,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter(mDisabledFeatures));
 
-    if (!cw->write(pc, formRestrictions, domSnapshots, reachablePaths, "/tmp/cvc4input")) {
+    if (!cw->write(pc, formRestrictions, domSnapshots, reachablePaths, renamer, "/tmp/cvc4input")) {
 
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
 
@@ -225,7 +225,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
         // Variables not prefixed with SYM_ are ignored
 
-        std::string identifier = SMTConstraintWriter::decodeIdentifier(symbol);
+        std::string identifier = cw->decodeIdentifier(symbol);
 
         if (identifier.compare(0, 7, "SYM_IN_") == 0) {
             SolutionPtr ret = decodeDOMInputResult(clog, identifier, type, value, &symbolvalue, formRestrictions);

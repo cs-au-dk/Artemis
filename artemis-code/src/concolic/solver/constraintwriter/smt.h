@@ -75,7 +75,7 @@ public:
 
     SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -85,8 +85,8 @@ public:
         return mErrorClause;
     }
 
-    static std::string encodeIdentifier(const std::string&);
-    static std::string decodeIdentifier(const std::string&);
+    std::string encodeIdentifier(const std::string&);
+    std::string decodeIdentifier(const std::string&);
 
 protected:
 
@@ -227,6 +227,7 @@ protected:
     FormRestrictions mFormRestrictions;
     DomSnapshotStoragePtr mDomSnapshots;
     ReachablePathsConstraintSet mReachablePaths;
+    ConcolicVariableRenamerPtr mRenamer;
     QStringList mPreambleDefinitions;
 
     // Benchmarking

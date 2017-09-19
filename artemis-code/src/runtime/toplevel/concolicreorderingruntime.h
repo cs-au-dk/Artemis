@@ -32,6 +32,12 @@
 namespace artemis
 {
 
+/*
+ * A runtime which allows dynamic reordering of events.
+ *
+ * TODO: This runtime does not support form restrictions (static or dynamic).
+ */
+
 class ConcolicReorderingRuntime : public Runtime
 {
     Q_OBJECT
@@ -60,6 +66,7 @@ protected:
     void chooseNextSequenceAndExplore();
     uint chooseNextActionToSearch();
     ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
+    ConcolicVariableRenamerPtr getVariableRenamer(uint actionIdx);
 
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 

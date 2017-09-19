@@ -56,7 +56,7 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void
             promise->isCoerced = true;
 
             recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
-            mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+            mExpressionBuffer = encodeIdentifier(symbolicstring->getSource().getIdentifier());
             mExpressionType = Symbolic::INT;
 
             return;
@@ -67,7 +67,8 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
 
-    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+
+    mExpressionBuffer = encodeIdentifier(symbolicstring->getSource().getIdentifier());
     mExpressionType = Symbolic::STRING;
 }
 

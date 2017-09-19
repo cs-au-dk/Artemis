@@ -96,7 +96,7 @@ protected:
     static QSharedPointer<ReachablePathsAbort> instance;
 };
 
-typedef QPair<QString, ReachablePathsConstraintPtr>  NamedReachablePathsConstraint;
+typedef QPair<QPair<QString, uint>, ReachablePathsConstraintPtr> NamedReachablePathsConstraint;
 typedef QSet<NamedReachablePathsConstraint> ReachablePathsConstraintSet;
 
 } // namespace artemis

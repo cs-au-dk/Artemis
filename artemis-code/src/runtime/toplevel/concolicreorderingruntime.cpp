@@ -301,6 +301,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 
     // Select a target branch from the chosen action's concolic tree.
     nextAction.analysis->setReachablePathsConstraints(reachablePaths);
+    nextAction.analysis->setVariableRenamer(getVariableRenamer(nextAction.index));
     ConcolicAnalysis::ExplorationResult result = nextAction.analysis->nextExploration();
     if (result.newExploration) {
         // Succesfully solved a PC in this action.
@@ -312,7 +313,8 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         // Decode the ordering to be used.
         // TODO
 
-        // Prepare the following execution.
+        // Prepare the next execution.
+        // TODO
 
     } else {
         // Couldn't explore in this action.
@@ -344,13 +346,40 @@ ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstrai
         if (actionIdx != ignoreIdx) {
             Action action = mAvailableActions[actionIdx];
             NamedReachablePathsConstraint constraint;
-            constraint.first = QString("Action %1 (%2)").arg(actionIdx).arg(action.variable);
+            constraint.first = QPair<QString, uint>(QString("Action %1 (%2)").arg(actionIdx).arg(action.variable), action.index);
             constraint.second = ReachablePathsConstraintGenerator::generateConstraint(action.analysis->getExecutionTree());
             constraintSet.insert(constraint);
         }
     }
 
     return constraintSet;
+}
+
+ConcolicVariableRenamerPtr ConcolicReorderingRuntime::getVariableRenamer(uint actionIdx)
+{
+    // Create a suitable renmaer for this aconcolic analysis.
+    QStringList vars;
+    foreach (Action action, mAvailableActions) {
+        switch (action.field->getType()) {
+        case TEXT:
+            vars.append("SYM_IN_" + action.variable);
+            break;
+        case FIXED_INPUT:
+            vars.append("SYM_IN_" + action.variable);
+            vars.append("SYM_IN_INT_" + action.variable);
+            break;
+        case BOOLEAN:
+            vars.append("SYM_IN_BOOL" + action.variable);
+            break;
+        case NO_INPUT:
+        default:
+            Log::fatal("Unexpected variable type encountered in ConcolicReorderingRuntime::getVariableRenamer.");
+            exit(1);
+        }
+    }
+
+    ConcolicVariableRenamerPtr renamer = ConcolicVariableRenamerPtr(new ConcolicVariableRenamer(vars, actionIdx));
+    return renamer;
 }
 
 
