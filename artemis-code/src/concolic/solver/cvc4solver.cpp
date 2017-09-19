@@ -284,7 +284,7 @@ SolutionPtr CVC4Solver::decodeDOMInputResult(std::ofstream& clog,
         symbol_name_type = Symbolic::BOOL;
     } else if (identifier.compare(0, 11, "SYM_IN_INT_") == 0) {
         symbol_name_type = Symbolic::INT;
-    } else if (identifier.compare(0, 12, "SYM_IN_BOOL_")) {
+    } else if (identifier.compare(0, 7, "SYM_IN_") == 0) {
         symbol_name_type = Symbolic::STRING;
     } else {
         std::cerr << "ERROR: Unknown symbol in solution: " << identifier << std::endl;
