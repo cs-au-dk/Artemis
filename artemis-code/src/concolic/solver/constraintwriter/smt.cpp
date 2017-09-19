@@ -55,6 +55,11 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
+bool SMTConstraintWriter::encodeUnderscore()
+{
+    return true;
+}
+
 bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ConcolicVariableRenamerPtr renamer, std::string outputFile)
 {
     std::string preVisitHookOutput;
@@ -520,7 +525,10 @@ std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier)
         identifier_modified = mRenamer->encode(QString::fromStdString(identifier)).toStdString();
     }
 
-    std::string t = SMTConstraintWriter::stringfindreplace(identifier_modified, "_" , "QQQ");
+    std::string t = identifier_modified;
+    if (encodeUnderscore()) {
+        t = SMTConstraintWriter::stringfindreplace(t, "_" , "QQQ");
+    }
     t = SMTConstraintWriter::stringfindreplace(t, "[" , "WWW");
     t = SMTConstraintWriter::stringfindreplace(t, "]" , "ZZZ");
     t = SMTConstraintWriter::stringfindreplace(t, ":" , "CCC");

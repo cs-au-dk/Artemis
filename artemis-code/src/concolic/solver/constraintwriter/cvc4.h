@@ -79,6 +79,8 @@ protected:
     virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
+    virtual bool encodeUnderscore();
+
     void emitDOMConstraints();
 
     virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);

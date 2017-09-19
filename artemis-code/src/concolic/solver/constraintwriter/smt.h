@@ -162,6 +162,7 @@ protected:
     virtual void postVisitPathConditionsHook();
 
     virtual std::string ifLabel();
+    virtual bool encodeUnderscore();
 
     virtual void emitReachablePathsConstraints();
     std::string reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent);

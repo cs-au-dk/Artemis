@@ -133,6 +133,11 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
     }
 }
 
+bool CVC4ConstraintWriter::encodeUnderscore()
+{
+    return false;
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
 
