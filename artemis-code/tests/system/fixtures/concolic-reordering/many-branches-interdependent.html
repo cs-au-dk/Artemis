@@ -1,0 +1,100 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // This test is used to check the reachable-paths constraints (manually) by including many branches in many actions.
+        
+        function handler_A1() {
+            var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            var v3 = document.getElementById("field_3").value;
+            var v4 = document.getElementById("field_4").value;
+            
+            if (v1 == "badinput") {
+                alert("Error 1.1");
+            }
+        }
+        
+        function handler_A2() {
+            var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            var v3 = document.getElementById("field_3").value;
+            var v4 = document.getElementById("field_4").value;
+            
+            if (v1 != "hello") {
+                alert("Error 1.2");
+            }
+            
+            if (v2.length > 6) {
+                if (v2 == "another bad input") {
+                    alert("Error 2.1");
+                } else {
+                    alert("Error 2.2");
+                }
+            }
+        }
+        
+        function handler_A3() {
+            var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            var v3 = document.getElementById("field_3").value;
+            var v4 = document.getElementById("field_4").value;
+            
+            if (v2 != "world") {
+                alert("Error 2.3");
+            }
+            
+            if (v3 == "testme") {
+                alert("Error 3.1");
+            }
+        }
+        
+        function handler_A4() {
+            var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            var v3 = document.getElementById("field_3").value;
+            var v4 = document.getElementById("field_4").value;
+            
+            if (v2.length > 6) {
+                if (v2 == "another bad input") {
+                    alert("Error 2.1");
+                } else {
+                    alert("Error 2.2");
+                }
+            }
+            
+            if (v3 != "testme") {
+                if (v3 == "hello" || v3 == "goodbye"){
+                    if (v3 != "hello") {
+                        alert("Error 3.2");
+                    }
+                }else{
+                    alert("Error 3.3");
+                }
+            }
+        }
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <input type="text" id="field_2" onchange="handler_A2()" value="default2" >
+        <input type="text" id="field_3" onchange="handler_A3()" value="default3" >
+        <input type="text" id="field_4" onchange="handler_A4()" value="default4" >
+        
+    </form>
+    
+</body>
+</html>
