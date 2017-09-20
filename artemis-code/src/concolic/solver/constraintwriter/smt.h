@@ -85,7 +85,7 @@ public:
         return mErrorClause;
     }
 
-    std::string encodeIdentifier(const std::string&);
+    std::string encodeIdentifier(const std::string&, bool noRename=false);
     std::string decodeIdentifier(const std::string&);
 
 protected:
@@ -195,8 +195,8 @@ protected:
      * domains via integer constraints on string length.
      */
 
-    void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
-    void recordAndEmitType(const std::string&, Symbolic::Type type);
+    void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type, bool noRename=false);
+    void recordAndEmitType(const std::string&, Symbolic::Type type, bool noRename=false);
     bool checkType(Symbolic::Type expected);
 
     virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);

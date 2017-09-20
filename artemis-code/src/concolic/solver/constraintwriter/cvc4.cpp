@@ -895,19 +895,19 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
                 mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
                 FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
 
-            recordAndEmitType(name.toStdString(), Symbolic::INT);
+            recordAndEmitType(name.toStdString(), Symbolic::INT, true);
             coerceToInt = true;
 
             mSuccessfulCoercions.insert(name.toStdString());
             Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
 
         } else {
-            recordAndEmitType(name.toStdString(), Symbolic::STRING);
+            recordAndEmitType(name.toStdString(), Symbolic::STRING, true);
         }
     }
 
     if(type == INDEX_ONLY || type == VALUE_INDEX) {
-        recordAndEmitType(idxname.toStdString(), Symbolic::INT);
+        recordAndEmitType(idxname.toStdString(), Symbolic::INT, true);
     }
 
     // If the select is empty, assert some default values.
@@ -915,8 +915,8 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream idxconstraint;
         std::stringstream valueconstraint;
 
-        valueconstraint << "(assert (= " << encodeIdentifier(name.toStdString()) << " \"\"))";
-        idxconstraint << "(assert (= " << encodeIdentifier(idxname.toStdString()) << " (- 1)))";
+        valueconstraint << "(assert (= " << encodeIdentifier(name.toStdString(), true) << " \"\"))";
+        idxconstraint << "(assert (= " << encodeIdentifier(idxname.toStdString(), true) << " (- 1)))";
 
         switch(type) {
         case VALUE_ONLY:
@@ -940,12 +940,12 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream idxconstraint;
         std::stringstream valueconstraint;
 
-        idxconstraint << "(= " << encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
+        idxconstraint << "(= " << encodeIdentifier(idxname.toStdString(), true) << " " << idx << ")";
 
         if (coerceToInt) {
-            valueconstraint << "(= " << encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
+            valueconstraint << "(= " << encodeIdentifier(name.toStdString(), true) << " " << value.toStdString() << ")";
         } else {
-            valueconstraint << "(= " << encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+            valueconstraint << "(= " << encodeIdentifier(name.toStdString(), true) << " \"" << value.toStdString() << "\")";
         }
 
         switch(type) {
@@ -978,7 +978,7 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
         name = QString("SYM_IN_BOOL_%1").arg(var);
         names.append(name);
 
-        recordAndEmitType(name.toStdString(), Symbolic::BOOL);
+        recordAndEmitType(name.toStdString(), Symbolic::BOOL, true);
     }
 
     mOutput << "(assert\n  (or\n";
@@ -988,9 +988,9 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
 
         foreach(QString var, names) {
             if(var == currentVar) {
-                mOutput << encodeIdentifier(var.toStdString()) << " ";
+                mOutput << encodeIdentifier(var.toStdString(), true) << " ";
             } else {
-                mOutput << "(not " << encodeIdentifier(var.toStdString()) << ") ";
+                mOutput << "(not " << encodeIdentifier(var.toStdString(), true) << ") ";
             }
         }
 
@@ -1001,7 +1001,7 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
     if(!constraint.alwaysSet) {
         mOutput << "    (and ";
         foreach(QString var, names) {
-            mOutput << "(not " << encodeIdentifier(var.toStdString()) << ") ";
+            mOutput << "(not " << encodeIdentifier(var.toStdString(), true) << ") ";
         }
         mOutput << ")\n";
     }

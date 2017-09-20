@@ -84,6 +84,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     mOutput.str("");
 
     QSet<QString> freeVars = pathCondition->freeVariables().keys().toSet();
+    // TODO: Include variables from mReachablePaths as well.
     preVisitPathConditionsHook(freeVars);
 
     preVisitHookOutput = mOutput.str();
@@ -229,7 +230,7 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
     mOutput << "\n; Action linear ordering constraints\n";
     std::string allOrderVars = "";
     foreach (uint actionIdx, actionVariables.keys()) {
-        std::string orderVar = "ORDERING" + std::to_string(actionIdx);
+        std::string orderVar = "SYM_ORDERING_" + std::to_string(actionIdx);
         recordAndEmitType(orderVar, Symbolic::INT);
         mOutput << "(assert (and (< 0 " << orderVar << " ) (<= " << orderVar << " " << N << ")))\n";
         allOrderVars.append(orderVar + " ");
@@ -269,11 +270,11 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
                 exit(1);
             }
 
-            std::string aOrder = "ORDERING" + std::to_string(aIdx);
-            std::string bOrder = "ORDERING" + std::to_string(bIdx);
+            std::string aOrder = "SYM_ORDERING_" + std::to_string(aIdx);
+            std::string bOrder = "SYM_ORDERING_" + std::to_string(bIdx);
             std::string aMainName = aInfo.first.toStdString();
             std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, bIdx).toStdString();
-            recordAndEmitType(aMainName, aType);
+            recordAndEmitType(aMainName, aType, true);
             recordAndEmitType(aAsSeenByB, aType);
 
             if (aIdx == bIdx) {
@@ -609,9 +610,9 @@ std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
     return newString;
 }
 
-std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier) {
+std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier, bool noRename) {
     std::string identifier_modified;
-    if (mReorderingInfo.isNull()) {
+    if (noRename || mReorderingInfo.isNull()) {
         identifier_modified = identifier;
     } else {
         identifier_modified = mReorderingInfo->encode(QString::fromStdString(identifier)).toStdString();
@@ -680,14 +681,14 @@ std::string SMTConstraintWriter::emitAndReturnNewTemporary(Symbolic::Type type)
     return temporaryName;
 }
 
-void SMTConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& source, Symbolic::Type type)
+void SMTConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& source, Symbolic::Type type, bool noRename)
 {
-    recordAndEmitType(source.getIdentifier(), type);
+    recordAndEmitType(source.getIdentifier(), type, noRename);
 }
 
-void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic::Type type)
+void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic::Type type, bool noRename)
 {
-    std::string encodedSource = encodeIdentifier(source);
+    std::string encodedSource = encodeIdentifier(source, noRename);
 
     std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(encodedSource);
 

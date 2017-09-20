@@ -203,6 +203,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
     // For the first iteration, the actions are taken in index order (i.e. DOM order).
 
     QList<FormFieldDescriptorConstPtr> fieldsOnPage = result->getFormFields();
+    FormRestrictions formFieldRestrictions = FormFieldRestrictedValues::getRestrictions(fieldsOnPage, mWebkitExecutor->getPage());
     uint fieldIdx = 0;
     foreach (FormFieldDescriptorConstPtr field, fieldsOnPage) {
         Action action;
@@ -211,6 +212,8 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
         action.variable = field->getDomElement()->getId();
         action.initialValue = getFieldCurrentValue(action.field);
         action.analysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+
+        action.analysis->setFormRestrictions(formFieldRestrictions);
 
         mAvailableActions[action.index] = action;
         mCurrentActionOrder.append(action.index);
