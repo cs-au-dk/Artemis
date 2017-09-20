@@ -358,7 +358,7 @@ ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstrai
 ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintInfo(uint actionIdx)
 {
     // Create the concolic renaming/reordering info for this concolic analysis.
-    QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables;
+    QMap<uint, QPair<QString, InjectionValue>> actionVariables;
     foreach (Action action, mAvailableActions) {
         switch (action.field->getType()) {
         case TEXT:
@@ -366,7 +366,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
             break;
         case FIXED_INPUT:
             actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
-            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_INT_" + action.variable, action.initialValue));
+            // N.B. The integer variable for the selectedIndex is handled indirectly via the form restrictions.
             break;
         case BOOLEAN:
             actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_BOOL" + action.variable, action.initialValue));

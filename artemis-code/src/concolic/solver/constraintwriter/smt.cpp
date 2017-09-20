@@ -216,7 +216,7 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
 
 
     // Assume that the action indices are exactly the set 1..N.
-    QMultiMap<uint, QPair<QString, InjectionValue>> actionVariables = mReorderingInfo->getActionVariables();
+    QMap<uint, QPair<QString, InjectionValue>> actionVariables = mReorderingInfo->getActionVariables();
     QList<uint> indices = actionVariables.keys();
     int N = indices.length();
     for (uint i=1; i<=(uint)N; i++) {
@@ -240,28 +240,46 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
     // For each action pair (A, B), set the value injected at A as seen by B depending on their relative order.
     mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
     foreach (uint aIdx, indices) {
-        foreach (ActionInfo aInfo, actionVariables.values(aIdx)) {
-            foreach (uint bIdx, indices) {
-                // TODO: We will generate an error here for select box index variables.
-                // We only have one default value per action, even though there are two corresponding variables.
-                // The real solution is to let the form restrictions handle this.
-                // Here we would generate only one value, and the form restriction would imply the other.
+        foreach (uint bIdx, indices) {
+            // TODO: We will generate an error here for select box index variables.
+            // We only have one default value per action, even though there are two corresponding variables.
+            // The real solution is to let the form restrictions handle this.
+            // Here we would generate only one value, and the form restriction would imply the other.
 
-                // TODO: Emit rules only for variables which are actually used in the PC or the other constaints.
+            // TODO: Emit rules only for variables which are actually used in the PC or the other constaints.
 
-                std::string aOrder = "ORDERING" + std::to_string(aIdx);
-                std::string bOrder = "ORDERING" + std::to_string(bIdx);
-                std::string aMainName = aInfo.first.toStdString();
-                std::string aDefault = "\"TODO\""; // TODO: Get the real value (e.g. aInfo.second.getString() )
-                std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, aIdx).toStdString();
-                recordAndEmitType(aMainName, Symbolic::STRING); // TODO: What type to emit?
-                recordAndEmitType(aAsSeenByB, Symbolic::STRING); // TODO: What type to emit?
+            ActionInfo aInfo = actionVariables[aIdx];
+            Symbolic::Type aType;
+            std::string aDefault;
+            switch (aInfo.second.getType()) {
+            case QVariant::String:
+                aType = Symbolic::STRING;
+                aDefault = "\"" + aInfo.second.getString().toStdString() + "\"";
+                break;
+            case QVariant::Int:
+                aType = Symbolic::INT; // N.B. Not expected to hit this case. We do not have integer inputs, and
+                aDefault = std::to_string(aInfo.second.getInt());
+                break;
+            case QVariant::Bool:
+                aType = Symbolic::BOOL;
+                aDefault = aInfo.second.getBool() ? "true" : "false";
+                break;
+            default:
+                Log::fatal("Unexpected default value type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
+                exit(1);
+            }
 
-                if (aIdx == bIdx) {
-                    mOutput << "(assert (= " << aAsSeenByB << " " << aMainName << "))\n";
-                } else {
-                    mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
-                }
+            std::string aOrder = "ORDERING" + std::to_string(aIdx);
+            std::string bOrder = "ORDERING" + std::to_string(bIdx);
+            std::string aMainName = aInfo.first.toStdString();
+            std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, bIdx).toStdString();
+            recordAndEmitType(aMainName, aType);
+            recordAndEmitType(aAsSeenByB, aType);
+
+            if (aIdx == bIdx) {
+                mOutput << "(assert (= " << aAsSeenByB << " " << aMainName << "))\n";
+            } else {
+                mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
             }
         }
     }
