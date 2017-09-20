@@ -36,6 +36,7 @@ public:
     virtual bool isAlwaysAborting() = 0;
 
     virtual QSet<QString> freeVariableNames() = 0;
+    virtual QSet<Symbolic::Expression*> getAllConditions() = 0;
 
     virtual ~ReachablePathsConstraint() {}
 };
@@ -53,15 +54,8 @@ public:
 
     virtual bool isAlwaysTerminating() { return false; }
     virtual bool isAlwaysAborting() { return false; }
-    virtual QSet<QString> freeVariableNames()
-    {
-        ExpressionFreeVariableLister lister;
-        condition->accept(&lister);
-        QSet<QString> result = lister.getResult().keys().toSet();
-        result.unite(thenConstraint->freeVariableNames());
-        result.unite(elseConstraint->freeVariableNames());
-        return result;
-    }
+    virtual QSet<QString> freeVariableNames();
+    virtual QSet<Symbolic::Expression*> getAllConditions();
 };
 
 class ReachablePathsDisjunction : public ReachablePathsConstraint
@@ -73,14 +67,8 @@ public:
 
     virtual bool isAlwaysTerminating() { return false; }
     virtual bool isAlwaysAborting() { return false; }
-    virtual QSet<QString> freeVariableNames()
-    {
-        QSet<QString> result;
-        foreach (ReachablePathsConstraintPtr c, children) {
-            result.unite(c->freeVariableNames());
-        }
-        return result;
-    }
+    virtual QSet<QString> freeVariableNames();
+    virtual QSet<Symbolic::Expression*> getAllConditions();
 };
 
 class ReachablePathsOk : public ReachablePathsConstraint
@@ -89,14 +77,9 @@ public:
     virtual bool isAlwaysTerminating() { return true; }
     virtual bool isAlwaysAborting() { return false; }
     virtual QSet<QString> freeVariableNames() { return QSet<QString>(); }
+    virtual QSet<Symbolic::Expression*> getAllConditions() { return QSet<Symbolic::Expression*>(); }
 
-    static QSharedPointer<ReachablePathsOk> getInstance()
-    {
-        if (instance.isNull()) {
-            instance = QSharedPointer<ReachablePathsOk>(new ReachablePathsOk());
-        }
-        return instance;
-    }
+    static QSharedPointer<ReachablePathsOk> getInstance();
 protected:
     ReachablePathsOk() {}
     static QSharedPointer<ReachablePathsOk> instance;
@@ -108,14 +91,9 @@ public:
     virtual bool isAlwaysTerminating() { return false; }
     virtual bool isAlwaysAborting() { return true; }
     virtual QSet<QString> freeVariableNames() { return QSet<QString>(); }
+    virtual QSet<Symbolic::Expression*> getAllConditions() { return QSet<Symbolic::Expression*>(); }
 
-    static QSharedPointer<ReachablePathsAbort> getInstance()
-    {
-        if (instance.isNull()) {
-            instance = QSharedPointer<ReachablePathsAbort>(new ReachablePathsAbort());
-        }
-        return instance;
-    }
+    static QSharedPointer<ReachablePathsAbort> getInstance();
 protected:
     ReachablePathsAbort() {}
     static QSharedPointer<ReachablePathsAbort> instance;

@@ -22,5 +22,58 @@ namespace artemis
 QSharedPointer<ReachablePathsOk> ReachablePathsOk::instance;
 QSharedPointer<ReachablePathsAbort> ReachablePathsAbort::instance;
 
+QSet<QString> ReachablePathsITE::freeVariableNames()
+{
+    ExpressionFreeVariableLister lister;
+    condition->accept(&lister);
+    QSet<QString> result = lister.getResult().keys().toSet();
+    result.unite(thenConstraint->freeVariableNames());
+    result.unite(elseConstraint->freeVariableNames());
+    return result;
+}
+
+QSet<Symbolic::Expression*> ReachablePathsITE::getAllConditions()
+{
+    QSet<Symbolic::Expression*> result;
+    result.insert(condition);
+    result.unite(thenConstraint->getAllConditions());
+    result.unite(elseConstraint->getAllConditions());
+    return result;
+}
+
+QSet<QString> ReachablePathsDisjunction::freeVariableNames()
+{
+    QSet<QString> result;
+    foreach (ReachablePathsConstraintPtr c, children) {
+        result.unite(c->freeVariableNames());
+    }
+    return result;
+}
+
+QSet<Symbolic::Expression*> ReachablePathsDisjunction::getAllConditions()
+{
+    QSet<Symbolic::Expression*> result;
+    foreach (ReachablePathsConstraintPtr c, children) {
+        result.unite(c->getAllConditions());
+    }
+    return result;
+}
+
+QSharedPointer<ReachablePathsOk> ReachablePathsOk::getInstance()
+{
+    if (instance.isNull()) {
+        instance = QSharedPointer<ReachablePathsOk>(new ReachablePathsOk());
+    }
+    return instance;
+}
+
+QSharedPointer<ReachablePathsAbort> ReachablePathsAbort::getInstance()
+{
+    if (instance.isNull()) {
+        instance = QSharedPointer<ReachablePathsAbort>(new ReachablePathsAbort());
+    }
+    return instance;
+}
+
 } // namespace artemis
 

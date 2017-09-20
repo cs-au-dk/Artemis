@@ -47,9 +47,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, ReachablePathsConstraintSet reachablePaths, ReorderingConstraintInfoPtr reorderingInfo, std::string outputFile) {
 
     // pre analysis
-    for (uint i = 0; i < pathCondition->size(); i++) {
-        mTypeAnalysis->analyze(pathCondition->get(i).first);
-    }
+    runTypeAnalaysis(pathCondition, reachablePaths);
     mSawToLowerCase = false;
     mSawToUpperCase = false;
 
@@ -146,6 +144,21 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
 bool CVC4ConstraintWriter::encodeUnderscore()
 {
     return false;
+}
+
+void CVC4ConstraintWriter::runTypeAnalaysis(PathConditionPtr pathCondition, ReachablePathsConstraintSet reachablePaths)
+{
+    // Analyse the main PC
+    for (uint i = 0; i < pathCondition->size(); i++) {
+        mTypeAnalysis->analyze(pathCondition->get(i).first);
+    }
+
+    // Also analyse the reachable-paths constraints, if any.
+    foreach (NamedReachablePathsConstraint constraint, reachablePaths) {
+        foreach (Symbolic::Expression* condition, constraint.second->getAllConditions()) {
+            mTypeAnalysis->analyze(condition);
+        }
+    }
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)

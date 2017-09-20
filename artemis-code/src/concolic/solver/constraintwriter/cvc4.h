@@ -81,6 +81,8 @@ protected:
 
     virtual bool encodeUnderscore();
 
+    void runTypeAnalaysis(PathConditionPtr pathCondition, ReachablePathsConstraintSet reachablePaths);
+
     void emitDOMConstraints();
 
     virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);

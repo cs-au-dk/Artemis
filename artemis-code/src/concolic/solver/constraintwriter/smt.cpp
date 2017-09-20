@@ -186,7 +186,7 @@ std::string SMTConstraintWriter::reachablePathsConstraintExpression(ReachablePat
         return indentStr + "false";
     }
 
-    // Otherwise, we must be at a ReachablePathsITE node.
+    // Otherwise, we must be at a ReachablePathsITE or ReachablePathsDisjunction node.
     // TODO: Really we should use a visitor or something and avoid this constant casting...
     QSharedPointer<ReachablePathsITE> ite = expr.dynamicCast<ReachablePathsITE>();
     if (!ite.isNull()) {
