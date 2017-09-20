@@ -164,6 +164,8 @@ protected:
     virtual std::string ifLabel();
     virtual bool encodeUnderscore();
 
+    QSet<QString> getFreeVariables(PathConditionPtr pc);
+
     virtual void emitReachablePathsConstraints();
     std::string reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent);
     virtual void emitLinearOrderingConstraints();

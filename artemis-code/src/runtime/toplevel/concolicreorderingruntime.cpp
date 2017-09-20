@@ -362,6 +362,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
 {
     // Create the concolic renaming/reordering info for this concolic analysis.
     QMap<uint, QPair<QString, InjectionValue>> actionVariables;
+    QMap<uint, QString> actionIndexVariables;
     foreach (Action action, mAvailableActions) {
         switch (action.field->getType()) {
         case TEXT:
@@ -369,6 +370,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
             break;
         case FIXED_INPUT:
             actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
+            actionIndexVariables.insert(action.index, "SYM_IN_INT_" + action.variable);
             // N.B. The integer variable for the selectedIndex is handled indirectly via the form restrictions.
             break;
         case BOOLEAN:
@@ -381,7 +383,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
         }
     }
 
-    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIdx));
+    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIndexVariables, actionIdx));
     return reorderingInfo;
 }
 

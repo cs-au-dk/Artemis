@@ -83,13 +83,12 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
 
     mOutput.str("");
 
-    QSet<QString> freeVars = pathCondition->freeVariables().keys().toSet();
-    // TODO: Include variables from mReachablePaths as well.
-    preVisitPathConditionsHook(freeVars);
+    preVisitPathConditionsHook(getFreeVariables(pathCondition));
 
     preVisitHookOutput = mOutput.str();
     mOutput.str("");
 
+    mOutput << "; The PC\n";
     for (uint i = 0; i < pathCondition->size(); i++) {
         mCurrentClause = i;
 
@@ -143,6 +142,18 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     }
 
     return true;
+}
+
+QSet<QString> SMTConstraintWriter::getFreeVariables(PathConditionPtr pc)
+{
+    QSet<QString> result = pc->freeVariables().keys().toSet();
+
+    // If the reachable-paths constraints are being used, we must include those variables as well.
+    foreach (NamedReachablePathsConstraint constraint, mReachablePaths) {
+        result.unite(constraint.second->freeVariableNames());
+    }
+
+    return result;
 }
 
 void SMTConstraintWriter::emitReachablePathsConstraints()

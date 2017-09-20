@@ -1,0 +1,50 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        function handler_A1() {
+            var v1 = document.getElementById("field_1").selectedIndex;
+            
+            if (v1 != 2) {
+                alert("Error 1");
+            }
+        }
+        
+        function handler_A2() {
+            var v2 = document.getElementById("field_2").selectedIndex;
+            
+            if (v2 != 2) {
+                alert("Error 2");
+            }
+        }
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <select id="field_1" onchange="handler_A1()" >
+            <option>ValueA</option>
+            <option selected="selected" >ValueB</option>
+            <option>ValueC</option>
+        </select>
+        <br>
+        
+        <select id="field_2" onchange="handler_A2()" >
+            <option>ValueA</option>
+            <option selected="selected" >ValueB</option>
+            <option>ValueC</option>
+        </select>
+    </form>
+    
+</body>
+</html>

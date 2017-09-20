@@ -71,6 +71,10 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
 
+    if (mFormRestrictions.first.size() >0 || mFormRestrictions.second.size() > 0) {
+        mOutput << "; Form restriction constraints\n";
+    }
+
     // Only write the form restrictions which relate to variables which are actually used in the PC.
     QSet<QString> selectRestrictionIndexVariables;
     foreach(SelectRestriction sr, mFormRestrictions.first) {
@@ -79,7 +83,13 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
         QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
         selectRestrictionIndexVariables.insert(idxname);
 
-        if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
+        // In concolic-reordering mode, we must always use VALUES_INDEX mode when the index is used aat all, as the
+        // reordering constraints only apply to the values.
+        if (!mReorderingInfo.isNull() && varsUsed.contains(idxname)) {
+            helperSelectRestriction(sr, VALUE_INDEX);
+
+            // Otherwise (in other modes) we output the smallest constraint we need.
+        } else if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
             if (!mDisabledFeatures.testFlag(SELECT_LINK_VALUE_INDEX)) {
                 // Default behaviour: link value and index constraints.
                 helperSelectRestriction(sr, VALUE_INDEX);
