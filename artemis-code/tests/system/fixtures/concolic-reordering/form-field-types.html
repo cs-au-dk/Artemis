@@ -1,0 +1,90 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // This test is used to check the form restrictions interact correctly with the ordering and reachable-paths constraints.
+        // N.B. We do not (yet) support dynamic form restrictions or dynamic default values.
+        
+        function handler_A1() {
+            var v1 = document.getElementById("field_1").value;
+            
+            if (v1 != "testme") {
+                alert("Error 1.1");
+            }
+        }
+        
+        function handler_A2() {
+            var v2 = document.getElementById("field_2").checked;
+            
+            if (!v2) {
+                alert("Error 2.1");
+            }
+        }
+        
+        function handler_A3() {
+            var v3a = document.getElementById("field_3_a").checked;
+            var v3b = document.getElementById("field_3_b").checked;
+            var v3c = document.getElementById("field_3_c").checked;
+            
+            if (v3b) {
+                alert("Error 3.1");
+            }
+        }
+        
+        function handler_A4() {
+            var v4 = document.getElementById("field_4").value;
+            
+            if (v4 == "ValueB") {
+                alert("Error 4.1");
+            }
+        }
+        
+        function handler_A5() {
+            var v5 = document.getElementById("field_5").selectedIndex;
+            
+            if (v5 == 1) {
+                alert("Error 5.1");
+            }
+        }
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <br>
+        
+        <input type="checkbox" id="field_2" onchange="handler_A2()" >
+        <br>
+        
+        <input type="radio" id="field_3_a" name="field_3" onchange="handler_A3()" >
+        <input type="radio" id="field_3_b" name="field_3" onchange="handler_A3()" checked="checked" >
+        <input type="radio" id="field_3_c" name="field_3" onchange="handler_A3()" >
+        <br>
+        
+        <select id="field_4" onchange="handler_A4()" >
+            <option>ValueA</option>
+            <option selected="selected" >ValueB</option>
+            <option>ValueC</option>
+        </select>
+        <br>
+        
+        <select id="field_5" onchange="handler_A5()" >
+            <option>ValueA</option>
+            <option selected="selected" >ValueB</option>
+            <option>ValueC</option>
+        </select>
+    </form>
+    
+</body>
+</html>
