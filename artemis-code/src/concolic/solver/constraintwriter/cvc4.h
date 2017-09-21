@@ -100,6 +100,7 @@ protected:
 
     CVC4TypeAnalysisPtr mTypeAnalysis;
     std::set<std::string> mSuccessfulCoercions;
+    virtual Symbolic::Type getTypeUsedInPC(std::string variable, Symbolic::Type initialValueType);
 
     std::set<Symbolic::SymbolicObject*> mVisitedSymbolicObjects;
     std::map<Symbolic::SymbolicObject*, std::set<std::string> > mUsedSymbolicObjectProperties;

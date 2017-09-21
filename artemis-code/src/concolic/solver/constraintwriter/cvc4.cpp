@@ -1240,4 +1240,15 @@ void CVC4ConstraintWriter::emitDOMConstraints()
 }
 
 
+
+Symbolic::Type CVC4ConstraintWriter::getTypeUsedInPC(std::string variable, Symbolic::Type initialValueType)
+{
+    // We must let the ordering/renaming constraints know which variables have been coerced.
+    if (mSuccessfulCoercions.find(variable) != mSuccessfulCoercions.end()) {
+        return Symbolic::INT;
+    } else {
+        return initialValueType;
+    }
+}
+
 }

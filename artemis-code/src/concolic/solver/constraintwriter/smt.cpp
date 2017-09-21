@@ -253,23 +253,28 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
     mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
     foreach (uint aIdx, indices) {
         foreach (uint bIdx, indices) {
-            // TODO: We will generate an error here for select box index variables.
-            // We only have one default value per action, even though there are two corresponding variables.
-            // The real solution is to let the form restrictions handle this.
-            // Here we would generate only one value, and the form restriction would imply the other.
-
             // TODO: Emit rules only for variables which are actually used in the PC or the other constaints.
 
             ActionInfo aInfo = actionVariables[aIdx];
+            std::string aMainName = aInfo.first.toStdString();
             Symbolic::Type aType;
             std::string aDefault;
             switch (aInfo.second.getType()) {
             case QVariant::String:
-                aType = Symbolic::STRING;
-                aDefault = "\"" + aInfo.second.getString().toStdString() + "\"";
+                // TODO: This is leaking some details of the type coercion that CVC4ConstraintWriter does...
+                aType = getTypeUsedInPC(aMainName, Symbolic::STRING);
+                if (aType == Symbolic::STRING) {
+                    aDefault = "\"" + aInfo.second.getString().toStdString() + "\"";
+                } else if (aType == Symbolic::INT) {
+                    bool convertedOk;
+                    aDefault = std::to_string(aInfo.second.getString().toInt(&convertedOk, 10)); // If conversion is not OK, then returns 0, which is what we want.
+                } else {
+                    Log::fatal("Unexpected coercion type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
+                    exit(1);
+                }
                 break;
             case QVariant::Int:
-                aType = Symbolic::INT; // N.B. Not expected to hit this case. We do not have integer inputs, and
+                aType = Symbolic::INT; // N.B. Not expected to hit this case. We do not have integer inputs, and select indices are handled via the form restrictions.
                 aDefault = std::to_string(aInfo.second.getInt());
                 break;
             case QVariant::Bool:
@@ -283,10 +288,10 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
 
             std::string aOrder = "SYM_ORDERING_" + std::to_string(aIdx);
             std::string bOrder = "SYM_ORDERING_" + std::to_string(bIdx);
-            std::string aMainName = aInfo.first.toStdString();
             std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, bIdx).toStdString();
             recordAndEmitType(aMainName, aType, true);
             recordAndEmitType(aAsSeenByB, aType);
+            // TODO: This will cause a type error if a variable is seen as coerced in some handlers and not coerced in other handlers. At the moment this case is not checked for or handled.
 
             if (aIdx == bIdx) {
                 mOutput << "(assert (= " << aAsSeenByB << " " << aMainName << "))\n";
@@ -295,11 +300,12 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
             }
         }
     }
+}
 
-
-
-    // TODO
-
+Symbolic::Type SMTConstraintWriter::getTypeUsedInPC(std::string variable, Symbolic::Type initialValueType)
+{
+    // This method is a no-op to allow overriding by CVC4ConstraintWriter.
+    return initialValueType;
 }
 
 
