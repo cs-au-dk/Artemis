@@ -83,7 +83,8 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
 
     mOutput.str("");
 
-    preVisitPathConditionsHook(getFreeVariables(pathCondition));
+    QSet<QString> freeVars = getFreeVariables(pathCondition);
+    preVisitPathConditionsHook(freeVars);
 
     preVisitHookOutput = mOutput.str();
     mOutput.str("");
@@ -110,7 +111,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     reachablePathsOutput = mOutput.str();
     mOutput.str("");
 
-    emitLinearOrderingConstraints();
+    emitLinearOrderingConstraints(freeVars);
     linearOrderingOutput = mOutput.str();
     mOutput.str("");
 
@@ -216,7 +217,7 @@ std::string SMTConstraintWriter::reachablePathsConstraintExpression(ReachablePat
     }
 }
 
-void SMTConstraintWriter::emitLinearOrderingConstraints()
+void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
 {
     if (mReorderingInfo.isNull()) {
         return;
@@ -252,11 +253,17 @@ void SMTConstraintWriter::emitLinearOrderingConstraints()
     // For each action pair (A, B), set the value injected at A as seen by B depending on their relative order.
     mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
     foreach (uint aIdx, indices) {
-        foreach (uint bIdx, indices) {
-            // TODO: Emit rules only for variables which are actually used in the PC or the other constaints.
+        // Emit rules only for variables which are actually used in the PC or the other constaints.
+        // TODO: It would be even better if we could emit constraints only when aAsSeenByB is used, but we do not have this information conveniently available.
+        ActionInfo aInfo = actionVariables[aIdx];
+        std::string aMainName = aInfo.first.toStdString();
+        if (!varsUsed.contains(QString::fromStdString(aMainName))) {
+            //Log::debug("Skipping ordering constraint for " + aMainName);
+            continue;
+        }
+        mOutput << "; For " << aMainName << "\n";
 
-            ActionInfo aInfo = actionVariables[aIdx];
-            std::string aMainName = aInfo.first.toStdString();
+        foreach (uint bIdx, indices) {
             Symbolic::Type aType;
             std::string aDefault;
             switch (aInfo.second.getType()) {

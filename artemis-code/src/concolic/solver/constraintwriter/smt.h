@@ -168,7 +168,7 @@ protected:
 
     virtual void emitReachablePathsConstraints();
     std::string reachablePathsConstraintExpression(ReachablePathsConstraintPtr expr, int indent);
-    virtual void emitLinearOrderingConstraints();
+    virtual void emitLinearOrderingConstraints(QSet<QString> varsUsed);
     virtual Symbolic::Type getTypeUsedInPC(std::string variable, Symbolic::Type initialValueType);
 
     /**
