@@ -269,9 +269,10 @@ void ConcolicReorderingRuntime::printCurrentActionSequence()
 {
     Log::debug("Current action sequence:");
 
+    uint pos = 0;
     foreach (uint actionIdx, mCurrentActionOrder) {
         Action action = mAvailableActions[actionIdx];
-        Log::debug(QString("  Action %1: %2").arg(action.index).arg(action.variable).toStdString());
+        Log::debug(QString("  #%1: Action %2 (%3)").arg(++pos).arg(action.index).arg(action.variable).toStdString());
     }
 }
 
@@ -311,10 +312,12 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         Log::debug("ConcolicReorderingRuntime: exploration succeeded.");
 
         // Decode the variables to be injected.
-        // TODO
+        decodeSolvedInjectionValues(); // TODO
 
         // Decode the ordering to be used.
-        // TODO
+        mCurrentActionOrder = decodeSolvedActionOrder(result.solution);
+        Log::debug("Solved action sequence:");
+        printCurrentActionSequence();
 
         // Prepare the next execution.
         // TODO
@@ -385,6 +388,52 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
 
     ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIndexVariables, actionIdx));
     return reorderingInfo;
+}
+
+void ConcolicReorderingRuntime::decodeSolvedInjectionValues()
+{
+    // TODO
+}
+
+QList<uint> ConcolicReorderingRuntime::decodeSolvedActionOrder(SolutionPtr solution)
+{
+    // Extract the next ordering from the SYM_ORDERING_* variables in the solution.
+    // N.B. The SYM_ORDERING_* naming scheme must match with SMTConstraintWriter::emitLinearOrderingConstraints()
+
+    // For each action i, extract SYM_ORDERING_i and record it in positionsToActions
+    QMap<uint, uint> positionsToActions;
+    foreach (uint actionIdx, mAvailableActions.keys()) {
+        QString orderingVar = QString("SYM_ORDERING_%1").arg(actionIdx);
+        Symbolvalue value = solution->findSymbol(orderingVar);
+        if (!value.found) {
+            Log::fatal(QString("ConcolicReorderingRuntime::decodeSolvedActionOrder: Could not find %1").arg(orderingVar).toStdString());
+            exit(1);
+        }
+        if (value.kind != Symbolic::INT) {
+            Log::fatal(QString("ConcolicReorderingRuntime::decodeSolvedActionOrder: Found the wrong type for %1").arg(orderingVar).toStdString());
+            exit(1);
+        }
+        uint actionPosition = (uint)value.u.integer;
+        if (positionsToActions.contains(actionPosition)) {
+            Log::fatal(QString("ConcolicReorderingRuntime::decodeSolvedActionOrder: Found duplicate actions for position %1").arg(actionPosition).toStdString());
+            exit(1);
+        }
+        positionsToActions.insert(actionPosition, actionIdx);
+    }
+
+    // Flatten positionsToActions into a list.
+    // N.B. we assume the positions must be exactly the set 1..N
+    uint N = (uint)mAvailableActions.size();
+    QList<uint> result;
+    for (uint pos=1; pos<=N; pos++) {
+        if (!positionsToActions.contains(pos)) {
+            Log::fatal(QString("ConcolicReorderingRuntime::decodeSolvedActionOrder: Found no action for position %1").arg(pos).toStdString());
+            exit(1);
+        }
+        result.append(positionsToActions[pos]);
+    }
+
+    return result;
 }
 
 

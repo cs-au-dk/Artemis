@@ -67,6 +67,8 @@ protected:
     uint chooseNextActionToSearch();
     ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
     ReorderingConstraintInfoPtr getReorderingConstraintInfo(uint actionIdx);
+    void decodeSolvedInjectionValues();
+    QList<uint> decodeSolvedActionOrder(SolutionPtr solution);
 
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 

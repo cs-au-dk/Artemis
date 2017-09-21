@@ -218,7 +218,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         symbolvalue.found = true;
 
         // The variable names indicate the type of the variable when it was read from the DOM.
-        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool, SYM_TARGET => DOM NODE
+        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool, SYM_TARGET_w => DOM NODE, SYM_ORDERING_i => int
         // But we also have the type used by the solver for that variable. These should walways match up, except in
         // the case where we perform a string->int optimisation and see a string named variable with int type in the
         // solver. These variables should be converted back to strings.
@@ -238,6 +238,19 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
             symbolvalue.kind = Symbolic::OBJECT;
             value = value.substr(1, value.length() - 2); // Strip quotes from strings
             symbolvalue.string = value;
+        } else if (identifier.compare(0, 13, "SYM_ORDERING_") == 0) {
+            if (type.compare("Int") != 0) {
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                return emitError(clog, "Type mismatch for ordering variable in solver's result.");
+            }
+            symbolvalue.kind = Symbolic::INT;
+            // Handle negative values. N.B. We never expect to see negative values in the ordering constraints, but that is not checked here.
+            if (value.find("(- ") == std::string::npos) {
+                std::stringstream(value) >> symbolvalue.u.integer;
+            } else {
+                std::stringstream(value.substr(3, value.length() - 3)) >> symbolvalue.u.integer;
+                symbolvalue.u.integer *= -1;
+            }
         } else {
             continue;
         }
