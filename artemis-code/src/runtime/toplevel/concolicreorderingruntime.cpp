@@ -201,7 +201,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
     // For the first iteration, the actions are taken in index order (i.e. DOM order).
 
     QList<FormFieldDescriptorConstPtr> fieldsOnPage = result->getFormFields();
-    FormRestrictions formFieldRestrictions = FormFieldRestrictedValues::getRestrictions(fieldsOnPage, mWebkitExecutor->getPage());
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(fieldsOnPage, mWebkitExecutor->getPage());
     uint fieldIdx = 0;
     foreach (FormFieldDescriptorConstPtr field, fieldsOnPage) {
         Action action;
@@ -212,7 +212,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
         action.analysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
         action.fullyExplored = false;
 
-        action.analysis->setFormRestrictions(formFieldRestrictions);
+        action.analysis->setFormRestrictions(mFormFieldRestrictions);
 
         mAvailableActions[action.index] = action;
         mCurrentActionOrder.append(action.index);
@@ -299,6 +299,8 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     if (nextActionIdx == 0) {
         // No action could be found to explore. N.B. 0 is not a valid index; they start at 1.
         Log::info("ConcolicReorderingRuntime: There were no actions left to explore. Done.");
+        saveConcolicTrees();
+        mWebkitExecutor->detach();
         done();
     }
 
@@ -317,7 +319,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         Log::debug("ConcolicReorderingRuntime: exploration succeeded.");
 
         // Decode the variables to be injected.
-        decodeSolvedInjectionValues(); // TODO
+        decodeSolvedInjectionValues();
 
         // Decode the ordering to be used.
         mCurrentActionOrder = decodeSolvedActionOrder(result.solution);
@@ -394,15 +396,29 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
 {
     // Create the concolic renaming/reordering info for this concolic analysis.
     QMap<uint, QPair<QString, InjectionValue>> actionVariables;
-    QMap<uint, QString> actionIndexVariables;
+    QMap<uint, QPair<QString, InjectionValue>> actionIndexVariables;
+    InjectionValue defaultIndex;
     foreach (Action action, mAvailableActions) {
         switch (action.field->getType()) {
         case TEXT:
             actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
             break;
         case FIXED_INPUT:
+            // Use the default value to look up the default index.
+            defaultIndex = InjectionValue(-1);
+            foreach (SelectRestriction sr, mFormFieldRestrictions.first) {
+                //Log::debug("CHECKING " + sr.variable.toStdString() + " == " + action.variable.toStdString());
+                if (sr.variable == action.variable) {
+                    assert(action.initialValue.getType() == QVariant::String);
+                    //Log::debug("CHECKING " + action.initialValue.getString().toStdString());
+                    if (sr.values.contains(action.initialValue.getString())) {
+                        defaultIndex = InjectionValue(sr.values.indexOf(action.initialValue.getString()));
+                    }
+                }
+            }
+
             actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_" + action.variable, action.initialValue));
-            actionIndexVariables.insert(action.index, "SYM_IN_INT_" + action.variable);
+            actionIndexVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_INT_" + action.variable, defaultIndex));
             // N.B. The integer variable for the selectedIndex is handled indirectly via the form restrictions.
             break;
         case BOOLEAN:

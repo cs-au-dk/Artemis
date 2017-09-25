@@ -229,7 +229,6 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
     // The extra constraints must represent the ordering of actions, and force them to have a linear order.
     // They also enforce different (default or non-default) values for each indexed variable depending on the ordering.
 
-
     // Assume that the action indices are exactly the set 1..N.
     QMap<uint, QPair<QString, InjectionValue>> actionVariables = mReorderingInfo->getActionVariables();
     QList<uint> indices = actionVariables.keys();
@@ -237,7 +236,6 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
     for (uint i=1; i<=(uint)N; i++) {
         assert(indices.contains(i));
     }
-
 
     // For each action index we create an ordering variable. Those are constraint to be distinct and in the expected
     // range, so the must form a linear order.
@@ -250,7 +248,6 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
         allOrderVars.append(orderVar + " ");
     }
     mOutput << "(assert (distinct " + allOrderVars + "))\n";
-
 
     // For each action pair (A, B), set the value injected at A as seen by B depending on their relative order.
     mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
@@ -282,14 +279,11 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
                     exit(1);
                 }
                 break;
-            case QVariant::Int:
-                aType = Symbolic::INT; // N.B. Not expected to hit this case. We do not have integer inputs, and select indices are handled via the form restrictions.
-                aDefault = std::to_string(aInfo.second.getInt());
-                break;
             case QVariant::Bool:
                 aType = Symbolic::BOOL;
                 aDefault = aInfo.second.getBool() ? "true" : "false";
                 break;
+            case QVariant::Int: // N.B. Not expected to hit this case. We do not have integer inputs, and select indices are handled separately.
             default:
                 Log::fatal("Unexpected default value type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
                 exit(1);
@@ -309,6 +303,42 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
             }
         }
     }
+
+    // Emit similar constraints for selectedIndex variables, which are handled separately.
+    QMap<uint, QPair<QString, InjectionValue>> actionIndexVariables = mReorderingInfo->getActionIndexVariables();
+    foreach (uint aIdx, actionIndexVariables.keys()) {
+        // Emit rules only for variables which are actually used in the PC or the other constaints.
+        ActionInfo aInfo = actionIndexVariables[aIdx];
+        std::string aMainName = aInfo.first.toStdString();
+        if (!varsUsed.contains(QString::fromStdString(aMainName))) {
+            //Log::debug("Skipping ordering constraint for " + aMainName);
+            continue;
+        }
+        mOutput << "; For " << aMainName << "\n";
+
+        // We know the type should be INT for these selectedIndex constraints.
+        if (aInfo.second.getType() != QVariant::Int) {
+            Log::fatal("Unexpected type found for default value of a selected index constraint.");
+            exit(1);
+        }
+        int aDefaultInt = aInfo.second.getInt();
+        std::string aDefault = (aDefaultInt > 0) ? std::to_string(aDefaultInt) : ("(- " + std::to_string(aDefaultInt*-1) + ")");
+
+        foreach (uint bIdx, indices) {
+            std::string aOrder = "SYM_ORDERING_" + std::to_string(aIdx);
+            std::string bOrder = "SYM_ORDERING_" + std::to_string(bIdx);
+            std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, bIdx).toStdString();
+            recordAndEmitType(aMainName, Symbolic::INT, true);
+            recordAndEmitType(aAsSeenByB, Symbolic::INT);
+
+            if (aIdx == bIdx) {
+                mOutput << "(assert (= " << aAsSeenByB << " " << aMainName << "))\n";
+            } else {
+                mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
+            }
+        }
+    }
+
 }
 
 Symbolic::Type SMTConstraintWriter::getTypeUsedInPC(std::string variable, Symbolic::Type initialValueType)

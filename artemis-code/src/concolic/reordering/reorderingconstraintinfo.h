@@ -32,7 +32,7 @@ namespace artemis
 class ReorderingConstraintInfo
 {
 public:
-    ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue>> actionVariables, QMap<uint, QString> actionIndexVariables, uint pcIndex);
+    ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue>> actionVariables, QMap<uint, QPair<QString, InjectionValue>> actionIndexVariables, uint pcIndex);
 
     void setIndex(uint index);
     void setPcIndex(); // Sets the current index to that of the currently-analysed action.
@@ -42,9 +42,11 @@ public:
     QString decode(QString name);
 
     QMap<uint, QPair<QString, InjectionValue>> getActionVariables();
+    QMap<uint, QPair<QString, InjectionValue>> getActionIndexVariables();
 
 protected:
     QMap<uint, QPair<QString, InjectionValue>> mActionVariables;
+    QMap<uint, QPair<QString, InjectionValue>> mActionIndexVariables;
     QStringList mVariablesToRename;
     uint mIndex;
     uint mPcIndex;
