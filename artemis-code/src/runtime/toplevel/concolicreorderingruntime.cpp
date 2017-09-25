@@ -212,6 +212,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
         action.variable = field->getDomElement()->getId();
         action.initialValue = getFieldCurrentValue(action.field);
         action.analysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+        action.fullyExplored = false;
 
         action.analysis->setFormRestrictions(formFieldRestrictions);
 
@@ -297,6 +298,12 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 {
     // Choose the action to explore next.
     uint nextActionIdx = chooseNextActionToSearch();
+    if (nextActionIdx == 0) {
+        // No action could be found to explore. N.B. 0 is not a valid index; they start at 1.
+        Log::info("ConcolicReorderingRuntime: There were no actions left to explore. Done.");
+        done();
+    }
+
     Action nextAction = mAvailableActions[nextActionIdx];
     Log::debug("ConcolicReorderingRuntime: exploring action " + std::to_string(nextActionIdx) + " (" + nextAction.variable.toStdString() + ")");
 
@@ -323,9 +330,10 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         // TODO
 
     } else {
-        // Couldn't explore in this action.
+        // Couldn't explore in this action. Try another one.
         Log::debug("ConcolicReorderingRuntime: exploration faield.");
-        // TODO
+        nextAction.fullyExplored = true; // Do not return to this action.
+        chooseNextSequenceAndExplore();
     }
 
     // TODO
@@ -336,10 +344,21 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 
 uint ConcolicReorderingRuntime::chooseNextActionToSearch()
 {
+    // Check which actions are not fully explored.
+    QList<uint> actionsToExplore;
+    foreach (Action action, mAvailableActions) {
+        if (!action.fullyExplored) {
+            actionsToExplore.append(action.index);
+        }
+    }
+    if (actionsToExplore.isEmpty()) {
+        Log::debug("ConcolicReorderingRuntime::chooseNextActionToSearch: Did not find any action to search.");
+        return 0; // N.B. 0 is not a valid index; they start at 1.
+    }
+
     // TODO: This should be chosen intelligently.
     // TODO: For now, we just choose (roughly) randomly.
-    // TODO: We also need a way to record which trees are fully explored and ignore then from the selection.
-    return mAvailableActions.keys().at(qrand() % mAvailableActions.size());
+    return actionsToExplore.at(qrand() % actionsToExplore.length());
 }
 
 ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstraints(uint ignoreIdx)

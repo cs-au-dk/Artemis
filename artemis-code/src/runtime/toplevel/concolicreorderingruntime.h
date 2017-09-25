@@ -79,6 +79,7 @@ protected:
         QString variable; // The name of the symbolic variable from this field (which will be the field ID).
         InjectionValue initialValue; // The default value for this field after a clean page load.
         ConcolicAnalysisPtr analysis;
+        bool fullyExplored;
     };
     QMap<uint, Action> mAvailableActions; // Maps indices to actions
     QList<uint> mCurrentActionOrder; // A permutation of mAvailableActions.
