@@ -65,6 +65,7 @@ protected:
     void printCurrentActionSequence();
     void chooseNextSequenceAndExplore();
     uint chooseNextActionToSearch();
+    uint mPreviouslySearchedAction;
     ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
     ReorderingConstraintInfoPtr getReorderingConstraintInfo(uint actionIdx);
     void decodeSolvedInjectionValues();

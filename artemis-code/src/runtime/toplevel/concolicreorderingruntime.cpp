@@ -30,6 +30,7 @@ namespace artemis
 ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mNumIterations(0)
+    , mPreviouslySearchedAction(0)
     , mRunId(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"))
 {
     // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
@@ -52,9 +53,6 @@ ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Opti
                      this, SLOT(slTimerRemoved(int)));
     // Do not capture AJAX callbacks, force them to be fired synchronously.
     QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
-
-    // Seed the RNG used when selecting an action to explore next.
-    qsrand(QDateTime::currentMSecsSinceEpoch());
 
     // Select the appropriate trace classifier.
     switch (options.concolicTraceClassifier) {
@@ -356,9 +354,21 @@ uint ConcolicReorderingRuntime::chooseNextActionToSearch()
         return 0; // N.B. 0 is not a valid index; they start at 1.
     }
 
-    // TODO: This should be chosen intelligently.
-    // TODO: For now, we just choose (roughly) randomly.
-    return actionsToExplore.at(qrand() % actionsToExplore.length());
+    // Use round-robin to select an action to search.
+    qSort(actionsToExplore);
+    if (mPreviouslySearchedAction == 0) {
+        mPreviouslySearchedAction = actionsToExplore[0];
+        return actionsToExplore[0];
+    }
+    foreach (uint actionIdx, actionsToExplore) {
+        if (actionIdx > mPreviouslySearchedAction) {
+            mPreviouslySearchedAction = actionIdx;
+            return actionIdx;
+        }
+    }
+    // Otherwise we have wrapped around to the start again.
+    mPreviouslySearchedAction = actionsToExplore[0];
+    return actionsToExplore[0];
 }
 
 ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstraints(uint ignoreIdx)
@@ -476,11 +486,11 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
         Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
         display.writeGraphFile(action.analysis->getExecutionTree(), name, false, title);
         if (mOptions.concolicTreeOutputOverview) {
-            display.writeGraphFile(action.analysis->getExecutionTree(), name_min, false, title);
+            display_min.writeGraphFile(action.analysis->getExecutionTree(), name_min, false, title);
         }
     }
 
-    // TODO: Remove old files if we are in mode TREE_FINAL.
+    // TODO: Do not overwrite old files unless we are in mode TREE_FINAL.
 }
 
 
