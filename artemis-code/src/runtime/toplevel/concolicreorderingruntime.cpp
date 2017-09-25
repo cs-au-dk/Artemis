@@ -280,8 +280,11 @@ InjectionValue ConcolicReorderingRuntime::getFieldCurrentValue(FormFieldDescript
     // Get the defualt/current value for this field from the DOM and return it as an InjectionValue.
     switch (field->getType()) {
     case FormFieldTypes::TEXT:
-    case FormFieldTypes::FIXED_INPUT:
         return InjectionValue(field->getDomElement()->getElement(mWebkitExecutor->getPage()).attribute("value"));
+    case FormFieldTypes::FIXED_INPUT:
+        // TODO: For some reason, calling .attribute("value") returns an empty string, even after a JS injection to set that property (similarly to FormFieldRestrictedValues::getRestrictions().
+        // For some reason we need this little JS injection to get the value.
+        return InjectionValue(field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.value", QUrl(), true).toString());
     case FormFieldTypes::BOOLEAN:
         return InjectionValue(field->getDomElement()->getElement(mWebkitExecutor->getPage()).hasAttribute("checked"));
     case FormFieldTypes::NO_INPUT:
@@ -410,7 +413,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
                 //Log::debug("CHECKING " + sr.variable.toStdString() + " == " + action.variable.toStdString());
                 if (sr.variable == action.variable) {
                     assert(action.initialValue.getType() == QVariant::String);
-                    //Log::debug("CHECKING " + action.initialValue.getString().toStdString());
+                    //Log::debug("CHECKING '" + action.initialValue.getString().toStdString() + "'");
                     if (sr.values.contains(action.initialValue.getString())) {
                         defaultIndex = InjectionValue(sr.values.indexOf(action.initialValue.getString()));
                     }
