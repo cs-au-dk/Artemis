@@ -79,7 +79,9 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     mDomSnapshots = domSnapshots;
     mReachablePaths = reachablePaths;
     mReorderingInfo = reorderingInfo;
-    mReorderingInfo->setPcIndex();
+    if (!mReorderingInfo.isNull()) {
+        mReorderingInfo->setPcIndex();
+    }
 
     mOutput.str("");
 
