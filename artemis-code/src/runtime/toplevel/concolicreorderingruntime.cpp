@@ -23,6 +23,7 @@
 #include "concolic/executiontree/classifier/formsubmissionclassifier.h"
 #include "concolic/executiontree/classifier/jserrorclassifier.h"
 #include "concolic/executiontree/classifier/nullclassifier.h"
+#include "concolic/tracestatistics.h"
 
 namespace artemis
 {
@@ -205,6 +206,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
     QList<FormFieldDescriptorConstPtr> fieldsOnPage = result->getFormFields();
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(fieldsOnPage, mWebkitExecutor->getPage());
     uint fieldIdx = 0;
+    QStringList orderingSummary;
     foreach (FormFieldDescriptorConstPtr field, fieldsOnPage) {
         Action action;
         action.index = ++fieldIdx;
@@ -218,7 +220,10 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
 
         mAvailableActions[action.index] = action;
         mCurrentActionOrder.append(action.index);
+
+        orderingSummary.append(QString::number(fieldIdx));
     }
+    mOrderingLog.append(orderingSummary.join(", "));
 }
 
 void ConcolicReorderingRuntime::makeAllFieldsSymbolic()
@@ -323,7 +328,6 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     if (nextActionIdx == 0) {
         // No action could be found to explore. N.B. 0 is not a valid index; they start at 1.
         Log::info("ConcolicReorderingRuntime: There were no actions left to explore. Done.");
-        saveConcolicTrees();
         mWebkitExecutor->detach();
         done();
     }
@@ -349,6 +353,12 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         mCurrentActionOrder = decodeSolvedActionOrder(result.solution);
         Log::debug("Solved action sequence:");
         printCurrentActionSequence();
+
+        QStringList orderingSummary;
+        foreach (uint x, mCurrentActionOrder) {
+            orderingSummary.append(QString::number(x));
+        }
+        mOrderingLog.append(orderingSummary.join(", "));
 
         // Prepare the next execution.
         mCurrentExplorationHandle = result.target;
@@ -564,6 +574,64 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
     // TODO: Do not overwrite old files unless we are in mode TREE_FINAL.
 }
 
+
+// TODO: This function is mostly duplicated in concolicruntime.cpp and concolicstandaloneruntime.cpp.
+void ConcolicReorderingRuntime::reportStatistics()
+{
+    Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
+
+    foreach (Action action, mAvailableActions) {
+        TraceStatistics stats;
+        stats.processTrace(action.analysis->getExecutionTree());
+
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConsoleMessages", stats.mNumConsoleMessages);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
+
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
+
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
+
+        //Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
+        Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+        Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+    }
+
+    // Also add some statistics about the new reordering algorithm.
+    Statistics::statistics()->accumulate("Concolic::Reordering::TotalActionsExplored", mAvailableActions.size());
+    foreach (Action action, mAvailableActions) {
+        if (action.fullyExplored) {
+            Statistics::statistics()->accumulate("Concolic::Reordering::TotalActionsFullyExplored", 1);
+        }
+    }
+    Statistics::statistics()->accumulate("Concolic::Reordering::UniqueOrderingsTested", mOrderingLog.toSet().size());
+}
+
+void ConcolicReorderingRuntime::done()
+{
+    saveConcolicTrees();
+    reportStatistics();
+
+    Log::debug("Orderings explored:");
+    foreach (QString order, mOrderingLog) {
+        Log::debug("    " + order.toStdString());
+    }
+
+    Runtime::done();
+}
 
 
 

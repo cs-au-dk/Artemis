@@ -46,6 +46,7 @@ public:
     ConcolicReorderingRuntime(QObject* parent, const Options& options, const QUrl& url);
 
     void run(const QUrl& url);
+    void done();
 
 protected:
     QUrl mUrl;
@@ -74,6 +75,7 @@ protected:
     QMap<uint, InjectionValue> decodeSolvedInjectionValues(SolutionPtr solution);
     QMap<uint, InjectionValue> mSolvedInjectionValues;
     QList<uint> decodeSolvedActionOrder(SolutionPtr solution);
+    QStringList mOrderingLog;
 
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 
@@ -94,6 +96,7 @@ protected:
     // Logging and reporting
     QString mRunId;
     void saveConcolicTrees();
+    void reportStatistics();
 
 protected slots:
     // Browser part
