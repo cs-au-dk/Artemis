@@ -133,6 +133,7 @@ void ConcolicReorderingRuntime::postConcreteExecution(ExecutableConfigurationCon
     }
 
     // Execute the current action sequence
+    makeAllFieldsSymbolic();
     executeCurrentActionSequence();
 
     // Choose the new values and actions to test
@@ -217,11 +218,16 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
 
         mAvailableActions[action.index] = action;
         mCurrentActionOrder.append(action.index);
+    }
+}
 
-        // Set all fields to be symbolic all the time.
-        // In the concolic mode this is only done during the injection, as we have a fixed ordering.
-        // In the server mode, everything is symbolic, and it causes some invalid suggestions.
-        // Here, it will be safe because we can explicitly model the relationships between events and the orderings.
+void ConcolicReorderingRuntime::makeAllFieldsSymbolic()
+{
+    // Set all fields to be symbolic all the time.
+    // In the concolic mode this is only done during the injection, as we have a fixed ordering.
+    // In the server mode, everything is symbolic, and it causes some invalid suggestions.
+    // Here, it will be safe because we can explicitly model the relationships between events and the orderings.
+    foreach (Action action, mAvailableActions) {
         action.field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.symbolictrigger == \"\";", QUrl(), true);
         action.field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.options.symbolictrigger == \"\";", QUrl(), true);
     }

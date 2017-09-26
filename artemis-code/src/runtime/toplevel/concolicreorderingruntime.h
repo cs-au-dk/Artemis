@@ -62,6 +62,7 @@ protected:
     // Action ordering and execution
     void setupInitialActionSequence(QSharedPointer<ExecutionResult> result);
     FormRestrictions mFormFieldRestrictions;
+    void makeAllFieldsSymbolic();
     void executeCurrentActionSequence();
     void printCurrentActionSequence();
     void chooseNextSequenceAndExplore();
