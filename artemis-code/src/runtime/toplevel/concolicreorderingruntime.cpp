@@ -238,7 +238,12 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         // Look up the value to inject in the solver's result.
         // If it does not exist, or this is the first iteration, then use the current/default value.
         // TODO: get the solved value!
-        InjectionValue injection = getFieldCurrentValue(action.field);
+        InjectionValue injection;
+        if (mSolvedInjectionValues.contains(actionIdx)) {
+            injection = mSolvedInjectionValues[actionIdx];
+        } else {
+            injection = getFieldCurrentValue(action.field);
+        }
 
         // Begin trace recording for this action
         mWebkitExecutor->getTraceBuilder()->beginRecording();
@@ -274,7 +279,7 @@ void ConcolicReorderingRuntime::printCurrentActionSequence()
         if (mSolvedInjectionValues.contains(actionIdx)) {
             injection = mSolvedInjectionValues[actionIdx].getType() == QVariant::String ? "\""+mSolvedInjectionValues[actionIdx].toString()+"\"" : mSolvedInjectionValues[actionIdx].toString();
         } else {
-            injection = (action.initialValue.getType() == QVariant::String ? "\""+action.initialValue.toString()+"\"" : action.initialValue.toString()) + " (unchanged)";
+            injection = "[unchanged] (initially " + (action.initialValue.getType() == QVariant::String ? "\""+action.initialValue.toString()+"\"" : action.initialValue.toString()) + ")";
         }
         Log::debug(QString("  #%1: Action %2 (%3). Injecting %4").arg(++pos).arg(action.index).arg(action.variable).arg(injection).toStdString());
     }
@@ -335,7 +340,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         printCurrentActionSequence();
 
         // Prepare the next execution.
-        // TODO
+        preConcreteExecution();
 
     } else {
         // Couldn't explore in this action. Try another one.
@@ -343,11 +348,6 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         mAvailableActions[nextActionIdx].fullyExplored = true; // Do not return to this action.
         chooseNextSequenceAndExplore();
     }
-
-    // TODO
-    Log::fatal("This analysis is not yet implemented. Quitting.");
-    saveConcolicTrees();
-    done();
 }
 
 uint ConcolicReorderingRuntime::chooseNextActionToSearch()
