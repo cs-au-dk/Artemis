@@ -182,9 +182,7 @@ void ReachablePathsConstraintGenerator::visit(TraceUnexploredMissed* node)
 
 void ReachablePathsConstraintGenerator::visit(TraceUnexploredQueued* node)
 {
-    // Should be handled in the branch nodes.
-    Log::fatal("ReachablePathsConstraintGenerator should not visit TraceUnexploredQueued directly.");
-    exit(1);
+    mSubtreeExpression = ReachablePathsOk::getInstance();
 }
 
 void ReachablePathsConstraintGenerator::visit(TraceEndSuccess* node)
