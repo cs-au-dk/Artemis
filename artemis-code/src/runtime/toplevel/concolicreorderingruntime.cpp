@@ -228,6 +228,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
 
 void ConcolicReorderingRuntime::executeCurrentActionSequence()
 {
+    Log::debug("Current action sequence:");
     printCurrentActionSequence();
     Log::debug("Executing...");
 
@@ -266,12 +267,16 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
 
 void ConcolicReorderingRuntime::printCurrentActionSequence()
 {
-    Log::debug("Current action sequence:");
-
     uint pos = 0;
     foreach (uint actionIdx, mCurrentActionOrder) {
         Action action = mAvailableActions[actionIdx];
-        Log::debug(QString("  #%1: Action %2 (%3)").arg(++pos).arg(action.index).arg(action.variable).toStdString());
+        QString injection;
+        if (mSolvedInjectionValues.contains(actionIdx)) {
+            injection = mSolvedInjectionValues[actionIdx].getType() == QVariant::String ? "\""+mSolvedInjectionValues[actionIdx].toString()+"\"" : mSolvedInjectionValues[actionIdx].toString();
+        } else {
+            injection = (action.initialValue.getType() == QVariant::String ? "\""+action.initialValue.toString()+"\"" : action.initialValue.toString()) + " (unchanged)";
+        }
+        Log::debug(QString("  #%1: Action %2 (%3). Injecting %4").arg(++pos).arg(action.index).arg(action.variable).arg(injection).toStdString());
     }
 }
 
@@ -322,7 +327,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         Log::debug("ConcolicReorderingRuntime: exploration succeeded.");
 
         // Decode the variables to be injected.
-        decodeSolvedInjectionValues();
+        mSolvedInjectionValues = decodeSolvedInjectionValues(result.solution);
 
         // Decode the ordering to be used.
         mCurrentActionOrder = decodeSolvedActionOrder(result.solution);
@@ -438,9 +443,44 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
     return reorderingInfo;
 }
 
-void ConcolicReorderingRuntime::decodeSolvedInjectionValues()
+QMap<uint, InjectionValue> ConcolicReorderingRuntime::decodeSolvedInjectionValues(SolutionPtr solution)
 {
-    // TODO
+    // mAvailableActions gives the variables we are looking for.
+    // Those which are not in the Solution object will get their default values.
+
+    QMap<uint, InjectionValue> result;
+    foreach (Action action, mAvailableActions) {
+        QString symbolName;
+        switch (action.field->getType()) {
+        case TEXT:
+        case FIXED_INPUT:
+            symbolName = "SYM_IN_" + action.variable;
+            break;
+        case BOOLEAN:
+            symbolName = "SYM_IN_BOOL_" + action.variable;
+            break;
+        case NO_INPUT:
+        default:
+            Log::fatal("Unexpected field type encountered in ConcolicReorderingRuntime::decodeSolvedInjectionValues");
+            exit(1);
+        }
+
+        Symbolvalue value = solution->findSymbol(symbolName);
+        if (value.found) {
+            switch (value.kind) {
+            case Symbolic::BOOL:
+                result.insert(action.index, InjectionValue(value.u.boolean));
+                break;
+            case Symbolic::STRING:
+                result.insert(action.index, InjectionValue(QString::fromStdString(value.string)));
+                break;
+            case Symbolic::INT:
+            default:
+                Log::fatal("Unexpected solved value type encountered in ConcolicReorderingRuntime::decodeSolvedInjectionValues.");
+            }
+        }
+    }
+    return result;
 }
 
 QList<uint> ConcolicReorderingRuntime::decodeSolvedActionOrder(SolutionPtr solution)
