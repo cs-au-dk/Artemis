@@ -30,6 +30,7 @@ namespace artemis
 ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mNumIterations(0)
+    , mCurrentExplorationHandle(ConcolicAnalysis::NO_EXPLORATION_TARGET)
     , mPreviouslySearchedAction(0)
     , mRunId(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"))
 {
@@ -262,7 +263,11 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         mTraceClassifier->classify(trace);
 
         // TODO: Save the exploration target from a solver solution and use it here so the tree can match up targets and attempts.
-        action.analysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
+        if (actionIdx == mPreviouslySearchedAction) {
+            action.analysis->addTrace(trace, mCurrentExplorationHandle);
+        } else {
+            action.analysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
+        }
     }
 
     // TODO: Should there be a way to set one action as "always last"?
@@ -340,6 +345,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         printCurrentActionSequence();
 
         // Prepare the next execution.
+        mCurrentExplorationHandle = result.target;
         preConcreteExecution();
 
     } else {

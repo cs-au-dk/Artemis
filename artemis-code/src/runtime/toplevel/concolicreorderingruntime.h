@@ -65,6 +65,7 @@ protected:
     void executeCurrentActionSequence();
     void printCurrentActionSequence();
     void chooseNextSequenceAndExplore();
+    ConcolicAnalysis::ExplorationHandle mCurrentExplorationHandle;
     uint chooseNextActionToSearch();
     uint mPreviouslySearchedAction;
     ReachablePathsConstraintSet getReachablePathsConstraints(uint ignoreIdx);
