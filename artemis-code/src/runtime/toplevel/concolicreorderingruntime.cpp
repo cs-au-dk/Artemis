@@ -335,7 +335,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     } else {
         // Couldn't explore in this action. Try another one.
         Log::debug("ConcolicReorderingRuntime: exploration faield.");
-        nextAction.fullyExplored = true; // Do not return to this action.
+        mAvailableActions[nextActionIdx].fullyExplored = true; // Do not return to this action.
         chooseNextSequenceAndExplore();
     }
 

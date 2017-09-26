@@ -75,7 +75,7 @@ protected:
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 
     struct Action {
-        // TODO: Currently Action only represents form fields, but we would like to extend it to include buttons and other widdgets which can be interacted with.
+        // TODO: Currently Action only represents form fields, but we would like to extend it to include buttons and other widgets which can be interacted with.
         uint index;
         FormFieldDescriptorConstPtr field;
         QString variable; // The name of the symbolic variable from this field (which will be the field ID).
