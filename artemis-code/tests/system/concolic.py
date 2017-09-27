@@ -56,19 +56,20 @@ def list_tests_in_folder(folder):
         out.append(result)
     return out
 
-def _assert_test_case(test_case, op, v1, v2):
+def _assert_test_case(test_case, op, v1, v2, key):
+    message = "%s was %s, expected %s%s" % (key, v1, (op+" " if op != "eq" else ""), v2)
     if op == "eq":
-        test_case.assertEqual(v1, v2)
+        test_case.assertEqual(v1, v2, message)
     elif op == "neq":
-        test_case.assertNotEqual(v1, v2)
+        test_case.assertNotEqual(v1, v2, message)
     elif op == "geq":
-        test_case.assertGreaterEqual(v1, v2)
+        test_case.assertGreaterEqual(v1, v2, message)
     elif op == "gt":
-        test_case.assertGreater(v1, v2)
+        test_case.assertGreater(v1, v2, message)
     elif op == "leq":
-        test_case.assertLessEqual(v1, v2)
+        test_case.assertLessEqual(v1, v2, message)
     elif op == "lt":
-        test_case.assertLess(v1, v2)
+        test_case.assertLess(v1, v2, message)
 
 def _get_from_report(report, key):
     m = re.match('PC(\[([0-9]+)\])?', key)
@@ -99,7 +100,7 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
                     tested_unsat = tested_unsat or s == "Concolic::Solver::ConstraintsSolvedAsUNSAT"
                     tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
                     tested_no_failed_injections = tested_no_failed_injections or s == "Concolic::FailedInjections"
-                    _assert_test_case(self, op, _get_from_report(report, s)['val'], _get_from_report(report, v)['val'])
+                    _assert_test_case(self, op, _get_from_report(report, s)['val'], _get_from_report(report, v)['val'], s)
 
         if test_dict:
             for op, tMap in test_dict.iteritems():
@@ -111,7 +112,7 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
 
                     v = to_appropriate_type(s, v)
                     r_val = _get_from_report(report, s)
-                    _assert_test_case(self, op, r_val['val'], v.replace(" ", "") if r_val['pc'] else v)
+                    _assert_test_case(self, op, r_val['val'], v.replace(" ", "") if r_val['pc'] else v, s)
 
         assert tested_unsat or not "Concolic::Solver::ConstraintsSolvedAsUNSAT" in report, \
             "Constraints solved as UNSAT are errors pr. default."

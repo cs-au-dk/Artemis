@@ -1,5 +1,11 @@
 <!--
-
+TEST Concolic::Iterations = 3
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 5
+TEST Concolic::Reordering::TotalActionsExplored = 2
+TEST Concolic::Reordering::TotalActionsFullyExplored = 2
+TEST Concolic::Reordering::UniqueOrderingsTested = 2
 -->
 <!doctype html><html lang="en">
 <head>
@@ -22,9 +28,14 @@
         
         function handler_A2() {
             var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            
+            if (v2 != "testme") {
+                alert("Error 2.1");
+            }
             
             if (v1 != "default1") {
-                alert("Error 2");
+                alert("Error 2.2");
             }
         }
         
