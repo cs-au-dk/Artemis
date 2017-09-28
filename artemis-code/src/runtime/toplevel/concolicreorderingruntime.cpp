@@ -429,11 +429,6 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     }
 }
 
-void ConcolicReorderingRuntime::exploreAction()
-{
-
-}
-
 uint ConcolicReorderingRuntime::chooseNextActionToSearch()
 {
     // Check which actions are not fully explored.

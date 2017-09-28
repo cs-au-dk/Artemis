@@ -67,7 +67,6 @@ protected:
     void executeCurrentActionSequence();
     void printCurrentActionSequence();
     void chooseNextSequenceAndExplore();
-    void exploreAction();
     ConcolicAnalysis::ExplorationHandle mCurrentExplorationHandle;
     uint chooseNextActionToSearch();
     uint mPreviouslySearchedAction;
