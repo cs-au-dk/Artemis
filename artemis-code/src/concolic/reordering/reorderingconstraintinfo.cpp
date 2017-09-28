@@ -22,10 +22,11 @@
 namespace artemis
 {
 
-ReorderingConstraintInfo::ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue> > actionVariables, QMap<uint, QPair<QString, InjectionValue> > actionIndexVariables, uint pcIndex)
+ReorderingConstraintInfo::ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue> > actionVariables, QMap<uint, QPair<QString, InjectionValue> > actionIndexVariables, uint pcIndex, uint submitButtonIndex)
 {
     mIndex = pcIndex; // Really this is meaningless until setIndex or setPcIndex has been called.
     mPcIndex = pcIndex;
+    mSubmitButtonIndex = submitButtonIndex;
     mActionVariables = actionVariables;
     mActionIndexVariables = actionIndexVariables;
     mVariablesToRename = QStringList();
@@ -88,6 +89,11 @@ QMap<uint, QPair<QString, InjectionValue> > ReorderingConstraintInfo::getActionV
 QMap<uint, QPair<QString, InjectionValue> > ReorderingConstraintInfo::getActionIndexVariables()
 {
     return mActionIndexVariables;
+}
+
+uint ReorderingConstraintInfo::getSubmitButtonIndex()
+{
+    return mSubmitButtonIndex;
 }
 
 } // namespace artemis

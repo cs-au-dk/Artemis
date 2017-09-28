@@ -67,6 +67,7 @@ protected:
     void executeCurrentActionSequence();
     void printCurrentActionSequence();
     void chooseNextSequenceAndExplore();
+    void exploreAction();
     ConcolicAnalysis::ExplorationHandle mCurrentExplorationHandle;
     uint chooseNextActionToSearch();
     uint mPreviouslySearchedAction;
@@ -90,6 +91,12 @@ protected:
     };
     QMap<uint, Action> mAvailableActions; // Maps indices to actions
     QList<uint> mCurrentActionOrder; // A permutation of mAvailableActions.
+
+    // Details of the submit button - handled separately from the form actions.
+    QString mSubmitButtonSelector;
+    ConcolicAnalysisPtr mSubmitButtonAnalysis;
+    bool mSubmitButtonFullyExplored;
+    uint mSubmitButtonIndex; // Not used to look it up, but as a "magic value" returned/checked in a few places.
 
     TraceClassifierPtr mTraceClassifier;
 

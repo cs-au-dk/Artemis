@@ -1,0 +1,53 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // Checks we always order the submit button last.
+        // The branch in the button handler will be UNSAT in that case, but SAT if we allowed reordering.
+        
+        function handler_A1() {
+            var v1 = document.getElementById("field_1").value;
+            
+            if (v1 == "default1") {
+                alert("Error 1.1");
+            }
+        }
+        
+        function handler_A2() {
+            // no-op
+        }
+        
+        function handler_submit() {
+            var v1 = document.getElementById("field_1").value;
+            
+            if (v1 != "default1") {
+                alert("Error B.1");
+                return false;
+            }
+            return true;
+        }
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <input type="text" id="field_2" onchange="handler_A2()" value="default2" >
+        
+        <button type="submit" onclick="return handler_submit();" id="artform-button" >Submit</button>
+        
+    </form>
+    
+</body>
+</html>

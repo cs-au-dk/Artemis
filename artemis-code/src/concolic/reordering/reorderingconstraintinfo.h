@@ -32,7 +32,7 @@ namespace artemis
 class ReorderingConstraintInfo
 {
 public:
-    ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue>> actionVariables, QMap<uint, QPair<QString, InjectionValue>> actionIndexVariables, uint pcIndex);
+    ReorderingConstraintInfo(QMap<uint, QPair<QString, InjectionValue>> actionVariables, QMap<uint, QPair<QString, InjectionValue>> actionIndexVariables, uint pcIndex, uint submitButtonIndex);
 
     void setIndex(uint index);
     void setPcIndex(); // Sets the current index to that of the currently-analysed action.
@@ -43,6 +43,7 @@ public:
 
     QMap<uint, QPair<QString, InjectionValue>> getActionVariables();
     QMap<uint, QPair<QString, InjectionValue>> getActionIndexVariables();
+    uint getSubmitButtonIndex();
 
 protected:
     QMap<uint, QPair<QString, InjectionValue>> mActionVariables;
@@ -50,6 +51,7 @@ protected:
     QStringList mVariablesToRename;
     uint mIndex;
     uint mPcIndex;
+    uint mSubmitButtonIndex; // 0 if we should not generate submit button constraints.
     QMap<QString, QString> mEncodedVars;
 };
 typedef QSharedPointer<ReorderingConstraintInfo> ReorderingConstraintInfoPtr;

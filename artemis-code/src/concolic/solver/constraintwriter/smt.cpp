@@ -262,33 +262,33 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
         }
         mOutput << "; For " << aMainName << "\n";
 
-        foreach (uint bIdx, indices) {
-            Symbolic::Type aType;
-            std::string aDefault;
-            switch (aInfo.second.getType()) {
-            case QVariant::String:
-                // TODO: This is leaking some details of the type coercion that CVC4ConstraintWriter does...
-                aType = getTypeUsedInPC(aMainName, Symbolic::STRING);
-                if (aType == Symbolic::STRING) {
-                    aDefault = "\"" + aInfo.second.getString().toStdString() + "\"";
-                } else if (aType == Symbolic::INT) {
-                    bool convertedOk;
-                    aDefault = std::to_string(aInfo.second.getString().toInt(&convertedOk, 10)); // If conversion is not OK, then returns 0, which is what we want.
-                } else {
-                    Log::fatal("Unexpected coercion type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
-                    exit(1);
-                }
-                break;
-            case QVariant::Bool:
-                aType = Symbolic::BOOL;
-                aDefault = aInfo.second.getBool() ? "true" : "false";
-                break;
-            case QVariant::Int: // N.B. Not expected to hit this case. We do not have integer inputs, and select indices are handled separately.
-            default:
-                Log::fatal("Unexpected default value type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
+        Symbolic::Type aType;
+        std::string aDefault;
+        switch (aInfo.second.getType()) {
+        case QVariant::String:
+            // TODO: This is leaking some details of the type coercion that CVC4ConstraintWriter does...
+            aType = getTypeUsedInPC(aMainName, Symbolic::STRING);
+            if (aType == Symbolic::STRING) {
+                aDefault = "\"" + aInfo.second.getString().toStdString() + "\"";
+            } else if (aType == Symbolic::INT) {
+                bool convertedOk;
+                aDefault = std::to_string(aInfo.second.getString().toInt(&convertedOk, 10)); // If conversion is not OK, then returns 0, which is what we want.
+            } else {
+                Log::fatal("Unexpected coercion type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
                 exit(1);
             }
+            break;
+        case QVariant::Bool:
+            aType = Symbolic::BOOL;
+            aDefault = aInfo.second.getBool() ? "true" : "false";
+            break;
+        case QVariant::Int: // N.B. Not expected to hit this case. We do not have integer inputs, and select indices are handled separately.
+        default:
+            Log::fatal("Unexpected default value type found in SMTConstraintWriter::emitLinearOrderingConstraints().");
+            exit(1);
+        }
 
+        foreach (uint bIdx, indices) {
             std::string aOrder = "SYM_ORDERING_" + std::to_string(aIdx);
             std::string bOrder = "SYM_ORDERING_" + std::to_string(bIdx);
             std::string aAsSeenByB = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, bIdx).toStdString();
@@ -301,6 +301,13 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
             } else {
                 mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
             }
+        }
+
+        // Also add a constraint for the variable as seen by the submit button.
+        if (mReorderingInfo->getSubmitButtonIndex() != 0) {
+            std::string aAsSeenByButton = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, mReorderingInfo->getSubmitButtonIndex()).toStdString();
+            recordAndEmitType(aAsSeenByButton, aType);
+            mOutput << "(assert (= " << aAsSeenByButton << " " << aMainName << "))\n";
         }
     }
 
@@ -336,6 +343,13 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
             } else {
                 mOutput << "(assert (= " << aAsSeenByB << " (" << ifLabel() << " (<= " << aOrder << " " << bOrder << ") " << aMainName << " " << aDefault << " )))\n";
             }
+        }
+
+        // Also add a constraint for the variable as seen by the submit button.
+        if (mReorderingInfo->getSubmitButtonIndex() != 0) {
+            std::string aAsSeenByButton = ReorderingConstraintInfo::encodeWithExplicitIndex(aInfo.first, mReorderingInfo->getSubmitButtonIndex()).toStdString();
+            recordAndEmitType(aAsSeenByButton, Symbolic::INT);
+            mOutput << "(assert (= " << aAsSeenByButton << " " << aMainName << "))\n";
         }
     }
 

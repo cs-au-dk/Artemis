@@ -75,7 +75,7 @@ protected:
     // Controls for the search procedure.
 
     // We can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.
-    // If an XPath has been give, we want to skip the entry point finding run completely and use a different method for injecting clicks.
+    // If an XPath has been given, we want to skip the entry point finding run completely and use a different method for injecting clicks.
     // If mManualEntryPoint is set, then we use mEntryPointXPath and skip the first iteration, otherwise we use mEntryPointEvent.
     bool mManualEntryPoint;
     QString mManualEntryPointXPath;

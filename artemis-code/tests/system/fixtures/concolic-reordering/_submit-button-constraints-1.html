@@ -1,0 +1,53 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        // Checks we can handle constraints on the submit button.
+        
+        function handler_A1() {
+            // no-op
+        }
+        
+        function handler_A2() {
+            // no-op
+        }
+        
+        function handler_submit() {
+            var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
+            
+            if (v1 != "hello") {
+                alert("Error B.1");
+                return false;
+            }
+            if (v2 != "world") {
+                alert("Error B.2");
+                return false;
+            }
+            return true;
+        }
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="field_1" onchange="handler_A1()" value="default1" >
+        <input type="text" id="field_2" onchange="handler_A2()" value="default2" >
+        
+        <button type="submit" onclick="return handler_submit();" id="artform-button" >Submit</button>
+        
+    </form>
+    
+</body>
+</html>

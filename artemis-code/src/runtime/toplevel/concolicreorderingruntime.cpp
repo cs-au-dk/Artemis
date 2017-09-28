@@ -24,6 +24,7 @@
 #include "concolic/executiontree/classifier/jserrorclassifier.h"
 #include "concolic/executiontree/classifier/nullclassifier.h"
 #include "concolic/tracestatistics.h"
+#include "runtime/input/clicksimulator.h"
 
 namespace artemis
 {
@@ -70,6 +71,13 @@ ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Opti
     default:
         Log::fatal("Unsupported classification method.");
         exit(1);
+    }
+
+    // If we are using a submit button, then set this up.
+    if (!mOptions.concolicEntryPoint.isNull()) {
+        mSubmitButtonSelector = mOptions.concolicEntryPoint;
+        mSubmitButtonAnalysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+        mSubmitButtonFullyExplored = false;
     }
 }
 
@@ -224,6 +232,9 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
         orderingSummary.append(QString::number(fieldIdx));
     }
     mOrderingLog.append(orderingSummary.join(", "));
+
+    // Give the submit button the next/final index.
+    mSubmitButtonIndex = fieldIdx + 1;
 }
 
 void ConcolicReorderingRuntime::makeAllFieldsSymbolic()
@@ -273,7 +284,6 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
         mTraceClassifier->classify(trace);
 
-        // TODO: Save the exploration target from a solver solution and use it here so the tree can match up targets and attempts.
         if (actionIdx == mPreviouslySearchedAction) {
             action.analysis->addTrace(trace, mCurrentExplorationHandle);
         } else {
@@ -281,7 +291,33 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         }
     }
 
-    // TODO: Should there be a way to set one action as "always last"?
+    // Also fire and record the submit button action.
+    if (!mSubmitButtonSelector.isNull()) {
+        assert(!mSubmitButtonAnalysis.isNull());
+        Log::debug("Executing submit button click");
+
+        // Look up the submit button element.
+        QWebElement target = mWebkitExecutor->getPage()->getSingleElementByXPath(mSubmitButtonSelector);
+        if (target.isNull()) {
+            Log::fatal("ConcolicReorderingRuntime::executeCurrentActionSequence: Click target could not be found. The XPath either did not match or matched multiple elements.");
+            exit(1);
+        }
+
+        mWebkitExecutor->getTraceBuilder()->beginRecording();
+
+        ClickSimulator::clickByUserEventSimulation(target);
+        clearAsyncEvents();
+
+        mWebkitExecutor->getTraceBuilder()->endRecording();
+        TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
+        mTraceClassifier->classify(trace);
+
+        if (mPreviouslySearchedAction == mSubmitButtonIndex) {
+            mSubmitButtonAnalysis->addTrace(trace, mCurrentExplorationHandle);
+        } else {
+            mSubmitButtonAnalysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
+        }
+    }
 
     saveConcolicTrees();
 }
@@ -298,6 +334,9 @@ void ConcolicReorderingRuntime::printCurrentActionSequence()
             injection = "[unchanged] (initially " + (action.initialValue.getType() == QVariant::String ? "\""+action.initialValue.toString()+"\"" : action.initialValue.toString()) + ")";
         }
         Log::debug(QString("  #%1: Action %2 (%3). Injecting %4").arg(++pos).arg(action.index).arg(action.variable).arg(injection).toStdString());
+    }
+    if (!mSubmitButtonSelector.isNull()) {
+        Log::debug(QString("  #%1: Submit button click").arg(mSubmitButtonIndex).toStdString());
     }
 }
 
@@ -332,16 +371,23 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         done();
     }
 
-    Action nextAction = mAvailableActions[nextActionIdx];
-    Log::debug("ConcolicReorderingRuntime: exploring action " + std::to_string(nextActionIdx) + " (" + nextAction.variable.toStdString() + ")");
+    ConcolicAnalysisPtr analysis;
+    if (!mSubmitButtonAnalysis.isNull() && nextActionIdx == mSubmitButtonIndex) {
+        Log::debug("ConcolicReorderingRuntime: Exploring submit button");
+        analysis = mSubmitButtonAnalysis;
+    } else {
+        Action nextAction = mAvailableActions[nextActionIdx];
+        Log::debug("ConcolicReorderingRuntime: Exploring action " + std::to_string(nextActionIdx) + " (" + nextAction.variable.toStdString() + ")");
+        analysis = nextAction.analysis;
+    }
 
     // Collate the reachable-paths constraints for the other actions.
     ReachablePathsConstraintSet reachablePaths = getReachablePathsConstraints(nextActionIdx);
 
     // Select a target branch from the chosen action's concolic tree.
-    nextAction.analysis->setReachablePathsConstraints(reachablePaths);
-    nextAction.analysis->setReorderingInfo(getReorderingConstraintInfo(nextAction.index));
-    ConcolicAnalysis::ExplorationResult result = nextAction.analysis->nextExploration();
+    analysis->setReachablePathsConstraints(reachablePaths);
+    analysis->setReorderingInfo(getReorderingConstraintInfo(nextActionIdx));
+    ConcolicAnalysis::ExplorationResult result = analysis->nextExploration();
     if (result.newExploration) {
         // Succesfully solved a PC in this action.
         Log::debug("ConcolicReorderingRuntime: exploration succeeded.");
@@ -367,9 +413,19 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
     } else {
         // Couldn't explore in this action. Try another one.
         Log::debug("ConcolicReorderingRuntime: exploration faield.");
-        mAvailableActions[nextActionIdx].fullyExplored = true; // Do not return to this action.
+        // Do not return to this action.
+        if (nextActionIdx == mSubmitButtonIndex) {
+            mSubmitButtonFullyExplored = true;
+        } else {
+            mAvailableActions[nextActionIdx].fullyExplored = true;
+        }
         chooseNextSequenceAndExplore();
     }
+}
+
+void ConcolicReorderingRuntime::exploreAction()
+{
+
 }
 
 uint ConcolicReorderingRuntime::chooseNextActionToSearch()
@@ -381,6 +437,9 @@ uint ConcolicReorderingRuntime::chooseNextActionToSearch()
             actionsToExplore.append(action.index);
         }
     }
+    if (!mSubmitButtonSelector.isNull() && !mSubmitButtonFullyExplored) {
+        actionsToExplore.append(mSubmitButtonIndex);
+    }
     if (actionsToExplore.isEmpty()) {
         Log::debug("ConcolicReorderingRuntime::chooseNextActionToSearch: Did not find any action to search.");
         return 0; // N.B. 0 is not a valid index; they start at 1.
@@ -388,15 +447,23 @@ uint ConcolicReorderingRuntime::chooseNextActionToSearch()
 
     // Use round-robin to select an action to search.
     qSort(actionsToExplore);
+    // On the first run, choose the first action.
     if (mPreviouslySearchedAction == 0) {
         mPreviouslySearchedAction = actionsToExplore[0];
         return actionsToExplore[0];
     }
+    // If we are in the middle of the action sequence, choose the next action.
     foreach (uint actionIdx, actionsToExplore) {
         if (actionIdx > mPreviouslySearchedAction) {
             mPreviouslySearchedAction = actionIdx;
             return actionIdx;
         }
+    }
+    // If we overflow the actions list, the submit button is next.
+    // N.B. This check works because we guarantee the submit button has a higher index than all the other actions.
+    if (actionsToExplore.contains(mSubmitButtonIndex) && mSubmitButtonIndex > mPreviouslySearchedAction) {
+        mPreviouslySearchedAction = mSubmitButtonIndex;
+        return mSubmitButtonIndex;
     }
     // Otherwise we have wrapped around to the start again.
     mPreviouslySearchedAction = actionsToExplore[0];
@@ -417,6 +484,14 @@ ReachablePathsConstraintSet ConcolicReorderingRuntime::getReachablePathsConstrai
             constraint.second = ReachablePathsConstraintGenerator::generateConstraint(action.analysis->getExecutionTree());
             constraintSet.insert(constraint);
         }
+    }
+
+    // Also emit the constraint for the submit button handler.
+    if (!mSubmitButtonSelector.isNull() && mSubmitButtonIndex != ignoreIdx) {
+        NamedReachablePathsConstraint constraint;
+        constraint.first = QPair<QString, uint>("submit button", mSubmitButtonIndex);
+        constraint.second = ReachablePathsConstraintGenerator::generateConstraint(mSubmitButtonAnalysis->getExecutionTree());
+        constraintSet.insert(constraint);
     }
 
     return constraintSet;
@@ -461,8 +536,10 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
         }
     }
 
-    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIndexVariables, actionIdx));
+    ReorderingConstraintInfoPtr reorderingInfo = ReorderingConstraintInfoPtr(new ReorderingConstraintInfo(actionVariables, actionIndexVariables, actionIdx, (mSubmitButtonSelector.isNull() ? 0 : mSubmitButtonIndex)));
     return reorderingInfo;
+
+    // N.B. We do not have to account for the submit button action; it is always last, so we do not handle it in the solver.
 }
 
 QMap<uint, InjectionValue> ConcolicReorderingRuntime::decodeSolvedInjectionValues(SolutionPtr solution)
@@ -568,6 +645,19 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
         display.writeGraphFile(action.analysis->getExecutionTree(), name, false, title);
         if (mOptions.concolicTreeOutputOverview) {
             display_min.writeGraphFile(action.analysis->getExecutionTree(), name_min, false, title);
+        }
+    }
+
+    // Also save the submit button tree.
+    if (!mSubmitButtonAnalysis.isNull()) {
+        QString name = QString("tree-%1_%2_Btn.gv").arg(mRunId).arg(mNumIterations);
+        QString name_min = QString("tree-%1_min_%2_Btn.gv").arg(mRunId).arg(mNumIterations);
+        QString title = QString("URL: %1\\nRun: %2\\nSubmit button click").arg(mUrl.toString()).arg(mRunId);
+
+        Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
+        display.writeGraphFile(mSubmitButtonAnalysis->getExecutionTree(), name, false, title);
+        if (mOptions.concolicTreeOutputOverview) {
+            display_min.writeGraphFile(mSubmitButtonAnalysis->getExecutionTree(), name_min, false, title);
         }
     }
 
