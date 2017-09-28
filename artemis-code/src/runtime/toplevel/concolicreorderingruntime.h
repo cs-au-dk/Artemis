@@ -101,6 +101,7 @@ protected:
 
     // Logging and reporting
     QString mRunId;
+    QSet<QString>mOldTreeFiles;
     void saveConcolicTrees();
     void reportStatistics();
 

@@ -631,6 +631,7 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
     if(mOptions.concolicTreeOutput == TREE_NONE){
         return;
     }
+    QSet<QString> treeFileNames;
 
     TraceDisplay display(mOptions.outputCoverage != NONE);
     TraceDisplayOverview display_min(mOptions.outputCoverage != NONE);
@@ -644,8 +645,10 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
 
         Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
         display.writeGraphFile(action.analysis->getExecutionTree(), name, false, title);
+        treeFileNames.insert(name);
         if (mOptions.concolicTreeOutputOverview) {
             display_min.writeGraphFile(action.analysis->getExecutionTree(), name_min, false, title);
+            treeFileNames.insert(name_min);
         }
     }
 
@@ -657,12 +660,21 @@ void ConcolicReorderingRuntime::saveConcolicTrees()
 
         Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
         display.writeGraphFile(mSubmitButtonAnalysis->getExecutionTree(), name, false, title);
+        treeFileNames.insert(name);
         if (mOptions.concolicTreeOutputOverview) {
             display_min.writeGraphFile(mSubmitButtonAnalysis->getExecutionTree(), name_min, false, title);
+            treeFileNames.insert(name_min);
         }
     }
 
-    // TODO: Do not overwrite old files unless we are in mode TREE_FINAL.
+    // If we are in TREE_FINAL mode, then remove the old trees.
+    if (mOptions.concolicTreeOutput == TREE_FINAL) {
+        mOldTreeFiles.subtract(treeFileNames); // Do not remove any just-written trees, in case this method is called twice with the same settings.
+        foreach (QString name, mOldTreeFiles) {
+            QFile::remove(name);
+        }
+        mOldTreeFiles = treeFileNames;
+    }
 }
 
 

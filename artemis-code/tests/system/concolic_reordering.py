@@ -20,6 +20,7 @@ def _artemis_runner(name, path):
                            iterations=0,
                            major_mode='concolic-reordering',
                            concolic_button='id("artform-button")',
+                           concolic_tree_output='final-overview',
                            event_delegation_testing=False,
                            verbose=True)
 
