@@ -231,6 +231,9 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
 
         orderingSummary.append(QString::number(fieldIdx));
     }
+    if (!mSubmitButtonSelector.isNull()) {
+        orderingSummary.append("Btn");
+    }
     mOrderingLog.append(orderingSummary.join(", "));
 
     // Give the submit button the next/final index.
@@ -403,6 +406,9 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
         QStringList orderingSummary;
         foreach (uint x, mCurrentActionOrder) {
             orderingSummary.append(QString::number(x));
+        }
+        if (!mSubmitButtonSelector.isNull()) {
+            orderingSummary.append("Btn");
         }
         mOrderingLog.append(orderingSummary.join(", "));
 
@@ -708,6 +714,13 @@ void ConcolicReorderingRuntime::reportStatistics()
         }
     }
     Statistics::statistics()->accumulate("Concolic::Reordering::UniqueOrderingsTested", mOrderingLog.toSet().size());
+
+    if (!mSubmitButtonSelector.isNull()) {
+        Statistics::statistics()->accumulate("Concolic::Reordering::TotalActionsExplored", 1);
+        if (mSubmitButtonFullyExplored) {
+            Statistics::statistics()->accumulate("Concolic::Reordering::TotalActionsFullyExplored", 1);
+        }
+    }
 }
 
 void ConcolicReorderingRuntime::done()

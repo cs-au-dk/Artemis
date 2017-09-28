@@ -1,5 +1,12 @@
 <!--
-
+TEST Concolic::Iterations = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 5
+TEST Concolic::Reordering::TotalActionsExplored = 3
+TEST Concolic::Reordering::TotalActionsFullyExplored = 3
+TEST Concolic::Reordering::UniqueOrderingsTested = 1
+TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 1
 -->
 <!doctype html><html lang="en">
 <head>
@@ -10,28 +17,37 @@
     <meta name="author" content="Ben Spencer">
     <script type="text/javascript">
         
-        // Checks we can handle constraints on the submit button.
+        // Checks we always order the submit button last.
+        // The branch in the button handler will be UNSAT in that case, but SAT if we allowed reordering.
         
         function handler_A1() {
             // no-op
         }
         
         function handler_A2() {
-            // no-op
+            var v2 = document.getElementById("field_2").value;
+            
+            if (v2 != "testme") {
+                alert("Error 2.1");
+            }
         }
         
         function handler_submit() {
             var v1 = document.getElementById("field_1").value;
             var v2 = document.getElementById("field_2").value;
             
+            // This is just so we don't see the interesting condition immediately.
             if (v1 != "hello") {
                 alert("Error B.1");
                 return false;
             }
-            if (v2 != "world") {
+            
+            // This condition is unreachable if we have already triggered A2 with a non-aborting path.
+            if (v2 != "default2") {
                 alert("Error B.2");
                 return false;
             }
+            
             return true;
         }
         

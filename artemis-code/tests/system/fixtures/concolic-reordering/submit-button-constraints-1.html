@@ -1,5 +1,11 @@
 <!--
-
+TEST Concolic::Iterations = 3
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 5
+TEST Concolic::Reordering::TotalActionsExplored = 3
+TEST Concolic::Reordering::TotalActionsFullyExplored = 3
+TEST Concolic::Reordering::UniqueOrderingsTested = 1
 -->
 <!doctype html><html lang="en">
 <head>
@@ -10,15 +16,10 @@
     <meta name="author" content="Ben Spencer">
     <script type="text/javascript">
         
-        // Checks we always order the submit button last.
-        // The branch in the button handler will be UNSAT in that case, but SAT if we allowed reordering.
+        // Checks we can handle constraints on the submit button.
         
         function handler_A1() {
-            var v1 = document.getElementById("field_1").value;
-            
-            if (v1 == "default1") {
-                alert("Error 1.1");
-            }
+            // no-op
         }
         
         function handler_A2() {
@@ -27,9 +28,14 @@
         
         function handler_submit() {
             var v1 = document.getElementById("field_1").value;
+            var v2 = document.getElementById("field_2").value;
             
-            if (v1 != "default1") {
+            if (v1 != "hello") {
                 alert("Error B.1");
+                return false;
+            }
+            if (v2 != "world") {
+                alert("Error B.2");
                 return false;
             }
             return true;
