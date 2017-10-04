@@ -45,6 +45,8 @@ public:
 
     void newIteration();
 
+    void reportGraphStatistics();
+
 public slots:
     void slJavascriptSymbolicFieldRead(QString variable, bool isSymbolic);
 

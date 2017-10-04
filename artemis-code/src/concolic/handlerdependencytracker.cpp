@@ -17,6 +17,7 @@
 #include "handlerdependencytracker.h"
 
 #include "util/fileutil.h"
+#include "statistics/statsstorage.h"
 
 #include <assert.h>
 #include <QDebug>
@@ -140,6 +141,31 @@ void HandlerDependencyTracker::slJavascriptSymbolicFieldRead(QString variable, b
     edge.second = isSymbolic;
 
     mEdgeCounts[edge] += 1;
+}
+
+
+void HandlerDependencyTracker::reportGraphStatistics()
+{
+    if(!mEnabled) {
+        return;
+    }
+
+    // Read mEdgeCounts and log some statistics about the handlers graph.
+    foreach(EdgeDescriptor edge, mEdgeCounts.keys()) {
+        Statistics::statistics()->accumulate("Concolic::HandlersGraph::TotalEdges", 1);
+
+        if (edge.first.first == mNoEventLabel) {
+            Statistics::statistics()->accumulate("Concolic::HandlersGraph::UnknownEdges", 1);
+        } else if (edge.second) {
+            Statistics::statistics()->accumulate("Concolic::HandlersGraph::SymbolicEdges", 1);
+        } else {
+            Statistics::statistics()->accumulate("Concolic::HandlersGraph::ConcreteEdges", 1);
+        }
+
+        if (edge.first.first == edge.first.second) {
+            Statistics::statistics()->accumulate("Concolic::HandlersGraph::SelfLoops", 1);
+        }
+    }
 }
 
 

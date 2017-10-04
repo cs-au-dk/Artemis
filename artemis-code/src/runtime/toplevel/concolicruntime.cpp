@@ -819,6 +819,8 @@ void ConcolicRuntime::reportStatistics()
     Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+
+    mHandlerTracker.reportGraphStatistics();
 }
 
 
