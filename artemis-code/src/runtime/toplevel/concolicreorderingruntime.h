@@ -104,6 +104,7 @@ protected:
     QSet<QString>mOldTreeFiles;
     void saveConcolicTrees();
     void reportStatistics();
+    void reportStatisticsForTree(TraceNodePtr tree);
 
 protected slots:
     // Browser part
