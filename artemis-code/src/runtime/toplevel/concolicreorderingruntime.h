@@ -56,8 +56,6 @@ protected:
     // Browser part
     void preConcreteExecution();
     void clearStateForNewIteration();
-    QMap<int, QPair<int, bool> > mTimers;
-    void clearAsyncEvents();
     bool mRunningFirstLoad;
 
     // Action ordering and execution
@@ -109,8 +107,6 @@ protected:
 protected slots:
     // Browser part
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
-    void slTimerAdded(int timerId, int timeout, bool singleShot);
-    void slTimerRemoved(int timerId);
 
 
 };

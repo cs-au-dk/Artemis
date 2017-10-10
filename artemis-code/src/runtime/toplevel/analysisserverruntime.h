@@ -83,9 +83,6 @@ protected:
 
     void backButtonOrError();
 
-    QMap<int, QPair<int, bool> > mTimers;
-    void clearAsyncEvents();
-
     // Page analysis
     FieldReadLog mFieldReadLog;
 
@@ -121,8 +118,6 @@ protected slots:
     void slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
     void slPageLoadScheduled(QUrl url);
     virtual void slAbortedExecution(QString reason);
-    void slTimerAdded(int timerId, int timeout, bool singleShot);
-    void slTimerRemoved(int timerId);
 
     // GUI part
     void slDebugWindowClosed();

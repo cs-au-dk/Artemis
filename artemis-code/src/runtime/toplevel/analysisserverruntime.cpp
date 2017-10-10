@@ -61,11 +61,6 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(sigPageLoadScheduled(QUrl)),
                      this, SLOT(slPageLoadScheduled(QUrl)));
 
-    QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(addedTimer(int, int, bool)),
-                     this, SLOT(slTimerAdded(int, int, bool)));
-    QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(removedTimer(int)),
-                     this, SLOT(slTimerRemoved(int)));
-
     // Connections for page analysis
     QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
                      &mFieldReadLog, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
@@ -84,8 +79,8 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
                          this, SLOT(slDebugWindowClosed()));
     }
 
-    // Do not capture AJAX callbacks, force them to be fired synchronously.
-    QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
+    // Handle async events directly.
+    enableAsyncEventCapture();
 
     // Do not exit on a bad page load.
     mWebkitExecutor->mIgnoreCancelledPageLoad = true;
@@ -1262,58 +1257,6 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
     }
 }
 
-
-void AnalysisServerRuntime::slTimerAdded(int timerId, int timeout, bool singleShot)
-{
-    assert(!mTimers.contains(timerId));
-    mTimers.insert(timerId, QPair<int, bool>(timeout, singleShot));
-}
-
-void AnalysisServerRuntime::slTimerRemoved(int timerId)
-{
-    // N.B. clearAsyncEvents removes IDs manually, so we do no necessarily expect timerId to still be in mTimers.
-    mTimers.remove(timerId);
-}
-
-// TODO: This function is duplicated in concolicreorderingruntime.cpp.
-void AnalysisServerRuntime::clearAsyncEvents()
-{
-    // AJAX events are handled synchronously in server mode (see call to doNotCaptureAjaxCallbacks in the
-    // AnalysisServerRuntime constructor) so they are ignored here.
-
-    // Fire all timers up to depth 4. i.e. 4 levels of nested timers, or 4 rounds of interval timers.
-    for (int i = 0; i < 4 && !mTimers.isEmpty(); i++) {
-        QList<int> currentRoundTimers = mTimers.keys();
-        qSort(currentRoundTimers); // Take timers in ID order.
-        Log::debug(QString("  CAE: Firing timers in round %1 (%2 timers)").arg(i).arg(currentRoundTimers.length()).toStdString());
-        foreach(int timerId, currentRoundTimers) {
-            if (!mTimers.contains(timerId)) {
-                continue; // This timer must have been removed by an earlier timer in this round.
-            }
-            bool singleShot = mTimers[timerId].second;
-
-            Log::debug(QString("  CAE: Fire timer %1").arg(timerId).toStdString());
-            // N.B. This may add new timers to mTimers, which we will pick up in the next round.
-            mWebkitExecutor->mWebkitListener->timerFire(timerId);
-            Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
-            if (singleShot) {
-                mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
-                mWebkitExecutor->mWebkitListener->timerCancel(timerId);
-                Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
-            }
-        }
-    }
-
-    // Cancel any outstanding timers.
-    foreach (int timerId, mTimers.keys()) {
-        Log::debug(QString("  CAE: Cancelling timer %1").arg(timerId).toStdString());
-        mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
-        mWebkitExecutor->mWebkitListener->timerCancel(timerId);
-        Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersCancelled", 1);
-    }
-
-    // Now all async events are executed or removed, so there should be no background execution in the browser.
-}
 
 
 void AnalysisServerRuntime::done()

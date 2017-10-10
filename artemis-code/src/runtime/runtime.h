@@ -72,11 +72,21 @@ protected:
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;
 
+    // Handline async events
+    // Subclasses may call enableAsyncEventCapture in their constructor to enable controlled handling of async events.
+    // They are the responsible for calling clearAsyncEvents at appropriate points to let these events execute.
+    void enableAsyncEventCapture();
+    void clearAsyncEvents();
+    QMap<int, QPair<int, bool> > mTimers;
+
 private:
     QString* mHeapReport;
 
 protected slots:
     virtual void slAbortedExecution(QString reason);
+
+    void slTimerAdded(int timerId, int timeout, bool singleShot);
+    void slTimerRemoved(int timerId);
 
 signals:
     void sigTestingDone();
