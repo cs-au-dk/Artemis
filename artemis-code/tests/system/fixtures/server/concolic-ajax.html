@@ -46,7 +46,7 @@
                     if (this.readyState == XMLHttpRequest.DONE && this.status == 0 && !xhr_connection_fail_reported) {
                         xhr_connection_fail_reported = true;
                         alert("XHR connection failed");
-                        status.textContent += "XHR connection failed; "
+                        status.textContent += "XHR connection failed; ";
                     }
                 };
                 xhr.send();

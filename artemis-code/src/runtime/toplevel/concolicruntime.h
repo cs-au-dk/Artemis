@@ -127,6 +127,7 @@ private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void postAllInjection();
     void postSingleInjection(FormFieldDescriptorConstPtr field);
+    void postSubmitButtonClick();
 
     void slExecutionTreeUpdated(TraceNodePtr tree, QString name);
 

@@ -113,6 +113,7 @@ private:
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
     void sigAbortedExecution(QString reason);
+    void sigPostFinalActionExecution(); // Called after the input sequence is executed, but before various statistics/teardown from the run.
 
 public slots:
     void slNAMFinished(QNetworkReply* reply);

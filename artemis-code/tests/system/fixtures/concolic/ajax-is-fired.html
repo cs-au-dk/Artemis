@@ -1,0 +1,56 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        function validate() {
+            // Make an AJAX call and do the validation once it has returned.
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://eu.httpbin.org/delay/1", true);
+            xhr.onreadystatechange = function() {
+                if (this.readyState == XMLHttpRequest.DONE && this.status == 0) {
+                    alert("XHR connection failed");
+                }
+            };
+            xhr.onload = function () {
+                // Validation here
+                var x = "testme";
+                var y = document.getElementById("testinput").value;
+                if (y != x) {
+                    alert("Error!");
+                }else{
+                    document.forms[0].submit();
+                }
+            };
+            xhr.send();
+            
+            return false;
+        }
+    </script>
+    
+</head>
+<body>
+    
+    <p>Write <i>testme</i> in the field to do something.</p>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="testinput" />
+        
+        <button type="submit" onclick="return validate();">Submit</button>
+        
+    </form>
+    
+</body>
+</html>

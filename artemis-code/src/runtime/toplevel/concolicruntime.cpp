@@ -67,6 +67,11 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr, QString)),
                      this, SLOT(slExecutionTreeUpdated(TraceNodePtr, QString)));
 
+    // Control async events
+    enableAsyncEventCapture();
+    QObject::connect(mWebkitExecutor, SIGNAL(sigPostFinalActionExecution()),
+                     this, SLOT(postSubmitButtonClick()));
+
     switch (options.concolicTraceClassifier) {
     case CLASSIFY_FORM_SUBMISSION:
         mTraceClassifier = TraceClassifierPtr(new FormSubmissionClassifier());
@@ -158,6 +163,7 @@ void ConcolicRuntime::postAllInjection()
             foreach(FormFieldDescriptorConstPtr field, mFormFields) {
                 Statistics::statistics()->accumulate("Concolic::EventSequence::ChangeHandlersTriggeredAfterInjection", 1);
                 triggerFieldChangeHandler(field);
+                clearAsyncEvents();
             }
         }
 
@@ -175,7 +181,13 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
             !mOptions.concolicDisabledFeatures.testFlag(EVENT_SEQUENCE_SYNC_INJECTIONS)) {
         Statistics::statistics()->accumulate("Concolic::EventSequence::ChangeHandlersTriggeredInSync", 1);
         triggerFieldChangeHandler(field);
+        clearAsyncEvents();
     }
+}
+
+void ConcolicRuntime::postSubmitButtonClick()
+{
+    clearAsyncEvents();
 }
 
 void ConcolicRuntime::triggerFieldChangeHandler(FormFieldDescriptorConstPtr field)

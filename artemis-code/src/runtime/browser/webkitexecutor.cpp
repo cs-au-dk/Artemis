@@ -326,6 +326,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
         input->apply(this->mPage, this->mWebkitListener);
     }
+    emit sigPostFinalActionExecution();
 
     qDebug() << "\n------------ POST PROCESSING -----------" << endl;
 

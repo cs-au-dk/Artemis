@@ -1,0 +1,92 @@
+<!--
+TEST PC[0] = ((SymbolicString == ConstantString) == ConstantBoolean)
+TEST PC[1] = ((SymbolicString == ConstantString) == ConstantBoolean)
+TEST PC[2] = ((SymbolicString == ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 4
+TEST Concolic::Solver::ConstraintsWritten = 4
+TEST Concolic::Solver::Constraint.SYM_IN_field1 = One
+TEST Concolic::Solver::Constraint.SYM_IN_field2 = Two
+TEST Concolic::Solver::Constraint.SYM_IN_field3 = Three
+TEST Runtime::ClearAsyncEvents::TimersTriggered = 32
+-->
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    
+    <script type="text/javascript">
+        
+        function validate() {
+            // Validate the fields with delays.
+            
+            var f1 = document.getElementById("field1");
+            var f2 = document.getElementById("field2");
+            var f3 = document.getElementById("field3");
+            
+            var v1 = "One";
+            var v2 = "Two";
+            var v3 = "Three";
+            
+            var delay = 1000;
+            
+            var b1 = false;
+            var b2 = false;
+            var b3 = false;
+            
+            window.setTimeout(function () {
+                if (f1.value == v1) {
+                    b1 = true;
+                } else {
+                    alert("Field 1: FAIL");
+                }
+                
+                window.setTimeout(function () {
+                    if (f2.value == v2) {
+                        b2 = true;
+                    } else {
+                        alert("Field 2: FAIL");
+                    }
+                    
+                    window.setTimeout(function () {
+                        if (f3.value == v3) {
+                            b3 = true;
+                        } else {
+                            alert("Field 3: FAIL");
+                        }
+                        
+                        window.setTimeout(function () {
+                            if (b1 && b2 && b3) {
+                                document.forms[0].submit();
+                            } else {
+                                alert("Submission failed");
+                            }
+                        }, delay)
+                        
+                    }, delay)
+                    
+                }, delay)
+                
+            }, delay)
+            
+            return false;
+        }
+        
+    </script>
+    
+</head>
+<body>
+    <p>Write <i>One</i>, <i>Two</i>, <i>Three</i> in the fields to do something.</p>
+    
+    <form method="GET" action="about:blank" >
+        <input type="text" id="field1" /><br>
+        <input type="text" id="field2" /><br>
+        <input type="text" id="field3" /><br>
+        
+        <button type="submit" onclick="return validate();" >Validate</button>
+    </form>
+    
+</body>
+</html>
