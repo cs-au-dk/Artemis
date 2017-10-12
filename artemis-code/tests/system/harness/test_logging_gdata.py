@@ -1,10 +1,21 @@
 
+# TODO: This logger can no longer work.
+# It uses the GData v2 API, which is no longer available.
+# https://developers.google.com/sheets/api/v3/
+# https://github.com/google/gdata-python-client/blob/master/src/gdata/client.py#L23
+
 import subprocess
 import re
 import getpass
 import sys
 
-import gdata.spreadsheet.service
+try
+    import gdata.spreadsheet.service
+except ImportError:
+    print "The 'gdata' module is required to save the results."
+    print "See http://code.google.com/p/gdata-python-client/ for downloads."
+    sys.exit()
+
 
 # Google Spreadsheets Logging
 class GDataLogger():
@@ -124,7 +135,10 @@ class GDataLogger():
         except gdata.service.RequestError:
             print "Error adding a new column header. (maybe there is not enough space on the worksheet?)"
             assert(false) # Fail the current test
-
+    
+    def process_header(self, string):
+        return string.replace("::", "::\n")
+    
 
 
 # Checking the currently checked out git commit.
