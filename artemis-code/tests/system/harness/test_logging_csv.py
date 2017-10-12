@@ -7,16 +7,18 @@ import subprocess
 
 
 class CsvLogger:
-    def __init__(self):
+    def __init__(self, file_name):
+        self._file_name = file_name
         self._rows = []
     
     def log_data(self, data):
         self._rows.append(data)
+        self.save() # Saving each row at a time simplifies the API and protects against crashes.
     
     def process_header(self, string):
         return string.replace("\n", "")
     
-    def save(self, file_name):
+    def save(self):
         initial_columns = ["Testing Run", "Artemis Version", "Site", "Extra Args", "URL", "Analysis", "DIADEM Time", "Entry Point", "Running Time", "Exit Code", "Iterations"]
         statistics_columns = set()
         for row in self._rows:
@@ -24,7 +26,7 @@ class CsvLogger:
         statistics_columns.difference_update(initial_columns)
         all_columns = initial_columns + sorted(statistics_columns)
         
-        with open(file_name, 'w') as f:
+        with open(self._file_name, 'w') as f:
             writer = csv.DictWriter(f, fieldnames=all_columns, restval="")
             writer.writeheader()
             

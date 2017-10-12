@@ -77,7 +77,7 @@ def main():
     
     # Set up the statistics logger
     if not dry_run:
-        logger = CsvLogger()
+        logger = CsvLogger(os.path.join(run_dir_name, "statistics.csv"))
     else:
         logger=None
     
@@ -115,9 +115,6 @@ def main():
     # Save the EPs which were used.
     if external_ep_finder and not dry_run:
         _save_ep_log(os.path.join(run_dir_name, "ep-log.csv"), ep_log)
-    
-    # Save the statistics log.
-    logger.save(os.path.join(run_dir_name, "statistics.csv"))
     
 
 
