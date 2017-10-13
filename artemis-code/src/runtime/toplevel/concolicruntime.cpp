@@ -45,6 +45,9 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     mManualEntryPoint = !options.concolicEntryPoint.isNull();
     mManualEntryPointXPath = options.concolicEntryPoint;
 
+    mManualFormArea = !options.concolicFormArea.isNull();
+    mManualFormAreaXPath = options.concolicFormArea;
+
     // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
     // renders the site being tested. It is required to have proper geometry in order to click correctly on elements.
     // Without this the "bare" ArtemisWebPage is laid out correctly but the document element has zero size, so any
@@ -350,7 +353,28 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
     // Find the form fields on the page and save them.
-    mFormFields = permuteFormFields(result->getFormFields(), mOptions.concolicEventHandlerPermutation);
+    // First, filter the fields accrding to mManualFormAreaXPath
+    QList<FormFieldDescriptorConstPtr> selectedFields;
+    if (mManualFormArea) {
+        // Look up the form area subtree.
+        QWebElement formAreaRoot = mWebkitExecutor->getPage()->getSingleElementByXPath(mManualFormAreaXPath);
+        if (formAreaRoot.isNull()) {
+            Log::error("Could not identify a single root element for the concolic form area.");
+            exit(1);
+        }
+        QList<QWebElement> formAreaElements = formAreaRoot.findAll("*").toList();
+        foreach (FormFieldDescriptorConstPtr field, result->getFormFields()) {
+            if (formAreaElements.contains(field->getDomElement()->getElement(mWebkitExecutor->getPage()))) {
+                selectedFields.append(field);
+            }
+        }
+    } else {
+        selectedFields = result->getFormFields();
+        // TODO: Also have an "auto" mode which chooses the first form element enclosing the chosen submit button.
+    }
+    // Then apply any permutation
+    mFormFields = permuteFormFields(selectedFields, mOptions.concolicEventHandlerPermutation);
+    // Save the form restrictions for this filtered set.
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
     mFormFieldInitialRestrictions = mFormFieldRestrictions;
     mConcolicAnalysis->setFormRestrictions(mFormFieldInitialRestrictions);

@@ -80,6 +80,10 @@ protected:
     bool mManualEntryPoint;
     QString mManualEntryPointXPath;
 
+    // If supplied, the concolic form area specifies whihc part of the DOM we should take form actions from.
+    bool mManualFormArea;
+    QString mManualFormAreaXPath;
+
     TraceClassifierPtr mTraceClassifier;
 
     // Method and variables for generating a graphviz graph of the execution tree.

@@ -132,6 +132,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Use the given XPath to locate the button to be used in concolic mode.\n"
             "           If not supplied, the concolic mode will use its built-in button finding, which is not robust.\n"
             "\n"
+            "--concolic-form-area <XPath>:\n"
+            "           The given XPath identifies a subtree of the DOM. The concolic analysis will fill input fields within this subtree.\n"
+            "           If not supplied, all form fields on the page are considered.\n"
+            "\n"
             "--concolic-tree-output <trees>:\n"
             "           none - Do not output any graphs.\n"
             "           final (default) - Generate a graph of the final tree after analysis.\n"
@@ -252,6 +256,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
+    {"concolic-form-area", required_argument, NULL, 'X'},
     {"concolic-search-procedure", required_argument, NULL, 'S'},
     {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
     {"concolic-selection-procedure", required_argument, NULL, 'T'},
@@ -745,6 +750,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
             break;
 
+        }
+
+        case 'X': {
+            options.concolicFormArea = QString(optarg);
+            break;
         }
 
         case 'y': {
