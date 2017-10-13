@@ -28,8 +28,7 @@ namespace artemis
 {
 
 ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QUrl& url) :
-    Runtime(parent, options, url),
-    mEntryPointDetector(mWebkitExecutor->getPage())
+    Runtime(parent, options, url)
 {
     mIterations = 1;
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
@@ -143,9 +142,6 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
         qDebug() << "Visiting new state";
         mVisitedStates.insert(hash);
     }
-
-    // FormCrawl (generate statistics)
-    mEntryPointDetector.detectAll(result);
 
     // Generate new inputs
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);

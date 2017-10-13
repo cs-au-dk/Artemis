@@ -47,7 +47,6 @@ protected:
     void preConcreteExecution();
 
     WorkListPtr mWorklist;
-    EntryPointDetector mEntryPointDetector;
     QSet<QUrl> mUrlsSeen;
 
     void notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration);
