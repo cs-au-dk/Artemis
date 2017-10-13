@@ -49,6 +49,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                bool enableConstantStringInstrumentation,
                                bool enablePropertyAccessInstrumentation,
                                bool enableEventVisibilityFiltering,
+                               QString eventFilterAreaXPath,
                                ConcolicBenchmarkFeatures disabledFeatures,
                                bool enableExtrnalNavigationRequests)
     : QObject(parent)
@@ -73,7 +74,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mPage.data()->networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(slNAMFinished(QNetworkReply*)));
     QObject::connect(mPage.data(), SIGNAL(loadProgress(int)),
                      this, SLOT(slLoadProgress(int)));
-    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage, disabledFeatures, enableEventVisibilityFiltering));
+    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage, disabledFeatures, enableEventVisibilityFiltering, eventFilterAreaXPath));
 
     mCoverageListener = appmodel->getCoverageListener();
     mJavascriptStatistics = appmodel->getJavascriptStatistics();

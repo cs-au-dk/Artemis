@@ -66,6 +66,7 @@ public:
                    bool enableConstantStringInstrumentation,
                    bool enablePropertyAccessInstrumentation,
                    bool enableEventVisibilityFiltering,
+                   QString eventFilterAreaXPath,
                    ConcolicBenchmarkFeatures disabledFeatures,
                    bool enableExtrnalNavigationRequests);
     ~WebKitExecutor();

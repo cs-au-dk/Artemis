@@ -156,9 +156,9 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
     // Filter the list of fields according to concolic-form-area.
     // TODO: Duplicated from code in concolicruntime.cpp
     QList<FormFieldDescriptorConstPtr> fieldsOnPage;
-    if (!mOptions.concolicFormArea.isNull()) {
+    if (!mOptions.eventFilterArea.isNull()) {
         // Look up the form area subtree.
-        QWebElement formAreaRoot = mWebkitExecutor->getPage()->getSingleElementByXPath(mOptions.concolicFormArea);
+        QWebElement formAreaRoot = mWebkitExecutor->getPage()->getSingleElementByXPath(mOptions.eventFilterArea);
         if (formAreaRoot.isNull()) {
             Log::error("Could not identify a single root element for the concolic form area.");
             exit(1);

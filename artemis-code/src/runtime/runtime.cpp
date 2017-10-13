@@ -116,6 +116,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation,
                                          options.enableEventVisibilityFiltering,
+                                         options.eventFilterArea,
                                          options.concolicDisabledFeatures,
                                          options.artemisLoadUrls);
 

@@ -28,11 +28,14 @@ namespace artemis
 
 ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page,
                                                ConcolicBenchmarkFeatures disabledFeatures,
-                                               bool enableEventVisibilityFiltering)
+                                               bool enableEventVisibilityFiltering,
+                                               QString eventFilterAreaXPath)
     : QObject(NULL)
     , mPage(page)
     , mDisabledFeatures(disabledFeatures)
     , mEnableEventVisibilityFiltering(enableEventVisibilityFiltering)
+    , mEnableEventFilterArea(!eventFilterAreaXPath.isNull())
+    , mEventFilterAreaXPath(eventFilterAreaXPath)
 {
     reset();
 }
@@ -89,6 +92,15 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
     if (mEnableEventVisibilityFiltering) {
         userClickableElements = mPage->getAllUserClickableElementsAndAncestors();
     }
+    QList<QWebElement> elementsAllowedByFilter;
+    if (mEnableEventFilterArea) {
+        QWebElement filterAreaRoot = mPage->getSingleElementByXPath(mEventFilterAreaXPath);
+        if (filterAreaRoot.isNull()) {
+            Log::error("Could not identify a single root element for the event filter area.");
+            exit(1);
+        }
+        elementsAllowedByFilter = filterAreaRoot.findAll("*").toList();
+    }
 
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
@@ -130,6 +142,16 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
                          << "class = " << actualSource.attribute("class")
                          << "visible = " << actualSource.isUserVisible()
                          << "xpath = " << actualSource.xPath();
+                continue;
+            }
+        }
+
+        if (mEnableEventFilterArea) {
+            // TODO: It would be even better if we could use the event-filter-area to filter the event targets. But that is not implemented here, we filter the elements on which the events are registered.
+            QWebElement actualSource = handler->getDomElement()->getElement(mPage);
+
+            if (!elementsAllowedByFilter.contains(actualSource)) {
+                Statistics::statistics()->accumulate("WebKit::events::skipped::eventfilterarea", 1);
                 continue;
             }
         }

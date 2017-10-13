@@ -45,8 +45,8 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     mManualEntryPoint = !options.concolicEntryPoint.isNull();
     mManualEntryPointXPath = options.concolicEntryPoint;
 
-    mManualFormArea = !options.concolicFormArea.isNull();
-    mManualFormAreaXPath = options.concolicFormArea;
+    mManualFormArea = !options.eventFilterArea.isNull();
+    mManualFormAreaXPath = options.eventFilterArea;
 
     // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
     // renders the site being tested. It is required to have proper geometry in order to click correctly on elements.

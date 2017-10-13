@@ -52,7 +52,8 @@ class ExecutionResultBuilder : public QObject
 public:
     explicit ExecutionResultBuilder(ArtemisWebPagePtr page,
                                     ConcolicBenchmarkFeatures disabledFeatures,
-                                    bool enableEventVisibilityFiltering);
+                                    bool enableEventVisibilityFiltering,
+                                    QString eventFilterAreaXPath);
     
     void reset();
     void notifyPageLoaded();
@@ -79,6 +80,9 @@ private:
 
     ConcolicBenchmarkFeatures mDisabledFeatures;
     bool mEnableEventVisibilityFiltering;
+
+    bool mEnableEventFilterArea;
+    QString mEventFilterAreaXPath;
 
 public slots:
     void slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber);

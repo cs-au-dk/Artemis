@@ -154,7 +154,7 @@ typedef struct OptionsType {
     ConcolicTreeOutput concolicTreeOutput;
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
-    QString concolicFormArea;
+    QString eventFilterArea;
     bool concolicTriggerEventHandlers;
     bool concolicEventHandlerReport;
     QString concolicEventHandlerPermutation;

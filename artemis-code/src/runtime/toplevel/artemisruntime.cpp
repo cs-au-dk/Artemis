@@ -63,6 +63,9 @@ void ArtemisRuntime::run(const QUrl& url)
     if (mOptions.enableEventVisibilityFiltering) {
         Statistics::statistics()->set("WebKit::events::skipped::visibility", 0);
     }
+    if (!mOptions.eventFilterArea.isNull()) {
+        Statistics::statistics()->set("WebKit::events::skipped::eventfilterarea", 0);
+    }
 
     preConcreteExecution();
 }
