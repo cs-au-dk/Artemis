@@ -151,10 +151,29 @@ void ConcolicReorderingRuntime::postConcreteExecution(ExecutableConfigurationCon
 void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<ExecutionResult> result)
 {
     // Populate mAvailableActions and set the default ordering in mCurrentActionOrder.
-    // TODO: mAvailaleActions should probably be given as input, or at least be configurable. For now (for testing) we can just take all fields.
     // For the first iteration, the actions are taken in index order (i.e. DOM order).
 
-    QList<FormFieldDescriptorConstPtr> fieldsOnPage = result->getFormFields();
+    // Filter the list of fields according to concolic-form-area.
+    // TODO: Duplicated from code in concolicruntime.cpp
+    QList<FormFieldDescriptorConstPtr> fieldsOnPage;
+    if (!mOptions.concolicFormArea.isNull()) {
+        // Look up the form area subtree.
+        QWebElement formAreaRoot = mWebkitExecutor->getPage()->getSingleElementByXPath(mOptions.concolicFormArea);
+        if (formAreaRoot.isNull()) {
+            Log::error("Could not identify a single root element for the concolic form area.");
+            exit(1);
+        }
+        QList<QWebElement> formAreaElements = formAreaRoot.findAll("*").toList();
+        foreach (FormFieldDescriptorConstPtr field, result->getFormFields()) {
+            if (formAreaElements.contains(field->getDomElement()->getElement(mWebkitExecutor->getPage()))) {
+                fieldsOnPage.append(field);
+            }
+        }
+    } else {
+        fieldsOnPage = result->getFormFields();
+        // TODO: Also have an "auto" mode which chooses the first form element enclosing the chosen submit button.
+    }
+
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(fieldsOnPage, mWebkitExecutor->getPage());
     uint fieldIdx = 0;
     QStringList orderingSummary;
