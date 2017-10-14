@@ -64,6 +64,7 @@ void ArtemisRuntime::run(const QUrl& url)
     if (!mOptions.eventFilterArea.isNull()) {
         Statistics::statistics()->set("WebKit::events::skipped::eventfilterarea", 0);
     }
+    Statistics::statistics()->set("ArtemisRuntime::UniqueUrlsDiscovered", 0);
 
     preConcreteExecution();
 }
