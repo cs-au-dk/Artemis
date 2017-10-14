@@ -57,13 +57,16 @@ def main():
                         help="Use DIADEM instead of the entry-points listed in the CSV file.")
     parser.add_argument('--extra-args', dest='extra_args',
                         help="A string of extra arguments which are passed directly to artemis for every test.")
+    parser.add_argument('--use-event-filter-area', action='store_true', dest='event_filter',
+                        help="The CSV file contains a fourth column, which contains XPaths to be used as the"
+                             "event-filter-area parameter to each run.")
     
     args = parser.parse_args()
     dry_run = args.dry_run
     external_ep_finder = args.external_ep_finder
     
     # Read the CSV file
-    sites = _read_csv_file(args.csv_file)
+    sites = _read_csv_file(args.csv_file, args.event_filter)
     
     if not sites:
         print "No sites to test!"
@@ -92,13 +95,14 @@ def main():
     ep_log = []
     for s in sites:
         test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
+        event_filter_xpath = s[3] if args.event_filter else None
         # Check how we will find the EPs.
         if external_ep_finder:
             test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name,
-                                    ep_log, constraints_index, constraints_dir, args.extra_args)
+                                    ep_log, constraints_index, constraints_dir, args.extra_args, event_filter_xpath)
         else:
             test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name, 
-                                    None, constraints_index, constraints_dir, args.extra_args)
+                                    None, constraints_index, constraints_dir, args.extra_args, event_filter_xpath)
         
         setattr(TestSequence, test_name, test)
     
@@ -120,7 +124,7 @@ def main():
 
 
 def full_test_generator(site_name, site_url, dry_run, logger, version, test_date, test_dir, ep_log, constraints_index,
-                        constraints_dir, extra_args):
+                        constraints_dir, extra_args, event_filter_xpath):
     """
     Returns a function which does a 'full' test of the given site.
     This means running the external entry-point finding tool and then for each EP found running the test returned by 
@@ -169,7 +173,7 @@ def full_test_generator(site_name, site_url, dry_run, logger, version, test_date
             site_id = "%s_%d" % (site_name, idx+1)
             test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
                                                          test_date, test_dir, ep_finder_time, constraints_index,
-                                                         constraints_dir, extra_args)))
+                                                         constraints_dir, extra_args, event_filter_xpath)))
             ep_log.append((site_id, site_url, ep))
         
         # Run each of these functions to actually test the different EPs.
@@ -200,7 +204,7 @@ def full_test_generator(site_name, site_url, dry_run, logger, version, test_date
 
 
 def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_date, test_dir, ep_finder_time,
-                    constraints_index, constraints_dir, extra_args):
+                    constraints_index, constraints_dir, extra_args, event_filter_xpath):
     """Returns a function which will test the given site and entry-point when executed."""
     
     def test(self):
@@ -213,6 +217,8 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
         data['Entry Point'] = site_ep
         data['DIADEM Time'] = ep_finder_time if ep_finder_time is not None else ""
         data['Extra Args'] = extra_args if extra_args else ''
+        if event_filter_xpath is not None:
+            data['Event Filter Area'] = event_filter_xpath
         
         try:
             # Clear /tmp/constraintlog and injections so we can get info from this run only.
@@ -237,7 +243,8 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
                                      #concolic_selection_procedure='avoid-unsat',
                                      #concolic_selection_budget='50',
                                      concolic_event_handler_report=True,
-                                     extra_args=extra_args)
+                                     extra_args=extra_args,
+                                     event_filter_area=event_filter_xpath)
             end_time = time.time()
             
             if dry_run:
@@ -262,7 +269,7 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
             try:
                 shutil.copytree("/tmp/injections", os.path.join(test_dir, site_name, "injections"))
             except OSError:
-                pass # Ignore erros (e.g. if there were no injections).
+                pass # Ignore errors (e.g. if there were no injections).
             
             # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
             # We also delete the core dumps to save space!
@@ -332,7 +339,7 @@ def _log_error_message(logger, site_id, site_url, version, test_date, ep_finder_
 
 
 
-def _read_csv_file(filename):
+def _read_csv_file(filename, expect_fourth_column):
     """
     Reads a CSV file into a list of triples.
     If the CSV file is formatted correctly it will return a list of name/URL/EP triples
@@ -343,7 +350,7 @@ def _read_csv_file(filename):
             reader = csv.reader(csvfile, skipinitialspace=True)
             reader.next() # Ignore header row
             for row in reader:
-                assert(len(row) == 3) # We expect three arguments.
+                assert (not expect_fourth_column and len(row) == 3) or (len(row) == 4)
                 sites.append(row)
         return sites
     except IOError:
