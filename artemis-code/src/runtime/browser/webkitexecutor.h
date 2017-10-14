@@ -68,7 +68,7 @@ public:
                    bool enableEventVisibilityFiltering,
                    QString eventFilterAreaXPath,
                    ConcolicBenchmarkFeatures disabledFeatures,
-                   bool enableExtrnalNavigationRequests);
+                   bool enableExternalNavigationRequests);
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);

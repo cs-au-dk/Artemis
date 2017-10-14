@@ -51,13 +51,13 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                bool enableEventVisibilityFiltering,
                                QString eventFilterAreaXPath,
                                ConcolicBenchmarkFeatures disabledFeatures,
-                               bool enableExtrnalNavigationRequests)
+                               bool enableExternalNavigationRequests)
     : QObject(parent)
     , mIgnoreCancelledPageLoad(false)
     , mNextOpCanceled(false)
     , mKeepOpen(false)
     , mSymbolicMode(MODE_CONCRETE)
-    , mEnableExternalNaviagtionRequests(enableExtrnalNavigationRequests)
+    , mEnableExternalNaviagtionRequests(enableExternalNavigationRequests)
 {
 
     mPresetFields = presetFields;

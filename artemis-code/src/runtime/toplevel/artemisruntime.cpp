@@ -45,10 +45,8 @@ ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QU
     Symbolic::SymbolicInterpreter::setFeatureSymbolicEventTargetEnabled(true);
     
     // If the load-new-urls option is set, we need to log scheduled page loads.
-    if (mOptions.artemisLoadUrls) {
-        QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
-                         this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
-    }
+    QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
+                     this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
 }
 
 void ArtemisRuntime::run(const QUrl& url)
@@ -184,12 +182,14 @@ void ArtemisRuntime::notifyAboutNewIteration(ExecutableConfigurationConstPtr con
 
 void ArtemisRuntime::slNavigationRequest(QWebFrame* frame, QNetworkRequest request, QWebPage::NavigationType type)
 {
-    if (mOptions.artemisLoadUrls) {
-        // Page loads are not executed during the iteration, but when we notice them, they are added to the worklist as a new entry-point to try.
-        if (!mUrlsSeen.contains(request.url())) {
-            Log::debug(QString("Adding URL to worklist: %1").arg(request.url().toString()).toStdString());
+    // Page loads are not executed during the iteration, but when we notice them, they are added to the worklist as a new entry-point to try.
+    if (!mUrlsSeen.contains(request.url())) {
+        Log::debug(QString("Discovered new URL: %1").arg(request.url().toString()).toStdString());
+        Statistics::statistics()->accumulate("ArtemisRuntime::UniqueUrlsDiscovered", 1);
+        mUrlsSeen.insert(request.url());
+
+        if (mOptions.artemisLoadUrls) {
             QSharedPointer<ExecutableConfiguration> newUrlConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), request.url()));
-            mUrlsSeen.insert(request.url());
             mWorklist->add(newUrlConfiguration, mAppmodel);
         }
     }
