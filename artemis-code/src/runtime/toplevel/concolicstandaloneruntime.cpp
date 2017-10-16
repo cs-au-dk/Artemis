@@ -267,6 +267,9 @@ void ConcolicStandaloneRuntime::reportStatistics()
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
 
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::TraceDivergenceNodes", stats.mNumDivergenceNodes);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentTraces", stats.mNumDivergentTraces);
+
     //Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
     //Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
     //Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);

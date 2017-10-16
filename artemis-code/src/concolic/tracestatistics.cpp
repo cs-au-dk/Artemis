@@ -40,6 +40,9 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     mNumSymBranchesFullyExplored = 0;
     mNumConcreteBranchesFullyExplored = 0;
 
+    mNumDivergenceNodes = 0;
+    mNumDivergentTraces = 0;
+
     mNumEventSequenceSymBranches = 0;
     mNumEventSequenceSymBranchesFullyExplored = 0;
 
@@ -88,10 +91,18 @@ void TraceStatistics::visit(TraceAnnotation *node)
     node->next->accept(this);
 }
 
-// These are not part of the "real" tree, so ignored completely.
+// These are treated like unexpected concrete branches, for the purpose of staistics.
+// We still wan to count them, as interesting exploration may happen below.
 void TraceStatistics::visit(TraceDivergence* node)
 {
+    mNumNodes++;
+    mNumDivergenceNodes++;
+    mNumDivergentTraces += node->divergedTraces.length();
+
     node->next->accept(this);
+    foreach (TraceNodePtr divergence, node->divergedTraces) {
+        divergence->accept(this);
+    }
 }
 
 void TraceStatistics::visit(TraceConcreteBranch *node)

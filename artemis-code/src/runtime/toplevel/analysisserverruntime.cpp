@@ -1144,8 +1144,10 @@ QVariant AnalysisServerRuntime::concolicStatistics(QString sequence)
     result_stats.insert("CouldNotSolve", stats.mNumUnexploredUnsolvable);
     result_stats.insert("SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
     result_stats.insert("SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
-    result_stats.insert("TracesRecordedInTree", stats.mNumEndUnknown + stats.mNumEndSuccess + stats.mNumEndFailure); // TODO: I think this should be the same a DistinctTracesExplored in the mian concolic runtime. In server mode it will be the same as TraceEndUnknown, as we do not use the classifier.
+    result_stats.insert("TracesRecordedInTree", stats.mNumEndUnknown + stats.mNumEndSuccess + stats.mNumEndFailure); // TODO: I think this should be the same a DistinctTracesExplored in the main concolic runtime. In server mode it will be the same as TraceEndUnknown, as we do not use the classifier.
     result_stats.insert("Queued", stats.mNumUnexploredQueued);
+    result_stats.insert("TraceDivergenceNodes", stats.mNumDivergenceNodes);
+    result_stats.insert("DivergentTraces", stats.mNumDivergentTraces);
 
     QVariantMap result;
     result.insert("concolicadvice", "done");

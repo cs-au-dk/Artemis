@@ -856,6 +856,9 @@ void ConcolicRuntime::reportStatistics()
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
 
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::TraceDivergenceNodes", stats.mNumDivergenceNodes);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentTraces", stats.mNumDivergentTraces);
+
     mHandlerTracker.reportGraphStatistics();
 }
 

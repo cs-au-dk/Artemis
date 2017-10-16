@@ -44,6 +44,9 @@ public:
     int mNumSymBranchesFullyExplored;
     int mNumConcreteBranchesFullyExplored;
 
+    int mNumDivergenceNodes;
+    int mNumDivergentTraces;
+
     int mNumEventSequenceSymBranches;
     int mNumEventSequenceSymBranchesFullyExplored;
 
@@ -71,7 +74,6 @@ public:
     // Cases we ignore or which cause an error.
     virtual void visit(TraceNode* node);
     virtual void visit(TraceAnnotation* node);
-    virtual void visit(TraceDivergence* node);
 
     // Cases we will implement.
     virtual void visit(TraceConcreteBranch* node);
@@ -84,6 +86,7 @@ public:
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);
 
+    virtual void visit(TraceDivergence* node);
     virtual void visit(TraceConcreteSummarisation* node);
 
     virtual void visit(TraceEndSuccess* node);

@@ -297,7 +297,7 @@ void TraceMerger::visit(TraceDivergence* node)
 }
 
 
-// When we find a divergent merge, this function writes the entire original tree and trace out to a file for manual analysis.
+// When we find a divergent merge, this function inserts the divergence node into the tree to record it.
 void TraceMerger::handleDivergence()
 {
     qWarning() << "Warning, divergance discovered while merging a trace!";
