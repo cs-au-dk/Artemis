@@ -47,7 +47,7 @@ protected:
     void preConcreteExecution();
 
     WorkListPtr mWorklist;
-    QSet<QUrl> mUrlsSeen;
+    QMap<QUrl, QList<int>> mUrlsSeen;
 
     void notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration);
 

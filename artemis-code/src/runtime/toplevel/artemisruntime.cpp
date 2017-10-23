@@ -54,7 +54,7 @@ void ArtemisRuntime::run(const QUrl& url)
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
     mUrlsSeen.clear();
-    mUrlsSeen.insert(url);
+    mUrlsSeen.insert(url, QList<int>());
 
     mWorklist->add(initialConfiguration, mAppmodel);
 
@@ -80,6 +80,20 @@ void ArtemisRuntime::preConcreteExecution()
 
         mWebkitExecutor->detach();
         mExecStat->generateOutput();
+
+        Log::debug("URLs discovered:");
+        foreach (QUrl url, mUrlsSeen.keys()) {
+            Log::debug("    " + url.toString().toStdString());
+            if (mUrlsSeen[url].length() > 0) {
+                QStringList seen;
+                foreach (int it, mUrlsSeen[url]) {
+                    seen.append(QString::number(it));
+                }
+                Log::debug("        Iterations: " + seen.join(", ").toStdString());
+            }
+        }
+        Log::debug("");
+
         done();
         return;
     }
@@ -185,10 +199,14 @@ void ArtemisRuntime::notifyAboutNewIteration(ExecutableConfigurationConstPtr con
 void ArtemisRuntime::slPageLoaded(QUrl url)
 {
     // Page loads are not executed during the iteration, but when we notice them, they are added to the worklist as a new entry-point to try.
-    if (!mUrlsSeen.contains(url)) {
+    if (mUrlsSeen.contains(url)) {
+        mUrlsSeen[url].append(mIterations);
+    } else {
         Log::debug("Discovered new URL: " + url.toString().toStdString());
         Statistics::statistics()->accumulate("ArtemisRuntime::UniqueUrlsDiscovered", 1);
-        mUrlsSeen.insert(url);
+        QList<int> its;
+        its.append(mIterations);
+        mUrlsSeen.insert(url, its);
 
         if (mOptions.artemisLoadUrls) {
             QSharedPointer<ExecutableConfiguration> newUrlConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
