@@ -46,6 +46,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     send_iteration_count=False,
                     event_delegation_testing=True,
                     concolic_test_mode_js=None,
+                    event_filter_area=None,
                     extra_args=None, #TODO: Use kwargs instead.
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -158,6 +159,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if concolic_test_mode_js is not None:
         args.append('--concolic-test-mode-js')
         args.append(concolic_test_mode_js)
+
+    if event_filter_area is not None:
+        args.append('--event-filter-area')
+        args.append(event_filter_area)
 
     if extra_args is not None:
         args.extend(extra_args.split()) # TODO: In general split() is not good enough here.
