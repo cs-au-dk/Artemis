@@ -21,6 +21,7 @@ TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
 			y = y.replace(trimregex, '');
 			y = y.replace(newlineregex, ''); // Redundant, but tests some cases in the regex printing code.
 
+			// TODO: Because we implement simple regex optimisations in the constraint writier, the solver actually only checks if testinput == "testme". Any more complex constraint which relied on the trimmed and untrimmed versions being different would fail.
 			if (y != x) {
 				alert("Error!");
 				return false;

@@ -1823,11 +1823,21 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncTrim(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
 
+#ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTrim", 1);
+        // TODO: It would probably be better to have a new Symbolic::StringTrim term, but for now this is translated to a regex condition.
+        JSValue value = trimString(exec, thisValue, TrimLeft | TrimRight);
+        value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                            new std::string("/^\\s+|\\s+$/g"),
+                                                            new std::string("")),
+                           exec->globalData());
+        return JSValue::encode(value);
+    } else {
+        return JSValue::encode(trimString(exec, thisValue, TrimLeft | TrimRight));
     }
-
+#else
     return JSValue::encode(trimString(exec, thisValue, TrimLeft | TrimRight));
+#endif
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncTrimLeft(ExecState* exec)
