@@ -65,6 +65,7 @@ void ArtemisRuntime::run(const QUrl& url)
         Statistics::statistics()->set("WebKit::events::skipped::eventfilterarea", 0);
     }
     Statistics::statistics()->set("ArtemisRuntime::UniqueUrlsDiscovered", 0);
+    mRunningTime.start();
 
     preConcreteExecution();
 }
@@ -198,16 +199,23 @@ void ArtemisRuntime::notifyAboutNewIteration(ExecutableConfigurationConstPtr con
 
 void ArtemisRuntime::slPageLoaded(QUrl url)
 {
-    // Page loads are not executed during the iteration, but when we notice them, they are added to the worklist as a new entry-point to try.
     if (mUrlsSeen.contains(url)) {
         mUrlsSeen[url].append(mIterations);
     } else {
         Log::debug("Discovered new URL: " + url.toString().toStdString());
         Statistics::statistics()->accumulate("ArtemisRuntime::UniqueUrlsDiscovered", 1);
+
+        // If this is the first new URL discovered, log some extra statistics.
+        if (mUrlsSeen.size() < 2) {
+            Statistics::statistics()->set("ArtemisRuntime::FirstNewUrlDiscoveredIteration", mIterations);
+            Statistics::statistics()->set("ArtemisRuntime::FirstNewUrlDiscoveredTimeMS", std::to_string(mRunningTime.elapsed()));
+        }
+
         QList<int> its;
         its.append(mIterations);
         mUrlsSeen.insert(url, its);
 
+        // Page loads are not executed during the iteration, but when we notice them, they are added to the worklist as a new entry-point to try.
         if (mOptions.artemisLoadUrls) {
             QSharedPointer<ExecutableConfiguration> newUrlConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
             mWorklist->add(newUrlConfiguration, mAppmodel);
