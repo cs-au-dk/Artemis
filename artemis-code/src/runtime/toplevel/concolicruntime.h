@@ -85,6 +85,7 @@ protected:
     QString mManualFormAreaXPath;
 
     TraceClassifierPtr mTraceClassifier;
+    bool mFoundSuccessTrace;
 
     // Method and variables for generating a graphviz graph of the execution tree.
     void outputTreeGraph();

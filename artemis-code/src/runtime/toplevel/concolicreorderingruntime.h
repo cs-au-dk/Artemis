@@ -35,7 +35,7 @@ namespace artemis
 /*
  * A runtime which allows dynamic reordering of events.
  *
- * TODO: This runtime does not support form restrictions (static or dynamic).
+ * TODO: This runtime does not support dynamic form restrictions.
  */
 
 class ConcolicReorderingRuntime : public Runtime
@@ -74,6 +74,7 @@ protected:
     QMap<uint, InjectionValue> mSolvedInjectionValues;
     QList<uint> decodeSolvedActionOrder(SolutionPtr solution);
     QStringList mOrderingLog;
+    bool mFoundFullyTerminatingTrace;
 
     InjectionValue getFieldCurrentValue(FormFieldDescriptorConstPtr field);
 

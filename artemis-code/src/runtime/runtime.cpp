@@ -222,6 +222,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));
+
+    mRunningTime.start();
 }
 
 void writeAndWrapReportBuffer(int nm, QString buffer){

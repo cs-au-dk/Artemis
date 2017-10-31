@@ -22,6 +22,7 @@
 #include <QNetworkProxy>
 #include <set>
 #include <QString>
+#include <QElapsedTimer>
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
@@ -78,6 +79,8 @@ protected:
     void enableAsyncEventCapture();
     void clearAsyncEvents();
     QMap<int, QPair<int, bool> > mTimers;
+
+    QElapsedTimer mRunningTime;
 
 private:
     QString* mHeapReport;

@@ -34,6 +34,7 @@ ConcolicReorderingRuntime::ConcolicReorderingRuntime(QObject* parent, const Opti
     , mNumIterations(0)
     , mCurrentExplorationHandle(ConcolicAnalysis::NO_EXPLORATION_TARGET)
     , mPreviouslySearchedAction(0)
+    , mFoundFullyTerminatingTrace(false)
     , mRunId(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"))
 {
     // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
@@ -220,6 +221,7 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
     printCurrentActionSequence();
     Log::debug("Executing...");
 
+    bool allActionsTerminate = true;
     foreach (uint actionIdx, mCurrentActionOrder) {
         Action action = mAvailableActions[actionIdx];
 
@@ -247,7 +249,11 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         // End trace recording
         mWebkitExecutor->getTraceBuilder()->endRecording();
         TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
-        mTraceClassifier->classify(trace);
+
+        TraceClassificationResult classification = mTraceClassifier->classify(trace);
+        if (classification == FAILURE) {
+            allActionsTerminate = false;
+        }
 
         if (actionIdx == mPreviouslySearchedAction) {
             action.analysis->addTrace(trace, mCurrentExplorationHandle);
@@ -275,12 +281,27 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
 
         mWebkitExecutor->getTraceBuilder()->endRecording();
         TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
-        mTraceClassifier->classify(trace);
+
+        TraceClassificationResult classification = mTraceClassifier->classify(trace);
+        if (classification == FAILURE) {
+            allActionsTerminate = false;
+        }
 
         if (mPreviouslySearchedAction == mSubmitButtonIndex) {
             mSubmitButtonAnalysis->addTrace(trace, mCurrentExplorationHandle);
         } else {
             mSubmitButtonAnalysis->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
+        }
+    }
+
+    if (allActionsTerminate) {
+        Statistics::statistics()->accumulate("Concolic::Reordering::FullyTerminatingTraces", 1);
+
+        if (!mFoundFullyTerminatingTrace) {
+            mFoundFullyTerminatingTrace = true;
+            Statistics::statistics()->set("Concolic::Reordering::FirstFullyTerminatingTraceIteration", mNumIterations);
+            Statistics::statistics()->set("Concolic::Reordering::FirstFullyTerminatingTraceTimeMS", std::to_string(mRunningTime.elapsed()));
+            // N.B. This is not as meaningful in this mode as in others. It is perfectly possible to find terminating traces in all trees but to never have explored them all simultaneously.
         }
     }
 

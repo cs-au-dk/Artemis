@@ -17,8 +17,6 @@
 #ifndef ARTEMISRUNTIME_H
 #define ARTEMISRUNTIME_H
 
-#include <QElapsedTimer>
-
 #include "runtime/worklist/worklist.h"
 
 #include "runtime/runtime.h"
@@ -50,7 +48,6 @@ protected:
 
     WorkListPtr mWorklist;
     QMap<QUrl, QList<int>> mUrlsSeen;
-    QElapsedTimer mRunningTime;
 
     void notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration);
 

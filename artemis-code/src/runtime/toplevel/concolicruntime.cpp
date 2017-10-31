@@ -34,6 +34,7 @@ namespace artemis
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mConcolicAnalysis(new ConcolicAnalysis(options, ConcolicAnalysis::CONCOLIC_RUNTIME))
+    , mFoundSuccessTrace(false)
     , mTraceDisplay(options.outputCoverage != NONE)
     , mTraceDisplayOverview(options.outputCoverage != NONE)
     , mHandlerTracker(options.concolicEventHandlerReport)
@@ -545,6 +546,14 @@ void ConcolicRuntime::mergeTraceIntoTree()
     switch(classification){
     case SUCCESS:
         Log::info("  Recorded trace was classified as a SUCCESS.");
+
+        // If this is the first success, save some statistics.
+        if (!mFoundSuccessTrace) {
+            mFoundSuccessTrace = true;
+            Statistics::statistics()->set("ConcolicRuntime::FirstSuccessTraceDiscoveredIteration", mNumIterations);
+            Statistics::statistics()->set("ConcolicRuntime::FirstSuccessTraceDiscoveredTimeMS", std::to_string(mRunningTime.elapsed()));
+        }
+
         break;
     case FAILURE:
         Log::info("  Recorded trace was classified as a FAILURE.");
