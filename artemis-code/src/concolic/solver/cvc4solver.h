@@ -43,6 +43,7 @@ private:
     SolutionPtr emitError(std::ofstream& clog, const std::string& reason, int clause = -1);
     void emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat);
     SolutionPtr decodeDOMInputResult(std::ofstream& clog, std::string identifier, std::string type, std::string value, Symbolvalue* result, const FormRestrictions& formRestrictions);
+    std::string stringResultReplacements(std::string value);
 
     QString mLastConstraintID;
 };

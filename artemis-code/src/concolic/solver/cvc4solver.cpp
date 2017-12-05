@@ -319,6 +319,9 @@ SolutionPtr CVC4Solver::decodeDOMInputResult(std::ofstream& clog,
             value = value.substr(1, value.length() - 2);
         }
 
+        // Replace escaped special chars in strings.
+        value = stringResultReplacements(value);
+
         symbolvalue->string = value;
 
     } else if (type.compare("Bool") == 0) {
@@ -401,6 +404,19 @@ SolutionPtr CVC4Solver::decodeDOMInputResult(std::ofstream& clog,
     }
 
     return SolutionPtr(NULL);
+}
+
+std::string CVC4Solver::stringResultReplacements(std::string value)
+{
+    // If there are escaped characters in the solver's result, un-escape them here.
+    QString v = QString::fromStdString(value);
+
+    v.replace("\\'", "'");
+    v.replace("\\\"", "\"");
+    v.replace("\\\\", "\\");
+
+    std::cerr << v.toStdString() << std::endl;
+    return v.toStdString();
 }
 
 SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason, int clause)
