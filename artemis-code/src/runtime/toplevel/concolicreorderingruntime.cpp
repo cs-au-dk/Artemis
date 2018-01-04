@@ -401,7 +401,7 @@ void ConcolicReorderingRuntime::chooseNextSequenceAndExplore()
 
     } else {
         // Couldn't explore in this action. Try another one.
-        Log::debug("ConcolicReorderingRuntime: exploration faield.");
+        Log::debug("ConcolicReorderingRuntime: exploration failed.");
         // Do not return to this action.
         if (nextActionIdx == mSubmitButtonIndex) {
             mSubmitButtonFullyExplored = true;
