@@ -81,12 +81,18 @@ namespace JSC {
             , m_value(value)
             , m_isGlobal(false)
         {
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         JSString(JSGlobalData& globalData)
             : JSCell(globalData, globalData.stringStructure.get())
             , m_isGlobal(false)
         {
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, size_t length)

@@ -11,6 +11,10 @@ QMAKE_CXXFLAGS += -g \
     
     #-DEXE_BUILD_COMMIT="$(if $(git rev-parse --is-inside-work-tree 2>/dev/null); then echo -n $(git rev-parse --short HEAD); if $(git status >/dev/null 2>&1; git diff-index --quiet HEAD --); then echo \"\"; else echo \" [with changes]\"; fi; else echo \"[unknown]\"; fi)" \
 
+# Turn off optimisations while debugging
+#QMAKE_CXXFLAGS_RELEASE -= -O2
+#QMAKE_CXXFLAGS_RELEASE += -O0
+
 DEFINES += ARTEMIS=1
 DEFINES += WTF_PLATFORM_QT=1
 
