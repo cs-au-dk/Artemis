@@ -260,6 +260,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         }
 
         Statistics::statistics()->accumulate(std::string("Symbolic::Interpreter::LostSymbolicInfo::ail_op_binary::") + opNameString(op), 1);
+        //std::cerr << std::string("Symbolic::Interpreter::LostSymbolicInfo::ail_op_binary::") + opNameString(op) << std::endl;
+        //std::cerr << "x:" << " isEmpty:" << x.isEmpty() << " isFunction:" << x.isFunction() << " isUndefined:" << x.isUndefined() << " isNull:" << x.isNull() << " isBoolean:" << x.isBoolean() << " isNumber:" << x.isNumber() << " isString:" << x.isString() << " isPrimitive:" << x.isPrimitive() << " isGetterSetter:" << x.isGetterSetter() << " isObject:" << x.isObject() << " isSymbolic:" << x.isSymbolic() << " isIndirectSymbolic:" << x.isIndirectSymbolic() << std::endl;
+        //std::cerr << "y:" << " isEmpty:" << y.isEmpty() << " isFunction:" << y.isFunction() << " isUndefined:" << y.isUndefined() << " isNull:" << y.isNull() << " isBoolean:" << y.isBoolean() << " isNumber:" << y.isNumber() << " isString:" << y.isString() << " isPrimitive:" << y.isPrimitive() << " isGetterSetter:" << y.isGetterSetter() << " isObject:" << y.isObject() << " isSymbolic:" << y.isSymbolic() << " isIndirectSymbolic:" << y.isIndirectSymbolic() << std::endl;
+
         return result;
 
         break;
