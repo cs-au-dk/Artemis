@@ -599,8 +599,10 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
                 exit(1);
             }
         }else{
-            Log::fatal(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
-            exit(1); // TODO: Maybe this should just be "could not solve" instead?
+            // In case of difficult branches, this can be expected. We do not know here the exact set of variables in the final PC, so we do not know if this is an error or not. Ignore.
+
+            //Log::fatal(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
+            //exit(1); // TODO: Maybe this should just be "could not solve" instead?
         }
     }
 }
