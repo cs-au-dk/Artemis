@@ -122,7 +122,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     if (WEXITSTATUS(result) == 124) {
         Statistics::statistics()->accumulate("Concolic::Solver::SolverTimeouts", 1);
-        return emitError(clog, "CVC4 execution timed-out..");
+        return emitError(clog, "CVC4 execution timed-out.");
     }
 
     // 3. interpret the result
