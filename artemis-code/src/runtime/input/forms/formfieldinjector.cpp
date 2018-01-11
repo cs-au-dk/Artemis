@@ -43,7 +43,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         // E.g. if you set the value of a select box then this approach correctly updates the node,
         // where the setAttribute approach updates the value itself but not the remaining state of the node
 
-        setValue = QString("this.value = \"") + value.getString() + "\";";
+        setValue = QString("this.value = \"") + jsStringEscape(value.getString()) + "\";";
         element.evaluateJavaScript(setValue);
 
         break;
@@ -237,7 +237,7 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
         element.evaluateJavaScript(keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey));
 
         // Inject the input
-        element.evaluateJavaScript(injectionJS.arg(value.left(i+1)));
+        element.evaluateJavaScript(injectionJS.arg(jsStringEscape(value.left(i+1))));
 
         // Send input event
         element.evaluateJavaScript(inputEventJS);
@@ -341,6 +341,13 @@ void FormFieldInjector::guiPressEnter(QWebElement element)
 
 
 
+
+QString FormFieldInjector::jsStringEscape(QString value)
+{
+    value.replace("\\", "\\\\");
+    value.replace("\"", "\\\"");
+    return value;
+}
 
 
 } // namespace artemis

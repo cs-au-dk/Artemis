@@ -50,6 +50,8 @@ protected:
     static bool simulateTextFieldFilling(QWebElement element, QString value, bool noBlur);
     static bool simulateBooleanFieldFilling(QWebElement element, InjectionValue value, bool noBlur);
     static bool simulateSelectBoxFilling(QWebElement element, InjectionValue value, bool noBlur);
+
+    static QString jsStringEscape(QString value);
 };
 
 
