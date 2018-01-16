@@ -59,6 +59,11 @@ bool CVC4TypeAnalysis::hasUniqueConstraint(const std::string& identifier, CVC4Ty
     return iter->second == type;
 }
 
+bool CVC4TypeAnalysis::knowsVariable(const std::string& identifier)
+{
+    return mType.find(identifier) != mType.end();
+}
+
 void CVC4TypeAnalysis::visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg) {
 
     recordConstraint(symbolicinteger->getSource().getIdentifier(), mExpressionType);

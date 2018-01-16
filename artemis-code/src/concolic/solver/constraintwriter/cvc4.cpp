@@ -915,7 +915,7 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
     bool coerceToInt = false;
     if(type == VALUE_ONLY || type == VALUE_INDEX) {
         if (!mDisabledFeatures.testFlag(CVC4_COERCION_OPT) &&
-                mReorderingInfo.isNull() && // In concolic-reordering mode, VALUE_INDEX is used in some cases where the value is never checked, and applying this coercion optimisation does not make sense. [In fact it will fail in the following type checker call.]
+                (mReorderingInfo.isNull() || mTypeAnalysis->knowsVariable(name.toStdString())) && // In concolic-reordering mode, VALUE_INDEX is used in some cases where the value is never checked, and applying this coercion optimisation does not make sense. [In fact it will fail in the following type checker call.]
                 mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
                 FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
 

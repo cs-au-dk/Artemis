@@ -764,6 +764,9 @@ void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic:
 
     if (iter != mTypemap.end()) {
         // type already recorded, update type info
+        if(iter->second != type) {
+            Log::debug("Encountered type conflict for " + source + " (" + std::to_string(iter->second) + ", " + std::to_string(type) + ")");
+        }
         iter->second = iter->second == type ? type : Symbolic::TYPEERROR;
     } else {
         // type not recorded before, output definition and store type
@@ -853,7 +856,7 @@ void SMTConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         default:
-            error("Unsupported type coercion from INT to UNKNOWN");
+            error("Unsupported type coercion from BOOL to UNKNOWN");
             break;
         }
 

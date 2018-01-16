@@ -50,6 +50,7 @@ public:
     };
 
     bool hasUniqueConstraint(const std::string&, CVC4Type);
+    bool knowsVariable(const std::string& identifier);
 
 protected:
 
