@@ -178,7 +178,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
         return
 
     try:
-        stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
+        stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8", "replace")
         returncode = 0
     except subprocess.CalledProcessError as e:
         if ignore_artemis_crash:
