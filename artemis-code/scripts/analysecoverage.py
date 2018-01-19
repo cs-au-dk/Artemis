@@ -28,6 +28,12 @@ def _coverage_parser(lines, result):
 		raise Exception("Expected file coverage statement")
 
 	file_id = match.group(1)
+	if file_id in result:
+		idx = 0
+		file_id_0 = file_id
+		while file_id in result:
+			idx += 1
+			file_id = file_id_0 + " ({})".format(idx)
 
 	result[file_id] = {'total_lines' : 0,
 					   'lines_covered': 0}
