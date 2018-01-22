@@ -237,17 +237,27 @@ void SMTConstraintWriter::emitLinearOrderingConstraints(QSet<QString> varsUsed)
         assert(indices.contains(i));
     }
 
-    // For each action index we create an ordering variable. Those are constraint to be distinct and in the expected
-    // range, so the must form a linear order.
+    // For each action index we create an ordering variable. Those are constrained to be distinct and in the expected
+    // range, so they must form a linear order.
     mOutput << "\n; Action linear ordering constraints\n";
-    std::string allOrderVars = "";
-    foreach (uint actionIdx, actionVariables.keys()) {
-        std::string orderVar = "SYM_ORDERING_" + std::to_string(actionIdx);
-        recordAndEmitType(orderVar, Symbolic::INT);
-        mOutput << "(assert (and (< 0 " << orderVar << " ) (<= " << orderVar << " " << N << ")))\n";
-        allOrderVars.append(orderVar + " ");
+    if (actionVariables.size() > 1) {
+        // There are multipe fields to order.
+        std::string allOrderVars = "";
+        foreach (uint actionIdx, actionVariables.keys()) {
+            std::string orderVar = "SYM_ORDERING_" + std::to_string(actionIdx);
+            recordAndEmitType(orderVar, Symbolic::INT);
+            mOutput << "(assert (and (< 0 " << orderVar << " ) (<= " << orderVar << " " << N << ")))\n";
+            allOrderVars.append(orderVar + " ");
+        }
+        mOutput << "(assert (distinct " + allOrderVars + "))\n";
+    } else if (actionVariables.size() == 1) {
+        // There is only a single field, just assign it a static value.
+        assert(actionVariables.contains(1));
+        recordAndEmitType("SYM_ORDERING_1", Symbolic::INT);
+        mOutput << "(assert (= SYM_ORDERING_1 1 ))\n";
+    } else {
+        // There are no actions to be ordered. Skip.
     }
-    mOutput << "(assert (distinct " + allOrderVars + "))\n";
 
     // For each action pair (A, B), set the value injected at A as seen by B depending on their relative order.
     mOutput << "\n; Force values at each action to be default or not depending on the ordering\n";
