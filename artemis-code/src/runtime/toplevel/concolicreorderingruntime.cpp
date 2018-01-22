@@ -239,8 +239,14 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
         mWebkitExecutor->getTraceBuilder()->beginRecording();
 
         // Fill the field, simulating a user action.
-        Log::debug(QString("Executing action %1 (field %2, value %3, JS user simulation)").arg(action.index).arg(action.variable).arg(injection.toString()).toStdString());
-        bool couldInject = FormFieldInjector::injectWithEventSimulation(action.field->getDomElement()->getElement(mWebkitExecutor->getPage()), injection, false);
+        bool couldInject;
+        if (false) { // TODO: This is just a dev-time switch used for debugging.
+            Log::debug(QString("Executing action %1 (field %2, value %3, JS user simulation)").arg(action.index).arg(action.variable).arg(injection.toString()).toStdString());
+            couldInject = FormFieldInjector::injectWithEventSimulation(action.field->getDomElement()->getElement(mWebkitExecutor->getPage()), injection, false);
+        } else {
+            Log::debug(QString("Executing action %1 (field %2, value %3, simple triggering)").arg(action.index).arg(action.variable).arg(injection.toString()).toStdString());
+            couldInject = FormFieldInjector::injectAndTriggerChangeHandler(action.field->getDomElement()->getElement(mWebkitExecutor->getPage()), injection);
+        }
         if (!couldInject) {
             Log::error("Error: failed to inject.");
         }
