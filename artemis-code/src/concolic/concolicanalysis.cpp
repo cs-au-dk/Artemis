@@ -369,7 +369,7 @@ FormRestrictions ConcolicAnalysis::mergeDynamicSelectRestrictions(FormRestrictio
 
     foreach(SelectRestriction sr, base.first) {
         if (!replacementVariables.contains(sr.variable)) {
-            concolicRuntimeDebug(QString("Using the default value for value for %1").arg(sr.variable));
+            concolicRuntimeDebug(QString("Using the default value for %1").arg(sr.variable));
             updated.first.insert(sr);
         }
     }

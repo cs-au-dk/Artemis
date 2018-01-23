@@ -196,6 +196,7 @@ void ConcolicReorderingRuntime::setupInitialActionSequence(QSharedPointer<Execut
     }
     if (!mSubmitButtonSelector.isNull()) {
         orderingSummary.append("Btn");
+        mSubmitButtonAnalysis->setFormRestrictions(mFormFieldRestrictions);
     }
     mOrderingLog.append(orderingSummary.join(", "));
 
