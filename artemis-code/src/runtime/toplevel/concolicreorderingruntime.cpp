@@ -518,7 +518,7 @@ ReorderingConstraintInfoPtr ConcolicReorderingRuntime::getReorderingConstraintIn
             // N.B. The integer variable for the selectedIndex is handled indirectly via the form restrictions.
             break;
         case BOOLEAN:
-            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_BOOL" + action.variable, action.initialValue));
+            actionVariables.insert(action.index, QPair<QString, InjectionValue>("SYM_IN_BOOL_" + action.variable, action.initialValue));
             break;
         case NO_INPUT:
         default:

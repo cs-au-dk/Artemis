@@ -1,0 +1,53 @@
+<!--
+TEST Concolic::Reordering::TotalActionsExplored = 7
+TEST Concolic::Reordering::TotalActionsFullyExplored = 7
+TEST Concolic::Reordering::FullyTerminatingTraces = 1
+-->
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    <script type="text/javascript">
+        
+        function handler_A123() {
+            var v12 = document.getElementById("input-1-2").checked;
+            
+            if (!v12) {
+                alert("Error");
+            }
+        }
+        
+        function handler_A456() {
+            var v12 = document.getElementById("input-1-2").checked;
+            
+            if (v12) {
+                alert("Error");
+            }
+        }
+        
+    </script>
+    
+</head>
+<body>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="radio" id="input-1-1" name="input-1" value="AAA" onchange="handler_A123()" >
+        <input type="radio" id="input-1-2" name="input-1" value="BBB" onchange="handler_A123()" >
+        <input type="radio" id="input-1-3" name="input-1" value="CCC" onchange="handler_A123()" >
+        <br><br>
+        
+        <input type="radio" id="input-2-1" name="input-2" value="XXX" onchange="handler_A456()" >
+        <input type="radio" id="input-2-2" name="input-2" value="YYY" onchange="handler_A456()" >
+        <input type="radio" id="input-2-3" name="input-2" value="ZZZ" onchange="handler_A456()" >
+        <br><br>
+        
+        <button type="submit" onclick="" id="artform-button" >Submit</button>
+        
+    </form>
+    
+</body>
+</html>
