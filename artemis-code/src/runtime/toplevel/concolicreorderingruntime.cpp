@@ -259,6 +259,7 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
 
         TraceClassificationResult classification = mTraceClassifier->classify(trace);
         if (classification == FAILURE) {
+            Log::debug("  Action " + std::to_string(actionIdx) + " aborted.");
             allActionsTerminate = false;
         }
 
@@ -291,6 +292,7 @@ void ConcolicReorderingRuntime::executeCurrentActionSequence()
 
         TraceClassificationResult classification = mTraceClassifier->classify(trace);
         if (classification == FAILURE) {
+            Log::debug("  Button click aborted.");
             allActionsTerminate = false;
         }
 
