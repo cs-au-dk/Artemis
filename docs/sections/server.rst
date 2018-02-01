@@ -590,7 +590,7 @@ Commands
     and ``artemisInputString()``. This can be used for testing the internal concolic engine of the platform.
     For normal testing of web pages the ``forminput`` command should be used instead for concolic testing.
     
-    The ``values`` parameter is a mapping from variable names (strings) to values, whihc may be strings, integers or
+    The ``values`` parameter is a mapping from variable names (strings) to values, which may be strings, integers or
     booleans.
     
     The ``reset`` parameter is optional, and if set to ``true``, the internal symbolic value table will be cleared
@@ -619,13 +619,13 @@ Commands
     
 * ``coverage``
     Returns a report of the line coverage from the executed commands.
-    The line coverage is taken since the server was strted, and cannot be reset.
+    The line coverage is taken since the server was started, and cannot be reset.
     
     The ``report`` is a list of reports for each distinct JavaScript source (web page, JS file, etc.).
     The line-by-line coverage report is human-readable, not in a good machine-readable format.
     It can be parsed with analyse-coverage.py.
     
-    The ``linescovered`` parameter is a list of line numbers whihc were covered.
+    The ``linescovered`` parameter is a list of line numbers which were covered.
     
     N.B. A line is considered covered if some interpretation was done on that line. So the close-braces of if
     statements, else statements, blank lines, and so on will never be considered covered.
